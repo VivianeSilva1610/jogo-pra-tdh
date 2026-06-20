@@ -12,34 +12,170 @@ interface MundoDasLetrasProps {
   onBack: () => void;
 }
 
-// Dicionário completo de dicas (Imagem/Emoji + Palavra + Sílaba) para todas as 26 letras do alfabeto
-const LETTER_HINTS: Record<string, { emoji: string; word: string; syllable: string }> = {
-  A: { emoji: '🐝', word: 'Abelha', syllable: 'A' },
-  B: { emoji: '⚽', word: 'Bola', syllable: 'BO' },
-  C: { emoji: '🏠', word: 'Casa', syllable: 'CA' },
-  D: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
-  E: { emoji: '🐘', word: 'Elefante', syllable: 'E' },
-  F: { emoji: '🔥', word: 'Fogo', syllable: 'FO' },
-  G: { emoji: '🐱', word: 'Gato', syllable: 'GA' },
-  H: { emoji: '🚁', word: 'Helicóptero', syllable: 'HE' },
-  I: { emoji: '🏝️', word: 'Ilha', syllable: 'I' },
-  J: { emoji: '🐊', word: 'Jacaré', syllable: 'JA' },
-  K: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
-  L: { emoji: '🦁', word: 'Leão', syllable: 'LE' },
-  M: { emoji: '🍎', word: 'Maçã', syllable: 'MA' },
-  N: { emoji: '☁️', word: 'Nuvem', syllable: 'NU' },
-  O: { emoji: '🥚', word: 'Ovo', syllable: 'O' },
-  P: { emoji: '🦆', word: 'Pato', syllable: 'PA' },
-  Q: { emoji: '🧀', word: 'Queijo', syllable: 'QUE' },
-  R: { emoji: '🐭', word: 'Rato', syllable: 'RA' },
-  S: { emoji: '☀️', word: 'Sol', syllable: 'SO' },
-  T: { emoji: '🍅', word: 'Tomate', syllable: 'TO' },
-  U: { emoji: '🍇', word: 'Uva', syllable: 'U' },
-  V: { emoji: '🐮', word: 'Vaca', syllable: 'VA' },
-  W: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
-  X: { emoji: '🍵', word: 'Xícara', syllable: 'XI' },
-  Y: { emoji: '🍜', word: 'Yakisoba', syllable: 'YA' },
-  Z: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+interface Hint {
+  emoji: string;
+  word: string;
+  syllable: string;
+}
+
+// Dicionário completo localizado para todas as 26 letras nos 4 idiomas
+const LETTER_HINTS: Record<string, Record<string, Hint>> = {
+  A: {
+    pt: { emoji: '🐝', word: 'Abelha', syllable: 'A' },
+    en: { emoji: '🍎', word: 'Apple', syllable: 'A' },
+    it: { emoji: '🐝', word: 'Ape', syllable: 'A' },
+    es: { emoji: '🐝', word: 'Abeja', syllable: 'A' },
+  },
+  B: {
+    pt: { emoji: '⚽', word: 'Bola', syllable: 'BO' },
+    en: { emoji: '⚽', word: 'Ball', syllable: 'BA' },
+    it: { emoji: '🍌', word: 'Banana', syllable: 'BA' },
+    es: { emoji: '⚽', word: 'Bola', syllable: 'BO' },
+  },
+  C: {
+    pt: { emoji: '🏠', word: 'Casa', syllable: 'CA' },
+    en: { emoji: '🐱', word: 'Cat', syllable: 'CA' },
+    it: { emoji: '🏠', word: 'Casa', syllable: 'CA' },
+    es: { emoji: '🏠', word: 'Casa', syllable: 'CA' },
+  },
+  D: {
+    pt: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
+    en: { emoji: '🐕', word: 'Dog', syllable: 'DO' },
+    it: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
+    es: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
+  },
+  E: {
+    pt: { emoji: '🐘', word: 'Elefante', syllable: 'E' },
+    en: { emoji: '🥚', word: 'Egg', syllable: 'E' },
+    it: { emoji: '🐘', word: 'Elefante', syllable: 'E' },
+    es: { emoji: '🐘', word: 'Elefante', syllable: 'E' },
+  },
+  F: {
+    pt: { emoji: '🔥', word: 'Fogo', syllable: 'FO' },
+    en: { emoji: '🐟', word: 'Fish', syllable: 'FI' },
+    it: { emoji: '🔥', word: 'Fuoco', syllable: 'FU' },
+    es: { emoji: '🔥', word: 'Fuego', syllable: 'FUE' },
+  },
+  G: {
+    pt: { emoji: '🐱', word: 'Gato', syllable: 'GA' },
+    en: { emoji: '🦒', word: 'Giraffe', syllable: 'GI' },
+    it: { emoji: '🐱', word: 'Gatto', syllable: 'GA' },
+    es: { emoji: '🐱', word: 'Gato', syllable: 'GA' },
+  },
+  H: {
+    pt: { emoji: '🚁', word: 'Helicóptero', syllable: 'HE' },
+    en: { emoji: '🚁', word: 'Helicopter', syllable: 'HE' },
+    it: { emoji: '🏨', word: 'Hotel', syllable: 'HO' },
+    es: { emoji: '🚁', word: 'Helicóptero', syllable: 'HE' },
+  },
+  I: {
+    pt: { emoji: '🏝️', word: 'Ilha', syllable: 'I' },
+    en: { emoji: '🦎', word: 'Iguana', syllable: 'I' },
+    it: { emoji: '🏝️', word: 'Isola', syllable: 'I' },
+    es: { emoji: '🏝️', word: 'Isla', syllable: 'I' },
+  },
+  J: {
+    pt: { emoji: '🐊', word: 'Jacaré', syllable: 'JA' },
+    en: { emoji: '🍯', word: 'Jar', syllable: 'JA' },
+    it: { emoji: '👖', word: 'Jeans', syllable: 'JE' },
+    es: { emoji: '🦒', word: 'Jirafa', syllable: 'JI' },
+  },
+  K: {
+    pt: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
+    en: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
+    it: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
+    es: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
+  },
+  L: {
+    pt: { emoji: '🦁', word: 'Leão', syllable: 'LE' },
+    en: { emoji: '🦁', word: 'Lion', syllable: 'LI' },
+    it: { emoji: '🦁', word: 'Leone', syllable: 'LE' },
+    es: { emoji: '🦁', word: 'León', syllable: 'LE' },
+  },
+  M: {
+    pt: { emoji: '🍎', word: 'Maçã', syllable: 'MA' },
+    en: { emoji: '🐵', word: 'Monkey', syllable: 'MO' },
+    it: { emoji: '🍎', word: 'Mela', syllable: 'ME' },
+    es: { emoji: '🍎', word: 'Manzana', syllable: 'MA' },
+  },
+  N: {
+    pt: { emoji: '☁️', word: 'Nuvem', syllable: 'NU' },
+    en: { emoji: '🪵', word: 'Nut', syllable: 'NU' },
+    it: { emoji: '☁️', word: 'Nuvola', syllable: 'NU' },
+    es: { emoji: '☁️', word: 'Nube', syllable: 'NU' },
+  },
+  O: {
+    pt: { emoji: '🥚', word: 'Ovo', syllable: 'O' },
+    en: { emoji: '🐙', word: 'Octopus', syllable: 'O' },
+    it: { emoji: '👁️', word: 'Occhio', syllable: 'O' },
+    es: { emoji: '👁️', word: 'Ojo', syllable: 'O' },
+  },
+  P: {
+    pt: { emoji: '🦆', word: 'Pato', syllable: 'PA' },
+    en: { emoji: '🍐', word: 'Pear', syllable: 'PE' },
+    it: { emoji: '🦆', word: 'Papera', syllable: 'PA' },
+    es: { emoji: '🦆', word: 'Pato', syllable: 'PA' },
+  },
+  Q: {
+    pt: { emoji: '🧀', word: 'Queijo', syllable: 'QUE' },
+    en: { emoji: '👑', word: 'Queen', syllable: 'QUE' },
+    it: { emoji: '📜', word: 'Quaderno', syllable: 'QUA' },
+    es: { emoji: '🧀', word: 'Queso', syllable: 'QUE' },
+  },
+  R: {
+    pt: { emoji: '🐭', word: 'Rato', syllable: 'RA' },
+    en: { emoji: '🌈', word: 'Rainbow', syllable: 'RA' },
+    it: { emoji: '🐸', word: 'Rana', syllable: 'RA' },
+    es: { emoji: '🐭', word: 'Ratón', syllable: 'RA' },
+  },
+  S: {
+    pt: { emoji: '☀️', word: 'Sol', syllable: 'SO' },
+    en: { emoji: '☀️', word: 'Sun', syllable: 'SU' },
+    it: { emoji: '☀️', word: 'Sole', syllable: 'SO' },
+    es: { emoji: '☀️', word: 'Sol', syllable: 'SO' },
+  },
+  T: {
+    pt: { emoji: '🍅', word: 'Tomate', syllable: 'TO' },
+    en: { emoji: '🐯', word: 'Tiger', syllable: 'TI' },
+    it: { emoji: '🐯', word: 'Tigre', syllable: 'TI' },
+    es: { emoji: '🍅', word: 'Tomate', syllable: 'TO' },
+  },
+  U: {
+    pt: { emoji: '🍇', word: 'Uva', syllable: 'U' },
+    en: { emoji: '🦄', word: 'Unicorn', syllable: 'U' },
+    it: { emoji: '🍇', word: 'Uva', syllable: 'U' },
+    es: { emoji: '🍇', word: 'Uva', syllable: 'U' },
+  },
+  V: {
+    pt: { emoji: '🐮', word: 'Vaca', syllable: 'VA' },
+    en: { emoji: '🌋', word: 'Volcano', syllable: 'VO' },
+    it: { emoji: '🐮', word: 'Vacca', syllable: 'VA' },
+    es: { emoji: '🐮', word: 'Vaca', syllable: 'VA' },
+  },
+  W: {
+    pt: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
+    en: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
+    it: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
+    es: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
+  },
+  X: {
+    pt: { emoji: '🍵', word: 'Xícara', syllable: 'XI' },
+    en: { emoji: '🎻', word: 'Xylophone', syllable: 'XY' },
+    it: { emoji: '🩻', word: 'Xilofono', syllable: 'XI' },
+    es: { emoji: '🩻', word: 'Xilófono', syllable: 'XI' },
+  },
+  Y: {
+    pt: { emoji: '🍜', word: 'Yakisoba', syllable: 'YA' },
+    en: { emoji: '🪀', word: 'Yo-yo', syllable: 'YO' },
+    it: { emoji: '🧘', word: 'Yoga', syllable: 'YO' },
+    es: { emoji: '🍜', word: 'Yakisoba', syllable: 'YA' },
+  },
+  Z: {
+    pt: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+    en: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+    it: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+    es: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+  }
 };
 
 const TARGET_LETTERS = ['A', 'E', 'I', 'O', 'U', 'B', 'M', 'P', 'T'];
@@ -81,7 +217,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   // Iniciar nova rodada
   useEffect(() => {
     startNewRound();
-  }, [round]);
+  }, [round, language]); // Escuta mudanças de round ou idioma
 
   const startNewRound = () => {
     // Escolher letra alvo aleatória
@@ -106,7 +242,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       const chosenLetter = alphabet[randomIdx];
       if (!selectedWrongLetters.includes(chosenLetter)) {
         selectedWrongLetters.push(chosenLetter);
-        alphabet.splice(randomIdx, 1); // remove do pool para não repetir
+        alphabet.splice(randomIdx, 1);
       }
     }
 
@@ -117,9 +253,14 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       .map((letter) => ({ letter }))
       .sort(() => Math.random() - 0.5);
 
-    // Mapear os dados dos cartões com as dicas correspondentes
+    // Mapear os dados dos cartões com as dicas baseadas no idioma atual
+    const activeLang = language || 'pt';
     const newItemsData = shuffledSlots.map((item, index) => {
-      const hint = LETTER_HINTS[item.letter] || { emoji: '❓', word: 'Desconhecido', syllable: item.letter };
+      const hintMap = LETTER_HINTS[item.letter];
+      const hint = hintMap 
+        ? (hintMap[activeLang] || hintMap['pt']) 
+        : { emoji: '❓', word: 'Desconhecido', syllable: item.letter };
+
       return {
         slotIndex: index,
         letter: item.letter,
@@ -145,12 +286,12 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
 
     Animated.parallel([
       Animated.timing(animRef, {
-        toValue: -85, // desliza para cima
+        toValue: -85,
         duration: 350,
         useNativeDriver: true
       }),
       Animated.timing(opacityRef, {
-        toValue: 0, // desaparece por completo
+        toValue: 0,
         duration: 350,
         useNativeDriver: true
       })
@@ -174,7 +315,6 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     } else {
       // ERROU! (Feedback positivo: Lumi diz "Vamos tentar novamente?")
       playSound('pop', soundEnabled);
-      // Fazer o item vibrar levemente antes de falar
       Animated.sequence([
         Animated.timing(animRef, { toValue: -75, duration: 100, useNativeDriver: true }),
         Animated.timing(animRef, { toValue: -95, duration: 100, useNativeDriver: true }),
@@ -202,7 +342,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       {/* LUMI COM INSTRUÇÃO NARRADA */}
       <MascotLumi text={t('game1Prompt', { letter: targetLetter })} />
 
-      {/* CENÁRIO FLORESTA INTERATIVA COM DICAS EDUCACIONAIS */}
+      {/* CENÁRIO FLORESTA INTERATIVA COM DICAS LOCALIZADAS */}
       <View style={styles.forestScene}>
         {itemsData.map((item) => {
           const animStyle = {
@@ -212,7 +352,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
 
           return (
             <View key={item.slotIndex} style={styles.itemWrapper}>
-              {/* Letra Oculta de Trás (fica no centro do wrapper) */}
+              {/* Letra Oculta de Trás */}
               <View style={styles.letterContainer}>
                 {item.revealed && (
                   <Text style={[
@@ -224,7 +364,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
                 )}
               </View>
 
-              {/* Elemento Interativo da Frente (Emoji + Sílaba + Palavra) */}
+              {/* Elemento Interativo da Frente (Dica multi-idioma de Sílaba + Palavra) */}
               <Animated.View style={[styles.coverContainer, animStyle]} pointerEvents={item.revealed ? 'none' : 'auto'}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -233,7 +373,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
                   style={styles.coverButton}
                 >
                   <Text style={styles.coverEmoji}>{item.emoji}</Text>
-                  {/* Exibe sílaba e palavra dica para pareamento fonético, ex: "BO - BOLA" */}
+                  {/* Exibe a dica no idioma ativo, ex: "BO - BOLA" ou "BA - BALL" */}
                   <Text style={styles.coverLabel}>{item.syllable} - {item.word.toUpperCase()}</Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -311,10 +451,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   letterSuccess: {
-    color: '#4CAF50', // Letra certa verde
+    color: '#4CAF50',
   },
   letterWrong: {
-    color: '#B0BEC5', // Letra errada cinza suave
+    color: '#B0BEC5',
   },
   coverContainer: {
     width: '100%',
@@ -328,7 +468,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 3,
     borderColor: '#81C784',
-    borderBottomWidth: 8, // Lindo efeito 3D fofo de botão de desenho animado
+    borderBottomWidth: 8,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#2E7D32',
