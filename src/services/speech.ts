@@ -11,6 +11,64 @@ const LANG_LOCALE_MAP: Record<LanguageType, string> = {
 };
 
 // ========================================================
+// MAPEAMENTO FONÉTICO DE LETRAS (MÉTODO FÔNICO)
+// Quando o TTS recebe uma letra isolada, pronuncia o NOME da letra.
+// Este mapa converte a letra para sua representação fonética (o SOM),
+// que o motor TTS pronunciará corretamente em cada idioma.
+// Ex: Italiano B → "ba" (som /b/) em vez de "bi" (nome da letra)
+// ========================================================
+const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
+  it: {
+    // Metodo fonico italiano: suoni delle lettere (non i nomi)
+    A: 'a',  B: 'ba', C: 'ca', D: 'da', E: 'e',  F: 'fa',
+    G: 'ga', H: 'a',  I: 'i',  J: 'gia',K: 'ka', L: 'la',
+    M: 'ma', N: 'na', O: 'o',  P: 'pa', Q: 'qua',R: 'ra',
+    S: 'sa', T: 'ta', U: 'u',  V: 'va', W: 'wa', X: 'csi',
+    Y: 'ya', Z: 'za',
+  },
+  pt: {
+    // Método fônico português: sons das letras
+    A: 'a',    B: 'be',   C: 'ce',   D: 'de',    E: 'e',     F: 'fe',
+    G: 'gue',  H: 'a',    I: 'i',    J: 'je',    K: 'ca',    L: 'le',
+    M: 'me',   N: 'ne',   O: 'o',    P: 'pe',    Q: 'que',   R: 're',
+    S: 'se',   T: 'te',   U: 'u',    V: 've',    W: 'wa',    X: 'che',
+    Y: 'ya',   Z: 'ze',
+  },
+  en: {
+    // English synthetic phonics: consonant sounds
+    A: 'ay',  B: 'buh', C: 'cuh', D: 'duh', E: 'eh',  F: 'fuh',
+    G: 'guh', H: 'huh', I: 'ih',  J: 'juh', K: 'kuh', L: 'luh',
+    M: 'muh', N: 'nuh', O: 'oh',  P: 'puh', Q: 'kwuh',R: 'ruh',
+    S: 'suh', T: 'tuh', U: 'uh',  V: 'vuh', W: 'wuh', X: 'ks',
+    Y: 'yuh', Z: 'zuh',
+  },
+  es: {
+    // Método fónico español: sonidos de las letras
+    A: 'a',  B: 'ba', C: 'ca', D: 'da', E: 'e',  F: 'fa',
+    G: 'ga', H: 'a',  I: 'i',  J: 'ja', K: 'ka', L: 'la',
+    M: 'ma', N: 'na', O: 'o',  P: 'pa', Q: 'qua',R: 'ra',
+    S: 'sa', T: 'ta', U: 'u',  V: 'ba', W: 'ua', X: 'csa',
+    Y: 'ya', Z: 'za',
+  },
+};
+
+/**
+ * Converte uma letra isolada para sua representação fonética no idioma indicado.
+ * Permite que o TTS pronuncie o SOM da letra em vez do seu NOME.
+ * Sílabas e palavras completas são retornadas sem alteração.
+ */
+const toPhoneticText = (text: string, language: LanguageType): string => {
+  const trimmed = text.trim();
+  const upper = trimmed.toUpperCase();
+  // Aplicar apenas para letra única (A–Z)
+  if (upper.length === 1 && upper >= 'A' && upper <= 'Z') {
+    const map = PHONETIC_LETTER_MAP[language];
+    if (map && map[upper]) return map[upper];
+  }
+  return text;
+};
+
+// ========================================================
 // CONFIGURAÇÕES DA VOZ COM INTEGRAÇÃO DE IA
 // ========================================================
 
@@ -20,7 +78,7 @@ const SUPABASE_TTS_FUNCTION_URL = '';
 
 // 2. (Para testes rápidos na Web) Sua chave de API da OpenAI.
 // ATENÇÃO: Não envie para produção com a chave exposta aqui!
-const OPENAI_API_KEY = '';
+const OPENAI_API_KEY = ''
 
 let currentSound: Audio.Sound | null = null;
 
@@ -29,11 +87,13 @@ export const speak = async (text: string, language: LanguageType) => {
     // Parar qualquer voz anterior
     await stopSpeech();
 
+    // Converter letra isolada para sua representação fonética (som, não nome)
+    const phoneticText = toPhoneticText(text, language);
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
 
     // OPÇÃO A: Supabase Edge Function (IA Premium Segura - para mobile e web)
     if (SUPABASE_TTS_FUNCTION_URL) {
-      const url = `${SUPABASE_TTS_FUNCTION_URL}?text=${encodeURIComponent(text)}&lang=${locale}`;
+      const url = `${SUPABASE_TTS_FUNCTION_URL}?text=${encodeURIComponent(phoneticText)}&lang=${locale}`;
       if (Platform.OS === 'web') {
         const htmlAudio = new window.Audio(url);
         (window as any)._currentSpeechAudio = htmlAudio;
@@ -54,7 +114,7 @@ export const speak = async (text: string, language: LanguageType) => {
         },
         body: JSON.stringify({
           model: 'tts-1',
-          input: text,
+          input: phoneticText,
           voice: 'nova', // Voz feminina amigável e nítida para crianças
         })
       });
@@ -72,20 +132,21 @@ export const speak = async (text: string, language: LanguageType) => {
     // OPÇÃO C: Web Speech API (Nativa do navegador - gratuita, sem CORS, funciona sempre)
     // Esta é a opção padrão para a versão web do app.
     if (Platform.OS === 'web') {
-      webSpeechSynth(text, locale);
+      webSpeechSynth(phoneticText, locale);
       return;
     }
 
     // OPÇÃO D: Expo Speech (Motor de voz nativo do celular)
-    await mobileLocalSpeech(text, locale);
+    await mobileLocalSpeech(phoneticText, locale);
 
   } catch (error) {
     console.warn('Erro ao reproduzir voz:', error);
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
+    const phoneticFallback = toPhoneticText(text, language);
     if (Platform.OS === 'web') {
-      webSpeechSynth(text, locale);
+      webSpeechSynth(phoneticFallback, locale);
     } else {
-      mobileLocalSpeech(text, locale);
+      mobileLocalSpeech(phoneticFallback, locale);
     }
   }
 };
