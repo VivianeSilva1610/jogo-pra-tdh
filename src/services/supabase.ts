@@ -23,6 +23,7 @@ export interface ChildProgressProfile {
   coins: number;
   challengesCompleted: number;
   character: string | null;
+  avatarName: string | null;
   equippedClothing: string | null;
   unlockedStickers: string[];
   unlockedClothing: string[];
@@ -64,6 +65,7 @@ export const loadChildProfile = async (
       coins: data.coins ?? 0,
       challengesCompleted: data.challenges_completed ?? 0,
       character: data.character ?? null,
+      avatarName: data.avatar_name ?? null,
       equippedClothing: data.equipped_clothing ?? null,
       unlockedStickers: data.unlocked_stickers ?? [],
       unlockedClothing: data.unlocked_clothing ?? [],
@@ -99,6 +101,7 @@ export const syncChildProfile = async (
           coins: profile.coins,
           challenges_completed: profile.challengesCompleted,
           character: profile.character ?? 'panda',
+          avatar_name: profile.avatarName ?? null,
           equipped_clothing: profile.equippedClothing,
           unlocked_stickers: profile.unlockedStickers,
           unlocked_clothing: profile.unlockedClothing,

@@ -75,6 +75,7 @@ interface GameContextProps {
   stars: number;
   coins: number;
   character: CharacterType | null;
+  avatarName: string | null;
   unlockedStickers: string[];
   unlockedClothing: string[];
   equippedClothing: string | null;
@@ -90,6 +91,7 @@ interface GameContextProps {
   setShowChestModal: (show: boolean) => void;
 
   selectCharacter: (char: CharacterType) => Promise<void>;
+  setAvatarName: (name: string) => Promise<void>;
   addStars: (count: number) => Promise<void>;
   addCoins: (count: number) => Promise<void>;
   buySticker: (id: string, cost: number) => Promise<boolean>;
@@ -119,6 +121,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
   const [stars, setStars] = useState<number>(0);
   const [coins, setCoins] = useState<number>(0);
   const [character, setCharacter] = useState<CharacterType | null>(null);
+  const [avatarName, setAvatarNameState] = useState<string | null>(null);
   const [unlockedStickers, setUnlockedStickers] = useState<string[]>([]);
   const [unlockedClothing, setUnlockedClothing] = useState<string[]>([]);
   const [equippedClothing, setEquippedClothing] = useState<string | null>(null);
@@ -167,6 +170,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
           setCoins(profile.coins);
           setChallengesCompleted(profile.challengesCompleted);
           setCharacter((profile.character as CharacterType) ?? null);
+          setAvatarNameState(profile.avatarName ?? null);
           setEquippedClothing(profile.equippedClothing);
           setUnlockedStickers(profile.unlockedStickers);
           setUnlockedClothing(profile.unlockedClothing);
@@ -182,7 +186,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
             key('game_stars'), key('game_coins'), key('game_character'),
             key('game_stickers'), key('game_clothing'), key('game_equipped_clothing'),
             key('game_challenges_count'), key('game_letters'), key('game_syllables'),
-            key('game_words'), key('game_sound'), key('game_premium'), key('game_usage')
+            key('game_words'), key('game_sound'), key('game_premium'), key('game_usage'),
+            key('game_avatar_name')
           ];
           const stores = await AsyncStorage.multiGet(keys);
 
@@ -203,6 +208,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
               case 'game_sound': setSoundEnabledState(val === 'true'); break;
               case 'game_premium': setIsPremiumState(val === 'true'); break;
               case 'game_usage': setDailyUsageSeconds(JSON.parse(val)); break;
+              case 'game_avatar_name': setAvatarNameState(val); break;
             }
           });
         }
@@ -232,7 +238,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
     syncTimeout.current = setTimeout(() => {
       const currentProfile: ChildProgressProfile = {
         stars, coins, challengesCompleted,
-        character, equippedClothing,
+        character, avatarName, equippedClothing,
         unlockedStickers, unlockedClothing,
         learnedLetters, masteredSyllables, readWords,
         dailyUsageSeconds, isPremium,
@@ -240,7 +246,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
       };
       syncChildProfile(childId, parentId, currentProfile);
     }, 3000);
-  }, [childId, parentId, stars, coins, challengesCompleted, character, equippedClothing,
+  }, [childId, parentId, stars, coins, challengesCompleted, character, avatarName, equippedClothing,
     unlockedStickers, unlockedClothing, learnedLetters, masteredSyllables, readWords,
     dailyUsageSeconds, isPremium]);
 
@@ -274,6 +280,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
     setCharacter(char);
     await AsyncStorage.setItem(key('game_character'), char);
     scheduleSync({ character: char });
+  };
+
+  const setAvatarName = async (name: string) => {
+    const trimmed = name.trim();
+    setAvatarNameState(trimmed || null);
+    if (trimmed) {
+      await AsyncStorage.setItem(key('game_avatar_name'), trimmed);
+    } else {
+      await AsyncStorage.removeItem(key('game_avatar_name'));
+    }
+    scheduleSync({ avatarName: trimmed || null });
   };
 
   const addStars = async (count: number) => {
@@ -457,6 +474,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
     setStars(0);
     setCoins(0);
     setCharacter(null);
+    setAvatarNameState(null);
     setUnlockedStickers([]);
     setUnlockedClothing([]);
     setEquippedClothing(null);
@@ -474,7 +492,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
       key('game_stars'), key('game_coins'), key('game_character'),
       key('game_stickers'), key('game_clothing'), key('game_equipped_clothing'),
       key('game_challenges_count'), key('game_letters'), key('game_syllables'),
-      key('game_words'), key('game_usage'), key('game_premium')
+      key('game_words'), key('game_usage'), key('game_premium'), key('game_avatar_name')
     ];
     await AsyncStorage.multiRemove(keysToRemove);
 
@@ -482,7 +500,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
     if (childId && parentId) {
       await syncChildProfile(childId, parentId, {
         stars: 0, coins: 0, challengesCompleted: 0, character: null,
-        equippedClothing: null, unlockedStickers: [], unlockedClothing: [],
+        avatarName: null, equippedClothing: null, unlockedStickers: [], unlockedClothing: [],
         learnedLetters: [], masteredSyllables: [], readWords: [],
         dailyUsageSeconds: {}, isPremium: false,
       });
@@ -492,10 +510,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
   return (
     <GameContext.Provider value={{
       childId, parentId,
-      stars, coins, character, unlockedStickers, unlockedClothing, equippedClothing,
+      stars, coins, character, avatarName, unlockedStickers, unlockedClothing, equippedClothing,
       challengesCompleted, learnedLetters, masteredSyllables, readWords, soundEnabled, isPremium,
       dailyUsageSeconds, showChestModal, isLoadingProfile, setShowChestModal,
-      selectCharacter, addStars, addCoins, buySticker, buyClothing, equipClothing,
+      selectCharacter, setAvatarName, addStars, addCoins, buySticker, buyClothing, equipClothing,
       completeChallenge, resetGameProgress, setSoundEnabled, setIsPremium, claimChestReward
     }}>
       {children}

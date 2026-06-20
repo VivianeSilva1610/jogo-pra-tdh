@@ -13,6 +13,10 @@ export interface Translations {
   back: string;
   chooseCharacter: string;
   changeAvatar: string;
+  editName: string;
+  enterAvatarName: string;
+  save: string;
+  cancel: string;
   unisexGirl: string;
   unisexBoy: string;
   fox: string;
@@ -118,6 +122,10 @@ const translations: Record<LanguageType, Translations> = {
     back: "Voltar",
     chooseCharacter: "Escolha seu Personagem",
     changeAvatar: "Mudar Personagem",
+    editName: "Editar Nome",
+    enterAvatarName: "Como quer chamar seu personagem?",
+    save: "Salvar",
+    cancel: "Cancelar",
     unisexGirl: "Menina Aventureira",
     unisexBoy: "Menino Aventureira",
     fox: "Raposa",
@@ -221,6 +229,10 @@ const translations: Record<LanguageType, Translations> = {
     back: "Back",
     chooseCharacter: "Choose your Character",
     changeAvatar: "Change Character",
+    editName: "Edit Name",
+    enterAvatarName: "What do you want to call your character?",
+    save: "Save",
+    cancel: "Cancel",
     unisexGirl: "Adventurer Girl",
     unisexBoy: "Adventurer Boy",
     fox: "Fox",
@@ -324,6 +336,10 @@ const translations: Record<LanguageType, Translations> = {
     back: "Indietro",
     chooseCharacter: "Scegli il tuo Personaggio",
     changeAvatar: "Cambia Personaggio",
+    editName: "Modifica Nome",
+    enterAvatarName: "Come vuoi chiamare il tuo personaggio?",
+    save: "Salva",
+    cancel: "Annulla",
     unisexGirl: "Ragazza Avventuriera",
     unisexBoy: "Ragazzo Avventuriero",
     fox: "Volpe",
@@ -427,6 +443,10 @@ const translations: Record<LanguageType, Translations> = {
     back: "Volver",
     chooseCharacter: "Elige tu Personaje",
     changeAvatar: "Cambiar Personaje",
+    editName: "Editar Nombre",
+    enterAvatarName: "¿Cómo quieres llamar a tu personaje?",
+    save: "Guardar",
+    cancel: "Cancelar",
     unisexGirl: "Chica Aventurera",
     unisexBoy: "Chico Aventurero",
     fox: "Zorro",

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, Modal } from 'react-native';
 import { useLocalization } from '../context/LocalizationContext';
 import { useGame, STICKERS_LIST, CLOTHING_LIST } from '../context/GameContext';
 import { getAvatarComponent } from '../components/VectorIcons';
@@ -17,6 +17,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
     coins,
     stars,
     character,
+    avatarName,
+    setAvatarName,
     equippedClothing,
     challengesCompleted,
     unlockedStickers,
@@ -24,6 +26,23 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
   } = useGame();
 
   const [motivationPhrase, setMotivationPhrase] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState('');
+
+  const handleStartEditName = () => {
+    const currentName = avatarName || t(
+      character === 'boy' ? 'unisexBoy' :
+      character === 'girl' ? 'unisexGirl' :
+      (character as any)
+    );
+    setTempName(currentName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    await setAvatarName(tempName);
+    setIsEditingName(false);
+  };
 
   const MOTIVATIONAL_PHRASES = [
     t('wellDone') + ' ' + t('youCanDoIt') + ' 🚀',
@@ -61,13 +80,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
           <View style={styles.avatarCard}>
             <View style={styles.avatarGlow} />
             {getAvatarComponent(character, 130, equippedClothing)}
-            <Text style={styles.avatarName}>
-              {t(
-                character === 'boy' ? 'unisexBoy' :
-                character === 'girl' ? 'unisexGirl' :
-                (character as any)
-              )}
-            </Text>
+            <TouchableOpacity 
+              style={styles.avatarNameContainer} 
+              onPress={handleStartEditName}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.avatarName}>
+                {avatarName || t(
+                  character === 'boy' ? 'unisexBoy' :
+                  character === 'girl' ? 'unisexGirl' :
+                  (character as any)
+                )}
+              </Text>
+              <Text style={styles.editIcon}>✏️</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.changeAvatarBtn}
               onPress={() => onNavigate('character_select')}
@@ -122,6 +148,47 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
           />
         </View>
       </View>
+
+      <Modal
+        visible={isEditingName}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsEditingName(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('enterAvatarName')}</Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              value={tempName}
+              onChangeText={setTempName}
+              maxLength={20}
+              placeholder={t('enterAvatarName')}
+              autoFocus={true}
+              selectTextOnFocus={true}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setIsEditingName(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonCancelText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSave]}
+                onPress={handleSaveName}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonSaveText}>{t('save')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -259,5 +326,91 @@ const styles = StyleSheet.create({
     width: '90%',
     marginTop: 'auto',
     marginBottom: 10,
+  },
+  avatarNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingHorizontal: 8,
+  },
+  editIcon: {
+    fontSize: 16,
+    marginLeft: 6,
+    opacity: 0.8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    maxWidth: 320,
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: '#FFE082',
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#5D4037',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  modalInput: {
+    width: '100%',
+    backgroundColor: '#FAFAFA',
+    borderWidth: 2,
+    borderColor: '#FFD54F',
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#37474F',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    width: '47%',
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#ECEFF1',
+    borderWidth: 1.5,
+    borderColor: '#CFD8DC',
+  },
+  modalButtonCancelText: {
+    color: '#546E7A',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalButtonSave: {
+    backgroundColor: '#FF9800',
+    borderWidth: 1.5,
+    borderColor: '#FFE082',
+  },
+  modalButtonSaveText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
