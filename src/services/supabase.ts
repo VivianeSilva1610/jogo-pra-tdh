@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = 'https://rhzqijryyjoesuwodiln.supabase.co';
@@ -9,7 +10,7 @@ export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false
+    detectSessionInUrl: Platform.OS === 'web'
   }
 });
 
