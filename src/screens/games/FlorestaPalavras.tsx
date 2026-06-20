@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalization } from '../../context/LocalizationContext';
 import { useGame } from '../../context/GameContext';
@@ -58,6 +58,86 @@ const ITEMS_POOL: ForestItem[] = [
       it: ['TORTA', 'STIVALE'],
       es: ['PASTEL', 'BOTA']
     }
+  },
+  {
+    emoji: '🏠',
+    wordKeys: { pt: 'CASA', en: 'HOUSE', it: 'CASA', es: 'CASA' },
+    wrongWordKeys: {
+      pt: ['CARRO', 'PORTA'],
+      en: ['CAR', 'DOOR'],
+      it: ['AUTO', 'PORTA'],
+      es: ['COCHE', 'PUERTA']
+    }
+  },
+  {
+    emoji: '☀️',
+    wordKeys: { pt: 'SOL', en: 'SUN', it: 'SOLE', es: 'SOL' },
+    wrongWordKeys: {
+      pt: ['LUA', 'NUVEM'],
+      en: ['MOON', 'CLOUD'],
+      it: ['LUNA', 'NUVOLA'],
+      es: ['LUNA', 'NUBE']
+    }
+  },
+  {
+    emoji: '🚗',
+    wordKeys: { pt: 'CARRO', en: 'CAR', it: 'AUTO', es: 'COCHE' },
+    wrongWordKeys: {
+      pt: ['TREM', 'MOTO'],
+      en: ['TRAIN', 'BIKE'],
+      it: ['TRENO', 'MOTO'],
+      es: ['TREN', 'MOTO']
+    }
+  },
+  {
+    emoji: '🐸',
+    wordKeys: { pt: 'SAPO', en: 'FROG', it: 'RANA', es: 'SAPO' },
+    wrongWordKeys: {
+      pt: ['PEIXE', 'PATO'],
+      en: ['FISH', 'DUCK'],
+      it: ['PESCE', 'ANATRA'],
+      es: ['PEZ', 'PATO']
+    }
+  },
+  {
+    emoji: '🍦',
+    wordKeys: { pt: 'SORVETE', en: 'ICE CREAM', it: 'GELATO', es: 'HELADO' },
+    wrongWordKeys: {
+      pt: ['DOCE', 'BOLO'],
+      en: ['SWEET', 'CAKE'],
+      it: ['DOLCE', 'TORTA'],
+      es: ['DULCE', 'PASTEL']
+    }
+  },
+  {
+    emoji: '🦁',
+    wordKeys: { pt: 'LEÃO', en: 'LION', it: 'LEONE', es: 'LEÓN' },
+    wrongWordKeys: {
+      pt: ['TIGRE', 'GATO'],
+      en: ['TIGER', 'CAT'],
+      it: ['TIGRE', 'GATTO'],
+      es: ['TIGRE', 'GATO']
+    }
+  },
+  {
+    emoji: '🍌',
+    wordKeys: { pt: 'BANANA', en: 'BANANA', it: 'BANANA', es: 'PLÁTANO' },
+    wrongWordKeys: {
+      pt: ['MAÇÃ', 'UVA'],
+      en: ['APPLE', 'GRAPE'],
+      it: ['MELA', 'UVA'],
+      es: ['MANZANA', 'UVA']
+    }
+  },
+  {
+    emoji: '📚',
+    wordKeys: { pt: 'LIVRO', en: 'BOOK', it: 'LIBRO', es: 'LIBRO' },
+    wrongWordKeys: {
+      pt: ['PAPEL', 'CANETA'],
+      en: ['PAPER', 'PEN'],
+      it: ['CARTA', 'PENNA'],
+      es: ['PAPEL', 'PLUMA']
+    }
   }
 ];
 
@@ -65,23 +145,39 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<ForestItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState<ForestItem>(ITEMS_POOL[0]);
   const [choices, setChoices] = useState<string[]>([]);
-  const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const hadErrorInRound = useRef(false);
 
+  // Inicializar fila
   useEffect(() => {
-    startNewRound();
-  }, [round]);
+    const selectedTargets: ForestItem[] = [];
+    const pool = [...ITEMS_POOL];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
+  }, []);
 
-  const startNewRound = () => {
-    // Pegar item correspondente ao round (ou aleatório)
-    const itemIdx = (round - 1) % ITEMS_POOL.length;
-    const selected = ITEMS_POOL[itemIdx];
+  // Iniciar nova rodada quando muda o índice na fila
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      startNewRound(queue[currentIndex]);
+    }
+  }, [currentIndex, queue, language]);
+
+  const startNewRound = (selected: ForestItem) => {
     setCurrentItem(selected);
     setRoundCompleted(false);
     setSelectedIdx(null);
+    hadErrorInRound.current = false;
 
     // Pegar palavra correta no idioma corrente
     const lang = language as string;
@@ -107,14 +203,22 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
       speak(choice, language);
 
       setTimeout(async () => {
-        if (round < 3) {
-          setRound(r => r + 1);
+        let updatedQueue = [...queue];
+        if (hadErrorInRound.current) {
+          updatedQueue.push(currentItem);
+          setQueue(updatedQueue);
+        }
+
+        const nextIdx = currentIndex + 1;
+        if (nextIdx < updatedQueue.length) {
+          setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('word', correctWord);
           onBack();
         }
       }, 2500);
     } else {
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
       setTimeout(() => {
@@ -130,7 +234,7 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game6Title')}</Text>
-        <Text style={styles.roundText}>Rodada {round}/3</Text>
+        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
       </View>
 
       <ProgressBar current={challengesCompleted} />

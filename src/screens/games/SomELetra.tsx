@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalization } from '../../context/LocalizationContext';
 import { useGame } from '../../context/GameContext';
@@ -13,28 +13,50 @@ interface SomELetraProps {
   onBack: () => void;
 }
 
-const SYLLABLES_POOL = ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'GA', 'FA', 'SA', 'RA', 'VA'];
+const SYLLABLES_POOL = [
+  'MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'GA', 'FA', 'SA', 'RA', 'VA',
+  'BO', 'CO', 'DO', 'FO', 'GO', 'JO', 'MO', 'PO', 'RO', 'SO', 'TO', 'VO',
+  'LI', 'MI', 'PI', 'RI', 'SI', 'TI', 'VI', 'PE', 'BE', 'DE', 'FE', 'GE',
+  'LE', 'ME', 'NE', 'RE', 'SE', 'TE'
+];
 
 export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [targetSyllable, setTargetSyllable] = useState('MA');
   const [choices, setChoices] = useState<string[]>([]);
-  const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const hadErrorInRound = useRef(false);
 
-  // Carregar rodada
+  // Inicializar fila com 3 sílabas distintas
   useEffect(() => {
-    startNewRound();
-  }, [round]);
+    const selectedTargets: string[] = [];
+    const pool = [...SYLLABLES_POOL];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
+  }, []);
 
-  const startNewRound = () => {
-    const selectedTarget = SYLLABLES_POOL[Math.floor(Math.random() * SYLLABLES_POOL.length)];
+  // Iniciar nova rodada quando muda o índice na fila
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      startNewRound(queue[currentIndex]);
+    }
+  }, [currentIndex, queue]);
+
+  const startNewRound = (selectedTarget: string) => {
     setTargetSyllable(selectedTarget);
     setRoundCompleted(false);
     setSelectedIdx(null);
+    hadErrorInRound.current = false;
 
     // Gerar 2 alternativas distintas
     const alternatives: string[] = [];
@@ -69,14 +91,22 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
       setRoundCompleted(true);
 
       setTimeout(async () => {
-        if (round < 3) {
-          setRound(r => r + 1);
+        let updatedQueue = [...queue];
+        if (hadErrorInRound.current) {
+          updatedQueue.push(targetSyllable);
+          setQueue(updatedQueue);
+        }
+
+        const nextIdx = currentIndex + 1;
+        if (nextIdx < updatedQueue.length) {
+          setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('syllable', targetSyllable);
           onBack();
         }
       }, 2000);
     } else {
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
       setTimeout(() => {
@@ -92,7 +122,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game4Title')}</Text>
-        <Text style={styles.roundText}>Rodada {round}/3</Text>
+        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
       </View>
 
       <ProgressBar current={challengesCompleted} />

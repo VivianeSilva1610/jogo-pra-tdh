@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, SafeAreaView } from 'react-native';
 import { useLocalization } from '../../context/LocalizationContext';
 import { useGame } from '../../context/GameContext';
@@ -13,27 +13,45 @@ interface LetrasCamufladasProps {
 }
 
 const SHUFFLED_EMOJIS = ['🌳', '🐝', '🚗', '🐱', '🐶', '⚽', '🍎', '🧸', '🚀', '⭐', '🎈', '🍉', '🐟'];
-const TARGET_LETTERS = ['B', 'D', 'F', 'L', 'N', 'R', 'S', 'V', 'Z'];
+const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [targetLetter, setTargetLetter] = useState('B');
   const [choices, setChoices] = useState<string[]>([]);
-  const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const hadErrorInRound = useRef(false);
 
+  // Inicializar fila
   useEffect(() => {
-    startNewRound();
-  }, [round]);
+    const selectedTargets: string[] = [];
+    const pool = [...TARGET_LETTERS];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
+  }, []);
 
-  const startNewRound = () => {
-    const selectedTarget = TARGET_LETTERS[Math.floor(Math.random() * TARGET_LETTERS.length)];
+  // Iniciar nova rodada quando muda o índice
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      startNewRound(queue[currentIndex]);
+    }
+  }, [currentIndex, queue]);
+
+  const startNewRound = (selectedTarget: string) => {
     setTargetLetter(selectedTarget);
     setRoundCompleted(false);
     setSelectedIdx(null);
+    hadErrorInRound.current = false;
 
     // Selecionar 4 emojis aleatórios distintos
     const emojis: string[] = [];
@@ -59,8 +77,15 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
       setRoundCompleted(true);
 
       setTimeout(async () => {
-        if (round < 3) {
-          setRound(r => r + 1);
+        let updatedQueue = [...queue];
+        if (hadErrorInRound.current) {
+          updatedQueue.push(targetLetter);
+          setQueue(updatedQueue);
+        }
+
+        const nextIdx = currentIndex + 1;
+        if (nextIdx < updatedQueue.length) {
+          setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('letter', targetLetter);
           onBack();
@@ -68,6 +93,7 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
       }, 2000);
     } else {
       // Incorreto
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
       
@@ -85,7 +111,7 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game2Title')}</Text>
-        <Text style={styles.roundText}>Rodada {round}/3</Text>
+        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
       </View>
 
       <ProgressBar current={challengesCompleted} />

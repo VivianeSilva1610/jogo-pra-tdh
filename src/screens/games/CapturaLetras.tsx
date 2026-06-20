@@ -22,7 +22,7 @@ interface Bubble {
 }
 
 const BUBBLE_COLORS = ['#E1F5FE', '#E8F5E9', '#FFFDE7', '#FCE4EC', '#F3E5F5', '#FFF3E0'];
-const TARGET_LETTERS = ['B', 'C', 'G', 'H', 'J', 'K', 'Q', 'W', 'Y'];
+const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -31,43 +31,79 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [targetLetter, setTargetLetter] = useState('B');
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [caughtCount, setCaughtCount] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const bubbleIdRef = useRef(0);
   const gameIntervalRef = useRef<any>(null);
+  const hadErrorInRound = useRef(false);
 
-  // Iniciar jogo
+  // Inicializar fila
   useEffect(() => {
-    // Escolher letra alvo
-    const selectedTarget = TARGET_LETTERS[Math.floor(Math.random() * TARGET_LETTERS.length)];
+    const selectedTargets: string[] = [];
+    const pool = [...TARGET_LETTERS];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
+  }, []);
+
+  // Iniciar nova rodada quando muda o índice na fila
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      startNewRound(queue[currentIndex]);
+    }
+  }, [currentIndex, queue]);
+
+  const startNewRound = (selectedTarget: string) => {
     setTargetLetter(selectedTarget);
     setCaughtCount(0);
     setIsDone(false);
     setBubbles([]);
+    hadErrorInRound.current = false;
 
+    if (gameIntervalRef.current) clearInterval(gameIntervalRef.current);
+    
     // Spawna uma bolha a cada 1.8 segundos
     gameIntervalRef.current = setInterval(() => {
       spawnBubble(selectedTarget);
     }, 1800);
+  };
 
+  useEffect(() => {
     return () => {
       if (gameIntervalRef.current) clearInterval(gameIntervalRef.current);
     };
   }, []);
 
-  // Monitorar se atingiu 5 capturas
+  // Monitorar se atingiu 3 capturas
   useEffect(() => {
-    if (caughtCount >= 5 && !isDone) {
+    if (caughtCount >= 3 && !isDone) {
       setIsDone(true);
       if (gameIntervalRef.current) clearInterval(gameIntervalRef.current);
       
       // Sucesso total!
       playSound('success', soundEnabled);
       setTimeout(async () => {
-        await completeChallenge('letter', targetLetter);
-        onBack();
+        let updatedQueue = [...queue];
+        if (hadErrorInRound.current) {
+          updatedQueue.push(targetLetter);
+          setQueue(updatedQueue);
+        }
+
+        const nextIdx = currentIndex + 1;
+        if (nextIdx < updatedQueue.length) {
+          setCurrentIndex(nextIdx);
+        } else {
+          await completeChallenge('letter', targetLetter);
+          onBack();
+        }
       }, 2000);
     }
   }, [caughtCount, isDone]);
@@ -124,6 +160,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
       setCaughtCount(prev => prev + 1);
     } else {
       // Tocou na bolha errada: estoura normalmente mas Lumi dá instrução de reforço
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
@@ -136,7 +173,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game3Title')}</Text>
-        <Text style={styles.roundText}>Pegou: {caughtCount}/5</Text>
+        <Text style={styles.roundText}>Pegou: {caughtCount}/3 (Desafio {currentIndex + 1}/{queue.length})</Text>
       </View>
 
       <ProgressBar current={challengesCompleted} />

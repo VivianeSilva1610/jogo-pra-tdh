@@ -178,7 +178,7 @@ const LETTER_HINTS: Record<string, Record<string, Hint>> = {
   }
 };
 
-const TARGET_LETTERS = ['A', 'E', 'I', 'O', 'U', 'B', 'M', 'P', 'T'];
+const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 interface ItemData {
   slotIndex: number;
@@ -193,10 +193,12 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [targetLetter, setTargetLetter] = useState('A');
   const [itemsData, setItemsData] = useState<ItemData[]>([]);
-  const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
+  const hadErrorInRound = useRef(false);
 
   // Animações de revelação (posição Y) para cada um dos 4 slots
   const anims = {
@@ -214,16 +216,30 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     3: useRef(new Animated.Value(1)).current
   };
 
-  // Iniciar nova rodada
+  // Inicializar fila
   useEffect(() => {
-    startNewRound();
-  }, [round, language]); // Escuta mudanças de round ou idioma
+    const selectedTargets: string[] = [];
+    const pool = [...TARGET_LETTERS];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
+  }, []);
 
-  const startNewRound = () => {
-    // Escolher letra alvo aleatória
-    const selectedTarget = TARGET_LETTERS[Math.floor(Math.random() * TARGET_LETTERS.length)];
+  // Iniciar nova rodada quando muda o índice ou idioma
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      startNewRound(queue[currentIndex]);
+    }
+  }, [currentIndex, queue, language]);
+
+  const startNewRound = (selectedTarget: string) => {
     setTargetLetter(selectedTarget);
     setRoundCompleted(false);
+    hadErrorInRound.current = false;
 
     // Resetar animações
     Object.keys(anims).forEach(key => {
@@ -304,8 +320,15 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       
       // Espera 2.5s antes de ir para a próxima rodada ou terminar
       setTimeout(async () => {
-        if (round < 3) {
-          setRound(r => r + 1);
+        let updatedQueue = [...queue];
+        if (hadErrorInRound.current) {
+          updatedQueue.push(targetLetter);
+          setQueue(updatedQueue);
+        }
+        
+        const nextIdx = currentIndex + 1;
+        if (nextIdx < updatedQueue.length) {
+          setCurrentIndex(nextIdx);
         } else {
           // Desafio finalizado com sucesso!
           await completeChallenge('letter', targetLetter);
@@ -314,6 +337,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       }, 2500);
     } else {
       // ERROU! (Feedback positivo: Lumi diz "Vamos tentar novamente?")
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       Animated.sequence([
         Animated.timing(animRef, { toValue: -75, duration: 100, useNativeDriver: true }),
@@ -333,7 +357,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game1Title')}</Text>
-        <Text style={styles.roundText}>Rodada {round}/3</Text>
+        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
       </View>
 
       {/* BARRA DE PROGRESSO DO TDAH */}

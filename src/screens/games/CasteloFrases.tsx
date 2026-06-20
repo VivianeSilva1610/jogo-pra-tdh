@@ -22,7 +22,7 @@ interface PhraseOption {
 const PHRASES_POOL: PhraseOption[] = [
   {
     sentence: 'O gato corre.',
-    shuffledPt: ['corre.', 'O', 'gato'],
+    shuffledPt: [],
     langMap: {
       pt: { sentence: 'O gato corre.', words: ['O', 'gato', 'corre.'] },
       en: { sentence: 'The cat runs.', words: ['The', 'cat', 'runs.'] },
@@ -32,12 +32,72 @@ const PHRASES_POOL: PhraseOption[] = [
   },
   {
     sentence: 'A casa é bela.',
-    shuffledPt: ['bela.', 'A', 'casa', 'é'],
+    shuffledPt: [],
     langMap: {
       pt: { sentence: 'A casa é bela.', words: ['A', 'casa', 'é', 'bela.'] },
       en: { sentence: 'The house is beautiful.', words: ['The', 'house', 'is', 'beautiful.'] },
       it: { sentence: 'La casa è bella.', words: ['La', 'casa', 'è', 'bella.'] },
       es: { sentence: 'La casa es bella.', words: ['La', 'casa', 'es', 'bella.'] }
+    }
+  },
+  {
+    sentence: 'O cão brinca.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O cão brinca.', words: ['O', 'cão', 'brinca.'] },
+      en: { sentence: 'The dog plays.', words: ['The', 'dog', 'plays.'] },
+      it: { sentence: 'Il cane gioca.', words: ['Il', 'cane', 'gioca.'] },
+      es: { sentence: 'El perro juega.', words: ['El', 'perro', 'juega.'] }
+    }
+  },
+  {
+    sentence: 'O sol brilha.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O sol brilha.', words: ['O', 'sol', 'brilha.'] },
+      en: { sentence: 'The sun shines.', words: ['The', 'sun', 'shines.'] },
+      it: { sentence: 'Il sole splende.', words: ['Il', 'sole', 'splende.'] },
+      es: { sentence: 'El sol brilla.', words: ['El', 'sol', 'brilla.'] }
+    }
+  },
+  {
+    sentence: 'A maçã é doce.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A maçã é doce.', words: ['A', 'maçã', 'é', 'doce.'] },
+      en: { sentence: 'The apple is sweet.', words: ['The', 'apple', 'is', 'sweet.'] },
+      it: { sentence: 'La mela è dolce.', words: ['La', 'mela', 'è', 'dolce.'] },
+      es: { sentence: 'La manzana es dulce.', words: ['La', 'manzana', 'es', 'dulce.'] }
+    }
+  },
+  {
+    sentence: 'A flor cresce.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A flor cresce.', words: ['A', 'flor', 'cresce.'] },
+      en: { sentence: 'The flower grows.', words: ['The', 'flower', 'grows.'] },
+      it: { sentence: 'Il fiore cresce.', words: ['Il', 'fiore', 'cresce.'] },
+      es: { sentence: 'La flor crece.', words: ['La', 'flor', 'crece.'] }
+    }
+  },
+  {
+    sentence: 'O pássaro voa.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O pássaro voa.', words: ['O', 'pássaro', 'voa.'] },
+      en: { sentence: 'The bird flies.', words: ['The', 'bird', 'flies.'] },
+      it: { sentence: 'L uccello vola.', words: ['L uccello', 'vola.'] },
+      es: { sentence: 'El pájaro vuela.', words: ['El', 'pájaro', 'vuela.'] }
+    }
+  },
+  {
+    sentence: 'O bolo é gostoso.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O bolo é gostoso.', words: ['O', 'bolo', 'é', 'gostoso.'] },
+      en: { sentence: 'The cake is tasty.', words: ['The', 'cake', 'is', 'tasty.'] },
+      it: { sentence: 'La torta è buona.', words: ['La', 'torta', 'è', 'buona.'] },
+      es: { sentence: 'El pastel es rico.', words: ['El', 'pastel', 'es', 'rico.'] }
     }
   }
 ];
@@ -46,36 +106,55 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
+  const [queue, setQueue] = useState<PhraseOption[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [currentPhraseObj, setCurrentPhraseObj] = useState<PhraseOption>(PHRASES_POOL[0]);
   const [shuffledWords, setShuffledWords] = useState<{ id: number; word: string; used: boolean }[]>([]);
   const [typedWords, setTypedWords] = useState<string[]>([]);
   const [roundCompleted, setRoundCompleted] = useState(false);
+  const hadErrorInRound = useRef(false);
 
   // Animação para abrir o portão do castelo (desliza para cima ou baixo)
   const gateTranslateY = useRef(new Animated.Value(0)).current;
 
+  // Inicializar fila com 3 frases distintas
   useEffect(() => {
-    // Escolhe uma frase aleatória
-    const selected = PHRASES_POOL[Math.floor(Math.random() * PHRASES_POOL.length)];
-    setCurrentPhraseObj(selected);
-    setTypedWords([]);
-    setRoundCompleted(false);
-    gateTranslateY.setValue(0);
-
-    const lang = language as string;
-    const phraseData = selected.langMap[lang] || selected.langMap['pt'];
-    
-    // Preparar palavras embaralhadas
-    const wordsList = [...phraseData.words]
-      .sort(() => Math.random() - 0.5)
-      .map((word, idx) => ({
-        id: idx,
-        word,
-        used: false
-      }));
-
-    setShuffledWords(wordsList);
+    const selectedTargets: PhraseOption[] = [];
+    const pool = [...PHRASES_POOL];
+    while (selectedTargets.length < 3 && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selectedTargets.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    setQueue(selectedTargets);
+    setCurrentIndex(0);
   }, []);
+
+  // Iniciar rodada quando muda o índice na fila ou idioma
+  useEffect(() => {
+    if (queue.length > 0 && currentIndex < queue.length) {
+      const selected = queue[currentIndex];
+      setCurrentPhraseObj(selected);
+      setTypedWords([]);
+      setRoundCompleted(false);
+      hadErrorInRound.current = false;
+      gateTranslateY.setValue(0);
+
+      const lang = language as string;
+      const phraseData = selected.langMap[lang] || selected.langMap['pt'];
+      
+      // Preparar palavras embaralhadas
+      const wordsList = [...phraseData.words]
+        .sort(() => Math.random() - 0.5)
+        .map((word, idx) => ({
+          id: idx,
+          word,
+          used: false
+        }));
+
+      setShuffledWords(wordsList);
+    }
+  }, [currentIndex, queue, language]);
 
   const handleWordTap = (wordItem: { id: number; word: string; used: boolean }) => {
     if (roundCompleted || wordItem.used) return;
@@ -114,11 +193,23 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
         });
 
         setTimeout(async () => {
-          await completeChallenge('word', phraseData.sentence);
-          onBack();
+          let updatedQueue = [...queue];
+          if (hadErrorInRound.current) {
+            updatedQueue.push(currentPhraseObj);
+            setQueue(updatedQueue);
+          }
+
+          const nextIdx = currentIndex + 1;
+          if (nextIdx < updatedQueue.length) {
+            setCurrentIndex(nextIdx);
+          } else {
+            await completeChallenge('word', phraseData.sentence);
+            onBack();
+          }
         }, 3500);
       }
     } else {
+      hadErrorInRound.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
@@ -171,7 +262,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game7Title')}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
       </View>
 
       <ProgressBar current={challengesCompleted} />
@@ -243,6 +334,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#5D4037',
+  },
+  roundText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#757575',
   },
   gameArea: {
     flex: 1,
