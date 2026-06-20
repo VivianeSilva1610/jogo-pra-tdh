@@ -228,7 +228,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           <View style={styles.langGrid}>
             {(['pt', 'en', 'it', 'es'] as LanguageType[]).map((lang) => {
               const isSelected = language === lang;
-              const labelMap = { pt: 'PT', en: 'EN', it: 'IT', es: 'ES' };
+              const labelMap = { pt: 'PT-BR', en: 'EN', it: 'IT', es: 'ES' };
               return (
                 <TouchableOpacity
                   key={lang}
