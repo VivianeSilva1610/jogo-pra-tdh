@@ -7,6 +7,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 
 interface MundoDasLetrasProps {
   onBack: () => void;
@@ -199,6 +200,8 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const [itemsData, setItemsData] = useState<ItemData[]>([]);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Animações de revelação (posição Y) para cada um dos 4 slots
   const anims = {
@@ -336,12 +339,17 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
         } else {
           // Desafio finalizado com sucesso!
           await completeChallenge('letter', targetLetter);
-          onBack();
+          if (!hadErrorEver.current) {
+            setShowPerfect(true);
+          } else {
+            onBack();
+          }
         }
       }, 2500);
     } else {
       // ERROU! (Feedback positivo: Lumi diz "Vamos tentar novamente?")
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       Animated.sequence([
         Animated.timing(animRef, { toValue: -75, duration: 100, useNativeDriver: true }),
@@ -418,6 +426,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
           );
         })}
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };

@@ -8,6 +8,7 @@ import { StarIcon, CoinIcon } from '../../components/VectorIcons';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft, Volume2 } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 
 interface SomELetraProps {
   onBack: () => void;
@@ -31,6 +32,8 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
   const [roundCompleted, setRoundCompleted] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Inicializar fila com 3 sílabas distintas
   useEffect(() => {
@@ -102,11 +105,16 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('syllable', targetSyllable);
-          onBack();
+          if (!hadErrorEver.current) {
+            setShowPerfect(true);
+          } else {
+            onBack();
+          }
         }
       }, 2000);
     } else {
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
       setTimeout(() => {
@@ -172,6 +180,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
           })}
         </View>
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };

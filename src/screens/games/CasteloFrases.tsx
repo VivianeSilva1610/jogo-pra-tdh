@@ -7,6 +7,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 import Svg, { Rect, Path, Polygon, G, Circle } from 'react-native-svg';
 
 interface CasteloFrasesProps {
@@ -113,6 +114,8 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const [typedWords, setTypedWords] = useState<string[]>([]);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Animação para abrir o portão do castelo (desliza para cima ou baixo)
   const gateTranslateY = useRef(new Animated.Value(0)).current;
@@ -209,12 +212,17 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             await completeChallenge('word', phraseData.sentence);
-            onBack();
+            if (!hadErrorEver.current) {
+              setShowPerfect(true);
+            } else {
+              onBack();
+            }
           }
         }, 3500);
       }
     } else {
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
@@ -324,6 +332,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
         )}
 
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };

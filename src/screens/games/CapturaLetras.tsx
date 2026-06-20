@@ -7,6 +7,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 
 interface CapturaLetrasProps {
   onBack: () => void;
@@ -40,6 +41,8 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
   const bubbleIdRef = useRef(0);
   const gameIntervalRef = useRef<any>(null);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Inicializar fila
   useEffect(() => {
@@ -105,7 +108,11 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('letter', targetLetter);
-          onBack();
+          if (!hadErrorEver.current) {
+            setShowPerfect(true);
+          } else {
+            onBack();
+          }
         }
       }, 2000);
     }
@@ -164,6 +171,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     } else {
       // Tocou na bolha errada: estoura normalmente mas Lumi dá instrução de reforço
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
@@ -215,6 +223,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
           );
         })}
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };

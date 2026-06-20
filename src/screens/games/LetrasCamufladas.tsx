@@ -7,6 +7,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 
 interface LetrasCamufladasProps {
   onBack: () => void;
@@ -26,6 +27,8 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
   const [roundCompleted, setRoundCompleted] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Inicializar fila
   useEffect(() => {
@@ -92,12 +95,17 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
           setCurrentIndex(nextIdx);
         } else {
           await completeChallenge('letter', targetLetter);
-          onBack();
+          if (!hadErrorEver.current) {
+            setShowPerfect(true);
+          } else {
+            onBack();
+          }
         }
       }, 2000);
     } else {
       // Incorreto
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
       
@@ -161,6 +169,7 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
           })}
         </View>
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };

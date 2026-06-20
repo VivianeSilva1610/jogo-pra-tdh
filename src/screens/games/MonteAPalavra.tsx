@@ -7,6 +7,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
+import { PerfectRun } from '../../components/PerfectRun';
 
 interface MonteAPalavraProps {
   onBack: () => void;
@@ -132,6 +133,8 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const [typedLetters, setTypedLetters] = useState<string[]>([]);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
+  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const [showPerfect, setShowPerfect] = useState(false);
 
   // Animação para construir/ampliar o item (ex: a casa crescendo na tela)
   const buildScale = useRef(new Animated.Value(0)).current;
@@ -226,13 +229,18 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             await completeChallenge('word', currentWord);
-            onBack();
+            if (!hadErrorEver.current) {
+              setShowPerfect(true);
+            } else {
+              onBack();
+            }
           }
         }, 3500);
       }
     } else {
       // Letra errada
       hadErrorInRound.current = true;
+      hadErrorEver.current = true;
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
@@ -306,6 +314,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           </View>
         )}
       </View>
+      <PerfectRun visible={showPerfect} onClose={onBack} />
     </SafeAreaView>
   );
 };
