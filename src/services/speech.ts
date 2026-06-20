@@ -22,79 +22,128 @@ const SUPABASE_TTS_FUNCTION_URL = '';
 // ATENÇÃO: Não envie para produção com a chave exposta aqui!
 const OPENAI_API_KEY = '';
 
-// 3. Ativar voz neural gratuita e super compreensível do Google Translate
-// Excelente para testes imediatos sem precisar de chaves ou gastar créditos.
-const USE_NEURAL_GOOGLE_TTS = true;
-
 let currentSound: Audio.Sound | null = null;
 
 export const speak = async (text: string, language: LanguageType) => {
   try {
-    // Parar qualquer voz anterior (tanto local quanto externa/IA)
+    // Parar qualquer voz anterior
     await stopSpeech();
 
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
 
-    // OPÇÃO A: Supabase Edge Function (IA Premium Segura)
+    // OPÇÃO A: Supabase Edge Function (IA Premium Segura - para mobile e web)
     if (SUPABASE_TTS_FUNCTION_URL) {
       const url = `${SUPABASE_TTS_FUNCTION_URL}?text=${encodeURIComponent(text)}&lang=${locale}`;
-      await playAudioFromUrl(url);
-      return;
-    }
-
-    // OPÇÃO B: OpenAI TTS Direta (IA Premium - Testes na Web)
-    if (OPENAI_API_KEY) {
-      if (Platform.OS === 'web') {
-        const response = await fetch('https://api.openai.com/v1/audio/speech', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'tts-1',
-            input: text,
-            voice: 'nova', // Voz feminina amigável e super nítida para crianças
-          })
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          const audioUrl = URL.createObjectURL(blob);
-          const htmlAudio = new window.Audio(audioUrl);
-          htmlAudio.play();
-          // Guarda a referência global para poder parar o som no meio se necessário
-          (window as any)._currentSpeechAudio = htmlAudio;
-          return;
-        }
-      }
-    }
-
-    // OPÇÃO C: Voz Neural do Google Translate (Gratuita, muito clara e natural)
-    if (USE_NEURAL_GOOGLE_TTS) {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${locale}&client=tw-ob&q=${encodeURIComponent(text)}`;
-      
       if (Platform.OS === 'web') {
         const htmlAudio = new window.Audio(url);
-        htmlAudio.play().catch(() => {
-          // Se o navegador bloquear o autoplay por falta de interação do usuário, usa o fallback local
-          fallbackToLocalSpeech(text, locale);
-        });
         (window as any)._currentSpeechAudio = htmlAudio;
+        await htmlAudio.play();
       } else {
         await playAudioFromUrl(url);
       }
       return;
     }
 
-    // OPÇÃO D: Fallback Local (Expo Speech nativo)
-    await fallbackToLocalSpeech(text, locale);
+    // OPÇÃO B: OpenAI TTS Direta (IA Premium - Testes na Web)
+    if (OPENAI_API_KEY && Platform.OS === 'web') {
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: text,
+          voice: 'nova', // Voz feminina amigável e nítida para crianças
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const htmlAudio = new window.Audio(audioUrl);
+        (window as any)._currentSpeechAudio = htmlAudio;
+        htmlAudio.play();
+        return;
+      }
+    }
+
+    // OPÇÃO C: Web Speech API (Nativa do navegador - gratuita, sem CORS, funciona sempre)
+    // Esta é a opção padrão para a versão web do app.
+    if (Platform.OS === 'web') {
+      webSpeechSynth(text, locale);
+      return;
+    }
+
+    // OPÇÃO D: Expo Speech (Motor de voz nativo do celular)
+    await mobileLocalSpeech(text, locale);
 
   } catch (error) {
-    console.warn('Erro ao reproduzir voz IA/Neural:', error);
-    // Caso ocorra qualquer falha de internet ou API, recua para o áudio do sistema
+    console.warn('Erro ao reproduzir voz:', error);
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
-    fallbackToLocalSpeech(text, locale);
+    if (Platform.OS === 'web') {
+      webSpeechSynth(text, locale);
+    } else {
+      mobileLocalSpeech(text, locale);
+    }
+  }
+};
+
+/**
+ * Web Speech API - API nativa de todos os navegadores modernos.
+ * Não requer internet extra, não tem CORS, funciona com voz local do sistema ou da nuvem (Chrome).
+ * Lida com carregamento assíncrono de vozes no Chrome (evento voiceschanged).
+ */
+const selectBestVoice = (locale: string): SpeechSynthesisVoice | null => {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  return (
+    voices.find(v => v.lang === locale && v.name.toLowerCase().includes('google')) ||
+    voices.find(v => v.lang === locale && !v.localService) ||
+    voices.find(v => v.lang === locale) ||
+    voices.find(v => v.lang.startsWith(locale.split('-')[0])) ||
+    null
+  );
+};
+
+const doSpeak = (text: string, locale: string) => {
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = locale;
+  utterance.pitch = 1.15; // Tom ligeiramente infantil
+  utterance.rate = 0.88;  // Fala pausada para TDAH
+  utterance.volume = 1.0;
+
+  const voice = selectBestVoice(locale);
+  if (voice) utterance.voice = voice;
+
+  (window as any)._currentSpeechUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+};
+
+const webSpeechSynth = (text: string, locale: string) => {
+  if (typeof window === 'undefined' || !window.speechSynthesis) {
+    console.warn('Web Speech API não disponível neste navegador.');
+    return;
+  }
+
+  // No Chrome, a lista de vozes carrega de forma assíncrona.
+  // Se ainda não estiver pronta, aguarda o evento 'voiceschanged'.
+  if (window.speechSynthesis.getVoices().length === 0) {
+    const handler = () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', handler);
+      doSpeak(text, locale);
+    };
+    window.speechSynthesis.addEventListener('voiceschanged', handler);
+    // Timeout de segurança: falar mesmo sem vozes premium (usa voz padrão do sistema)
+    setTimeout(() => {
+      window.speechSynthesis.removeEventListener('voiceschanged', handler);
+      doSpeak(text, locale);
+    }, 500);
+  } else {
+    doSpeak(text, locale);
   }
 };
 
@@ -115,15 +164,15 @@ const playAudioFromUrl = async (url: string) => {
       }
     });
   } catch (err) {
-    console.warn('Erro ao carregar som remoto da IA:', err);
+    console.warn('Erro ao carregar som remoto:', err);
     throw err;
   }
 };
 
 /**
- * Fallback para o motor de voz nativo do sistema operacional do celular
+ * Motor de voz nativo do sistema operacional (iOS / Android) via expo-speech
  */
-const fallbackToLocalSpeech = async (text: string, locale: string) => {
+const mobileLocalSpeech = async (text: string, locale: string) => {
   await Speech.stop();
   Speech.speak(text, {
     language: locale,
@@ -137,7 +186,7 @@ const fallbackToLocalSpeech = async (text: string, locale: string) => {
  */
 export const stopSpeech = async () => {
   try {
-    // Parar Expo Speech nativo
+    // Parar Expo Speech (mobile)
     await Speech.stop();
 
     // Parar som remoto no celular
@@ -147,10 +196,15 @@ export const stopSpeech = async () => {
       currentSound = null;
     }
 
-    // Parar áudio HTML5 no navegador
-    if (Platform.OS === 'web' && (window as any)._currentSpeechAudio) {
-      (window as any)._currentSpeechAudio.pause();
-      (window as any)._currentSpeechAudio = null;
+    // Parar Web Speech API (navegador)
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if ((window as any)._currentSpeechAudio) {
+        (window as any)._currentSpeechAudio.pause();
+        (window as any)._currentSpeechAudio = null;
+      }
     }
   } catch (error) {
     console.warn('Erro ao parar reprodução de voz:', error);
