@@ -31,12 +31,20 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
 
-  // Animações de revelação para cada um dos 4 itens
+  // Animações de revelação (posição Y) para cada um dos 4 itens
   const anims = {
     tree: useRef(new Animated.Value(0)).current,
     flower: useRef(new Animated.Value(0)).current,
     stone: useRef(new Animated.Value(0)).current,
     chest: useRef(new Animated.Value(0)).current
+  };
+
+  // Animações de opacidade para cada um dos 4 itens (fadem para revelar o fundo)
+  const opacities = {
+    tree: useRef(new Animated.Value(1)).current,
+    flower: useRef(new Animated.Value(1)).current,
+    stone: useRef(new Animated.Value(1)).current,
+    chest: useRef(new Animated.Value(1)).current
   };
 
   // Iniciar nova rodada
@@ -51,8 +59,9 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     setRoundCompleted(false);
 
     // Resetar animações
-    Object.values(anims).forEach(anim => {
-      Animated.timing(anim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+    Object.keys(anims).forEach(key => {
+      Animated.timing(anims[key as keyof typeof anims], { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      Animated.timing(opacities[key as keyof typeof opacities], { toValue: 1, duration: 200, useNativeDriver: true }).start();
     });
 
     // Distribuir letras nos itens
@@ -74,13 +83,22 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     // Revelar o item específico
     setItemsData(prev => prev.map(item => item.id === itemId ? { ...item, revealed: true } : item));
     
-    // Animação de deslizar o objeto para cima/lado revelando a letra
+    // Animação paralela: deslizar para cima e sumir (fade-out)
     const animRef = anims[itemId as keyof typeof anims];
-    Animated.timing(animRef, {
-      toValue: -40, // desliza 40px para cima
-      duration: 300,
-      useNativeDriver: true
-    }).start();
+    const opacityRef = opacities[itemId as keyof typeof opacities];
+
+    Animated.parallel([
+      Animated.timing(animRef, {
+        toValue: -80, // desliza mais para cima
+        duration: 350,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityRef, {
+        toValue: 0, // desaparece por completo revelando a letra perfeitamente
+        duration: 350,
+        useNativeDriver: true
+      })
+    ]).start();
 
     if (itemLetter === targetLetter) {
       // ACERTOU!
@@ -100,11 +118,11 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     } else {
       // ERROU! (Feedback positivo: Lumi diz "Vamos tentar novamente?")
       playSound('pop', soundEnabled);
-      // Fazer o item vibrar levemente para indicar toque
+      // Fazer o item vibrar levemente antes de falar
       Animated.sequence([
-        Animated.timing(animRef, { toValue: -30, duration: 100, useNativeDriver: true }),
-        Animated.timing(animRef, { toValue: -45, duration: 100, useNativeDriver: true }),
-        Animated.timing(animRef, { toValue: -40, duration: 100, useNativeDriver: true })
+        Animated.timing(animRef, { toValue: -70, duration: 100, useNativeDriver: true }),
+        Animated.timing(animRef, { toValue: -90, duration: 100, useNativeDriver: true }),
+        Animated.timing(animRef, { toValue: -80, duration: 100, useNativeDriver: true })
       ]).start(() => {
         speak(t('tryAgain'), language);
       });
@@ -136,12 +154,13 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
           const isRevealed = itemState ? itemState.revealed : false;
           
           const animStyle = {
-            transform: [{ translateY: anims[item.id as keyof typeof anims] }]
+            transform: [{ translateY: anims[item.id as keyof typeof anims] }],
+            opacity: opacities[item.id as keyof typeof opacities]
           };
 
           return (
             <View key={item.id} style={styles.itemWrapper}>
-              {/* Letra Oculta de Trás (aparece quando o item sobe) */}
+              {/* Letra Oculta de Trás (fica no centro do wrapper) */}
               <View style={styles.letterContainer}>
                 {isRevealed && (
                   <Text style={[
@@ -154,9 +173,10 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
               </View>
 
               {/* Elemento Interativo da Frente (Árvore, Flor...) */}
-              <Animated.View style={[styles.coverContainer, animStyle]}>
+              <Animated.View style={[styles.coverContainer, animStyle]} pointerEvents={isRevealed ? 'none' : 'auto'}>
                 <TouchableOpacity
                   activeOpacity={0.8}
+                  disabled={isRevealed || roundCompleted}
                   onPress={() => handleTapItem(item.id, letterBehind)}
                   style={styles.coverButton}
                 >
@@ -212,30 +232,29 @@ const styles = StyleSheet.create({
     width: '44%',
     aspectRatio: 0.9,
     marginVertical: 15,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   letterContainer: {
     position: 'absolute',
-    bottom: 20,
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#FFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#FFE082',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
     zIndex: 1,
   },
   letterText: {
-    fontSize: 36,
+    fontSize: 38,
     fontWeight: '900',
   },
   letterSuccess: {
@@ -252,23 +271,24 @@ const styles = StyleSheet.create({
   coverButton: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#C8E6C9',
-    borderRadius: 20,
-    borderWidth: 2.5,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 24,
+    borderWidth: 3,
     borderColor: '#81C784',
+    borderBottomWidth: 8, // Lindo efeito 3D fofo de botão de desenho animado
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   coverEmoji: {
-    fontSize: 50,
+    fontSize: 52,
   },
   coverLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#2E7D32',
     marginTop: 5,
