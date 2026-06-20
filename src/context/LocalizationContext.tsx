@@ -103,6 +103,7 @@ export interface Translations {
   dino_costume: string;
   pirate_hat: string;
   detective_lens: string;
+  onlyOwnedCanTry: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -205,6 +206,7 @@ const translations: Record<LanguageType, Translations> = {
     dino_costume: "Fantasia de Dinossauro",
     pirate_hat: "Chapéu de Pirata",
     detective_lens: "Lupa de Detetive",
+    onlyOwnedCanTry: "Apenas itens adquiridos podem ser provados!",
   },
   en: {
     appName: "Letter Adventure",
@@ -305,6 +307,7 @@ const translations: Record<LanguageType, Translations> = {
     dino_costume: "Dino Costume",
     pirate_hat: "Pirate Hat",
     detective_lens: "Detective Magnifier",
+    onlyOwnedCanTry: "Only owned items can be tried on!",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -405,6 +408,7 @@ const translations: Record<LanguageType, Translations> = {
     dino_costume: "Costume da Dinosauro",
     pirate_hat: "Cappello da Pirata",
     detective_lens: "Lente da Investigatore",
+    onlyOwnedCanTry: "Solo gli articoli acquistati possono essere provati!",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -505,6 +509,7 @@ const translations: Record<LanguageType, Translations> = {
     dino_costume: "Disfraz de Dinosaurio",
     pirate_hat: "Sombrero de Pirata",
     detective_lens: "Lupa de Detective",
+    onlyOwnedCanTry: "¡Solo se pueden probar los artículos adquiridos!",
   }
 };
 

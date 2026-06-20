@@ -5,6 +5,7 @@ import { useGame, STICKERS_LIST, CLOTHING_LIST, StickerItem, ClothingItem, CLOTH
 import { CustomButton } from '../components/CustomButton';
 import { StarIcon, CoinIcon, getAvatarComponent } from '../components/VectorIcons';
 import { ArrowLeft, Gift } from 'lucide-react-native';
+import { supabase } from '../services/supabase';
 
 interface CollectionScreenProps {
   onNavigate: (screen: string) => void;
@@ -29,6 +30,15 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
   const [activeTab, setActiveTab] = useState<'stickers' | 'shop'>('stickers');
   const [errorMsg, setErrorMsg] = useState('');
   const [previewItems, setPreviewItems] = useState<string[]>([]);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email.toLowerCase());
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setPreviewItems(equippedClothing ? equippedClothing.split(',').map(x => x.trim()).filter(Boolean) : []);
@@ -215,7 +225,14 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
                   <View key={item.id} style={[styles.clothingCard, isPreviewed && styles.clothingCardPreviewed]}>
                     <TouchableOpacity 
                       style={styles.clothingPressableArea} 
-                      onPress={() => handleTryOn(item)}
+                      onPress={() => {
+                        if (!isUnlocked && userEmail !== 'viroedu@gmail.com') {
+                          setErrorMsg(t('onlyOwnedCanTry'));
+                          setTimeout(() => setErrorMsg(''), 2500);
+                          return;
+                        }
+                        handleTryOn(item);
+                      }}
                       activeOpacity={0.7}
                     >
                       <View style={[styles.clothingIconBg, isPreviewed && styles.clothingIconBgPreviewed]}>
