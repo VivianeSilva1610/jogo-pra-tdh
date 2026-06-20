@@ -68,6 +68,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
                 (character as any)
               )}
             </Text>
+            <TouchableOpacity
+              style={styles.changeAvatarBtn}
+              onPress={() => onNavigate('character_select')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.changeAvatarBtnText}>✏️ {t('changeAvatar')}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -178,6 +185,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#5D4037',
     marginTop: 10,
+  },
+  changeAvatarBtn: {
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#FFB74D',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  changeAvatarBtnText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#E65100',
   },
   statsCard: {
     width: '90%',

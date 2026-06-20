@@ -65,8 +65,6 @@ function GameAppContent({ childId, parentId }: { childId: string | null; parentI
     // Só exige seleção se já estiver logado e não tiver personagem salvo
     if (session && character === null) {
       setCurrentScreen('character_select');
-    } else if (character !== null && currentScreen === 'character_select') {
-      setCurrentScreen('home');
     }
   }, [character, session]);
 

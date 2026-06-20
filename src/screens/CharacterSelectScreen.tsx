@@ -5,6 +5,7 @@ import { useLocalization } from '../context/LocalizationContext';
 import { getAvatarComponent } from '../components/VectorIcons';
 import { CustomButton } from '../components/CustomButton';
 import { speak } from '../services/speech';
+import { ArrowLeft } from 'lucide-react-native';
 
 interface CharacterSelectScreenProps {
   onNavigate: (screen: string) => void;
@@ -20,9 +21,9 @@ const CHARACTERS: { id: CharacterType; nameKey: 'unisexBoy' | 'unisexGirl' | 'fo
 ];
 
 export const CharacterSelectScreen: React.FC<CharacterSelectScreenProps> = ({ onNavigate }) => {
-  const { selectCharacter } = useGame();
+  const { selectCharacter, character } = useGame();
   const { t, language } = useLocalization();
-  const [selected, setSelected] = useState<CharacterType>('panda');
+  const [selected, setSelected] = useState<CharacterType>(character || 'panda');
 
   const handleSelect = (charId: CharacterType, nameKey: string) => {
     setSelected(charId);
@@ -31,11 +32,22 @@ export const CharacterSelectScreen: React.FC<CharacterSelectScreenProps> = ({ on
 
   const handleConfirm = async () => {
     await selectCharacter(selected);
-    onNavigate('home');
+    onNavigate(character ? 'profile' : 'home');
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {character !== null && (
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => onNavigate('profile')}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <ArrowLeft size={24} color="#2E7D32" />
+          </TouchableOpacity>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>{t('chooseCharacter')}</Text>
         
@@ -144,5 +156,19 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 300,
     marginTop: 25,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#C8E6C9',
   },
 });

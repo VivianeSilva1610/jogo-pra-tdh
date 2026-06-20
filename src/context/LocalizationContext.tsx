@@ -12,6 +12,7 @@ export interface Translations {
   parents: string;
   back: string;
   chooseCharacter: string;
+  changeAvatar: string;
   unisexGirl: string;
   unisexBoy: string;
   fox: string;
@@ -116,6 +117,7 @@ const translations: Record<LanguageType, Translations> = {
     parents: "Pais",
     back: "Voltar",
     chooseCharacter: "Escolha seu Personagem",
+    changeAvatar: "Mudar Personagem",
     unisexGirl: "Menina Aventureira",
     unisexBoy: "Menino Aventureira",
     fox: "Raposa",
@@ -218,6 +220,7 @@ const translations: Record<LanguageType, Translations> = {
     parents: "Parents",
     back: "Back",
     chooseCharacter: "Choose your Character",
+    changeAvatar: "Change Character",
     unisexGirl: "Adventurer Girl",
     unisexBoy: "Adventurer Boy",
     fox: "Fox",
@@ -320,6 +323,7 @@ const translations: Record<LanguageType, Translations> = {
     parents: "Genitori",
     back: "Indietro",
     chooseCharacter: "Scegli il tuo Personaggio",
+    changeAvatar: "Cambia Personaggio",
     unisexGirl: "Ragazza Avventuriera",
     unisexBoy: "Ragazzo Avventuriero",
     fox: "Volpe",
@@ -422,6 +426,7 @@ const translations: Record<LanguageType, Translations> = {
     parents: "Padres",
     back: "Volver",
     chooseCharacter: "Elige tu Personaje",
+    changeAvatar: "Cambiar Personaje",
     unisexGirl: "Chica Aventurera",
     unisexBoy: "Chico Aventurero",
     fox: "Zorro",
