@@ -104,6 +104,7 @@ export interface Translations {
   pirate_hat: string;
   detective_lens: string;
   onlyOwnedCanTry: string;
+  game1PromptSyllable: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -207,6 +208,7 @@ const translations: Record<LanguageType, Translations> = {
     pirate_hat: "Chapéu de Pirata",
     detective_lens: "Lupa de Detetive",
     onlyOwnedCanTry: "Apenas itens adquiridos podem ser provados!",
+    game1PromptSyllable: "Ouça e encontre a sílaba correspondente!",
   },
   en: {
     appName: "Letter Adventure",
@@ -308,6 +310,7 @@ const translations: Record<LanguageType, Translations> = {
     pirate_hat: "Pirate Hat",
     detective_lens: "Detective Magnifier",
     onlyOwnedCanTry: "Only owned items can be tried on!",
+    game1PromptSyllable: "Listen and find the corresponding syllable!",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -409,6 +412,7 @@ const translations: Record<LanguageType, Translations> = {
     pirate_hat: "Cappello da Pirata",
     detective_lens: "Lente da Investigatore",
     onlyOwnedCanTry: "Solo gli articoli acquistati possono essere provati!",
+    game1PromptSyllable: "Ascolta e trova la sillaba corrispondente!",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -510,6 +514,7 @@ const translations: Record<LanguageType, Translations> = {
     pirate_hat: "Sombrero de Pirata",
     detective_lens: "Lupa de Detective",
     onlyOwnedCanTry: "¡Solo se pueden probar los artículos adquiridos!",
+    game1PromptSyllable: "¡Escucha y encuentra la sílaba correspondiente!",
   }
 };
 

@@ -20,6 +20,12 @@ interface Hint {
   syllable: string;
 }
 
+interface GameTarget {
+  type: 'letter' | 'syllable';
+  value: string;
+  letter: string;
+}
+
 // Dicionário completo localizado para todas as 26 letras nos 4 idiomas
 const LETTER_HINTS: Record<string, Record<string, Hint>> = {
   A: {
@@ -195,9 +201,11 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
 
-  const [queue, setQueue] = useState<string[]>([]);
+  const [queue, setQueue] = useState<GameTarget[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [targetLetter, setTargetLetter] = useState('A');
+  const [targetType, setTargetType] = useState<'letter' | 'syllable'>('letter');
+  const [targetValue, setTargetValue] = useState('A');
   const [itemsData, setItemsData] = useState<ItemData[]>([]);
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
@@ -232,15 +240,29 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       pool = ['K', 'W', 'X', 'Y'];
     }
 
-    const selectedTargets: string[] = [];
+    const selectedTargets: GameTarget[] = [];
+    const activeLang = language || 'pt';
     while (selectedTargets.length < 3 && pool.length > 0) {
       const idx = Math.floor(Math.random() * pool.length);
-      selectedTargets.push(pool[idx]);
+      const chosenLetter = pool[idx];
       pool.splice(idx, 1);
+
+      // Decidir tipo: 50% letra, 50% sílaba
+      const type = Math.random() < 0.5 ? 'letter' : 'syllable';
+      const hintMap = LETTER_HINTS[chosenLetter];
+      const hint = hintMap 
+        ? (hintMap[activeLang] || hintMap['pt']) 
+        : { syllable: chosenLetter };
+
+      selectedTargets.push({
+        type,
+        value: type === 'letter' ? chosenLetter : hint.syllable,
+        letter: chosenLetter
+      });
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted]);
+  }, [challengesCompleted, language]);
 
   // Iniciar nova rodada quando muda o índice ou idioma
   useEffect(() => {
@@ -249,13 +271,15 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     }
   }, [currentIndex, queue, language]);
 
-  const startNewRound = (selectedTarget: string) => {
-    setTargetLetter(selectedTarget);
+  const startNewRound = (selectedTarget: GameTarget) => {
+    setTargetLetter(selectedTarget.letter);
+    setTargetType(selectedTarget.type);
+    setTargetValue(selectedTarget.value);
     setRoundCompleted(false);
     hadErrorInRound.current = false;
 
-    // Falar a letra alvo no início da rodada
-    speak(selectedTarget, language);
+    // Falar a letra ou sílaba alvo no início da rodada
+    speak(selectedTarget.value, language);
 
 
     // Resetar animações
@@ -266,7 +290,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     });
 
     // Distribuir letras nos slots
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l => l !== selectedTarget);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l => l !== selectedTarget.letter);
     
     // O primeiro slot ganha a letra alvo, os outros ganham letras aleatórias não repetidas
     const selectedWrongLetters: string[] = [];
@@ -279,7 +303,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       }
     }
 
-    const slots = [selectedTarget, ...selectedWrongLetters];
+    const slots = [selectedTarget.letter, ...selectedWrongLetters];
 
     // Embaralhar os slots
     const shuffledSlots = slots
@@ -339,7 +363,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       setTimeout(async () => {
         let updatedQueue = [...queue];
         if (hadErrorInRound.current) {
-          updatedQueue.push(targetLetter);
+          updatedQueue.push(queue[currentIndex]);
           setQueue(updatedQueue);
         }
         
@@ -391,12 +415,12 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       <ProgressBar current={challengesCompleted} />
 
       {/* LUMI COM INSTRUÇÃO NARRADA */}
-      <MascotLumi text={t('game1Prompt')} />
+      <MascotLumi text={targetType === 'letter' ? t('game1Prompt') : t('game1PromptSyllable')} />
       
       {/* BOTÃO OUVIR NOVAMENTE */}
       <TouchableOpacity 
         style={styles.listenButton} 
-        onPress={() => speak(targetLetter, language)}
+        onPress={() => speak(targetValue, language)}
       >
         <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
       </TouchableOpacity>
@@ -415,12 +439,17 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
               {/* Letra Oculta de Trás */}
               <View style={styles.letterContainer}>
                 {item.revealed && (
-                  <Text style={[
-                    styles.letterText,
-                    item.letter === targetLetter ? styles.letterSuccess : styles.letterWrong
-                  ]}>
-                    {item.letter}
-                  </Text>
+                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={[
+                      styles.letterText,
+                      item.letter === targetLetter ? styles.letterSuccess : styles.letterWrong
+                    ]}>
+                      {item.letter}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '900', color: '#78909C', marginTop: 1 }}>
+                      {item.syllable}
+                    </Text>
+                  </View>
                 )}
               </View>
 
@@ -546,8 +575,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   letterText: {
-    fontSize: 38,
+    fontSize: 32,
     fontWeight: '900',
+    lineHeight: 34,
   },
   letterSuccess: {
     color: '#4CAF50',
