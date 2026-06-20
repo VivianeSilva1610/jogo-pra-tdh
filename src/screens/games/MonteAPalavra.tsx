@@ -121,6 +121,180 @@ const WORDS_POOL: WordOption[] = [
   { emoji: '⌚', langMap: { pt: { word: 'RELOGIO', soundText: 'Relógio' }, en: { word: 'WATCH', soundText: 'Watch' }, it: { word: 'OROLOGIO', soundText: 'Orologio' }, es: { word: 'RELOJ', soundText: 'Reloj' } } }
 ];
 
+const VOWELS = 'AEIOUÁÉÍÓÚÂÊÔÃÕÀÜY';
+const isVowel = (c: string) => c && VOWELS.includes(c.toUpperCase());
+
+const UNSEPARABLE_CLUSTERS = new Set([
+  'CH', 'LH', 'NH', 'PR', 'PL', 'BR', 'BL', 'CR', 'CL', 'GR', 'GL', 'FR', 'FL', 'TR', 'TL', 'VR', 'VL', 'DR',
+  'ch', 'lh', 'nh', 'pr', 'pl', 'br', 'bl', 'cr', 'cl', 'gr', 'gl', 'fr', 'fl', 'tr', 'tl', 'vr', 'vl', 'dr'
+]);
+
+function splitSyllables(word: string): string[] {
+  if (!word) return [];
+  const upperWord = word.toUpperCase();
+  
+  // Mapa manual para garantir separação precisa das sílabas em português
+  const MANUAL_MAP: Record<string, string[]> = {
+    'CÃO': ['CÃO'],
+    'SOL': ['SOL'],
+    'TREM': ['TREM'],
+    'PÃO': ['PÃO'],
+    'MEL': ['MEL'],
+    'PÉ': ['PÉ'],
+    'SAL': ['SAL'],
+    'REI': ['REI'],
+    'ZERO': ['ZE', 'RO'],
+    'ANEL': ['A', 'NEL'],
+    'ARCO': ['AR', 'CO'],
+    'BAÚ': ['BA', 'Ú'],
+    'CAFÉ': ['CA', 'FÉ'],
+    'CAPA': ['CA', 'PA'],
+    'COCO': ['CO', 'CO'],
+    'DOCE': ['DO', 'CE'],
+    'FACA': ['FA', 'CA'],
+    'GURI': ['GU', 'RI'],
+    'HORA': ['HO', 'RA'],
+    'MANGA': ['MAN', 'GA'],
+    'JÓIA': ['JÓ', 'IA'],
+    'LEITE': ['LEI', 'TE'],
+    'LIMA': ['LI', 'MA'],
+    'TUBO': ['TU', 'BO'],
+    'BICO': ['BI', 'CO'],
+    'TENIS': ['TÊ', 'NIS'],
+    'PENA': ['PE', 'NA'],
+    'POÇA': ['PO', 'ÇA'],
+    'RAIO': ['RAI', 'O'],
+    'SELO': ['SE', 'LO'],
+    'TINTA': ['TIN', 'TA'],
+    'TOURO': ['TOU', 'RO'],
+    'VASO': ['VA', 'SO'],
+    'CAIXA': ['CAI', 'XA'],
+    'CHAVE': ['CHA', 'VE'],
+    'DENTE': ['DEN', 'TE'],
+    'FOLHA': ['FO', 'LHA'],
+    'GARFO': ['GAR', 'FO'],
+    'LAPIS': ['LÁ', 'PIS'],
+    'LIMÃO': ['LI', 'MÃO'],
+    'MILHO': ['MI', 'LHO'],
+    'NAVIO': ['NA', 'VIO'],
+    'OCULOS': ['Ó', 'CU', 'LOS'],
+    'PORTA': ['POR', 'TA'],
+    'PRATO': ['PRA', 'TO'],
+    'RELOGIO': ['RE', 'LÓ', 'GIO'],
+    'PEIXE': ['PEI', 'XE'],
+    'LOBO': ['LO', 'BO'],
+    'PATO': ['PA', 'TO'],
+    'RATO': ['RA', 'TO'],
+    'VACA': ['VA', 'CA'],
+    'ROSA': ['RO', 'SA'],
+    'SUCO': ['SU', 'CO'],
+    'OVO': ['O', 'VO'],
+    'BOTA': ['BO', 'TA'],
+    'CARRO': ['CAR', 'RO'],
+    'BANANA': ['BA', 'NA', 'NA'],
+    'LIVRO': ['LI', 'VRO'],
+    'PERA': ['PE', 'RA'],
+    'KIWI': ['KI', 'WI'],
+    'PIPA': ['PI', 'PA'],
+    'MESA': ['ME', 'SA'],
+    'CAMA': ['CA', 'MA'],
+    'BALA': ['BA', 'LA'],
+    'GELO': ['GE', 'LO'],
+    'LAMA': ['LA', 'MA'],
+    'LIXO': ['LI', 'XO'],
+    'MALA': ['MA', 'LA'],
+    'MAPA': ['MA', 'PA'],
+    'MOLA': ['MO', 'LA'],
+    'MOTO': ['MO', 'TO'],
+    'MURO': ['MU', 'RO'],
+    'NINHO': ['NI', 'NHO'],
+    'NUVEM': ['NU', 'VEM'],
+    'OLHO': ['O', 'LHO'],
+    'OURO': ['OU', 'RO'],
+    'PANO': ['PA', 'NO'],
+    'POTE': ['PO', 'TE'],
+    'REDE': ['RE', 'DE'],
+    'RODA': ['RO', 'DA'],
+    'SINO': ['SI', 'NO'],
+    'SOPA': ['SO', 'PA'],
+    'SOFÁ': ['SO', 'FÁ'],
+    'TEIA': ['TEI', 'A'],
+    'VELA': ['VE', 'LA'],
+    'VENTO': ['VEN', 'TO'],
+    'MACACO': ['MA', 'CA', 'CO'],
+    'UVA': ['U', 'VA'],
+    'URSO': ['UR', 'SO'],
+    'SAPO': ['SA', 'PO'],
+    'BOLO': ['BO', 'LO'],
+    'DADO': ['DA', 'DO'],
+    'LUA': ['LU', 'A'],
+    'FOGO': ['FO', 'GO'],
+    'LEÃO': ['LE', 'ÃO'],
+    'GATO': ['GA', 'TO'],
+    'MAÇÃ': ['MA', 'ÇÃ'],
+    'BOLA': ['BO', 'LA'],
+    'CASA': ['CA', 'SA'],
+  };
+
+  if (MANUAL_MAP[upperWord]) {
+    return MANUAL_MAP[upperWord];
+  }
+
+  // Fallback para outras línguas (espanhol, italiano, inglês)
+  const syllables: string[] = [];
+  let current = '';
+  
+  for (let i = 0; i < upperWord.length; i++) {
+    const char = upperWord[i];
+    current += char;
+    
+    const next1 = upperWord[i + 1];
+    const next2 = upperWord[i + 2];
+    
+    if (isVowel(char)) {
+      if (next1 && !isVowel(next1)) {
+        if (next2 && isVowel(next2)) {
+          syllables.push(current);
+          current = '';
+        } else if (next2 && !isVowel(next2)) {
+          const cluster = next1 + next2;
+          if (UNSEPARABLE_CLUSTERS.has(cluster)) {
+            syllables.push(current);
+            current = '';
+          }
+        }
+      }
+    } else {
+      if (next1 && !isVowel(next1)) {
+        if (next2 && isVowel(next2)) {
+          const cluster = char + next1;
+          if (!UNSEPARABLE_CLUSTERS.has(cluster)) {
+            syllables.push(current);
+            current = '';
+          }
+        }
+      }
+    }
+  }
+  
+  if (current) {
+    syllables.push(current);
+  }
+  
+  for (let i = syllables.length - 1; i > 0; i--) {
+    const syl = syllables[i];
+    const hasVowel = syl.split('').some(c => isVowel(c));
+    if (!hasVowel) {
+      syllables[i - 1] += syl;
+      syllables.splice(i, 1);
+    }
+  }
+  
+  return syllables;
+}
+
+const DECOY_SYLLABLES = ['LA', 'BO', 'MA', 'PA', 'CA', 'TA', 'DE', 'ME', 'PO', 'SO', 'VI', 'RA', 'SE', 'TE', 'DA', 'GA'];
+
 export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
@@ -130,14 +304,16 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const [currentWord, setCurrentWord] = useState('');
   const [currentEmoji, setCurrentEmoji] = useState('');
   const [currentSoundText, setCurrentSoundText] = useState('');
-  const [shuffledLetters, setShuffledLetters] = useState<{ id: number; char: string; used: boolean }[]>([]);
-  const [typedLetters, setTypedLetters] = useState<string[]>([]);
+  
+  const [targetSyllables, setTargetSyllables] = useState<string[]>([]);
+  const [shuffledSyllables, setShuffledSyllables] = useState<{ id: number; part: string; used: boolean }[]>([]);
+  const [typedSyllables, setTypedSyllables] = useState<string[]>([]);
+  
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
-  const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const hadErrorEver = useRef(false);
   const [showPerfect, setShowPerfect] = useState(false);
 
-  // Animação para construir/ampliar o item (ex: a casa crescendo na tela)
   const buildScale = useRef(new Animated.Value(0)).current;
 
   // Inicializar fila com 3 palavras distintas
@@ -163,47 +339,64 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
       setCurrentWord(wordData.word);
       setCurrentEmoji(selected.emoji);
       setCurrentSoundText(wordData.soundText);
-      setTypedLetters([]);
+      setTypedSyllables([]);
       setRoundCompleted(false);
       hadErrorInRound.current = false;
       buildScale.setValue(0);
 
-      // Separar letras, atribuir ID e embaralhar
-      const letters = wordData.word.split('').map((char, index) => ({
-        id: index,
-        char,
+      // Separar em sílabas
+      const syllables = splitSyllables(wordData.word);
+      setTargetSyllables(syllables);
+
+      // Criar itens para as sílabas corretas
+      const parts = syllables.map((part, idx) => ({
+        id: idx,
+        part,
         used: false
       }));
 
-      setShuffledLetters(letters.sort(() => Math.random() - 0.5));
+      // Adicionar distratores se tiver poucas opções para manter sempre de 3 a 4 opções
+      const maxOptions = Math.max(3, syllables.length + 1);
+      let decoyId = 100;
+      while (parts.length < maxOptions) {
+        const randomDecoy = DECOY_SYLLABLES[Math.floor(Math.random() * DECOY_SYLLABLES.length)];
+        if (!syllables.includes(randomDecoy) && !parts.some(p => p.part === randomDecoy)) {
+          parts.push({
+            id: decoyId++,
+            part: randomDecoy,
+            used: false
+          });
+        }
+      }
+
+      setShuffledSyllables(parts.sort(() => Math.random() - 0.5));
 
       // Tocar som da palavra automaticamente no começo
       speak(wordData.soundText, language);
     }
   }, [currentIndex, queue, language]);
 
-  const handleLetterTap = (letterItem: { id: number; char: string; used: boolean }) => {
-    if (roundCompleted || letterItem.used) return;
+  const handleSyllableTap = (item: { id: number; part: string; used: boolean }) => {
+    if (roundCompleted || item.used) return;
 
-    const nextIndex = typedLetters.length;
-    const expectedChar = currentWord[nextIndex];
+    const nextIndex = typedSyllables.length;
+    const expectedPart = targetSyllables[nextIndex];
 
-    if (letterItem.char === expectedChar) {
-      // Letra certa!
+    if (item.part === expectedPart) {
       playSound('pop', soundEnabled);
       
-      // Marcar letra como usada no grid inferior
-      setShuffledLetters(prev => prev.map(item => item.id === letterItem.id ? { ...item, used: true } : item));
+      // Marcar sílaba como usada no grid inferior
+      setShuffledSyllables(prev => prev.map(s => s.id === item.id ? { ...s, used: true } : s));
       
       // Adicionar à palavra montada
-      const newTyped = [...typedLetters, letterItem.char];
-      setTypedLetters(newTyped);
+      const newTyped = [...typedSyllables, item.part];
+      setTypedSyllables(newTyped);
 
-      // Falar a letra digitada
-      speak(letterItem.char, language);
+      // Falar a sílaba digitada
+      speak(item.part, language);
 
       // Verificar se a palavra foi completamente formada
-      if (newTyped.length === currentWord.length) {
+      if (newTyped.length === targetSyllables.length) {
         setRoundCompleted(true);
         playSound('success', soundEnabled);
         
@@ -214,7 +407,6 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           tension: 40,
           useNativeDriver: true
         }).start(() => {
-          // Falar a palavra completa e concluir
           speak(currentSoundText, language);
         });
 
@@ -239,7 +431,6 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
         }, 3500);
       }
     } else {
-      // Letra errada
       hadErrorInRound.current = true;
       hadErrorEver.current = true;
       playSound('pop', soundEnabled);
@@ -275,14 +466,14 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
 
       <View style={styles.gameArea}>
         
-        {/* Espaços da Palavra (Slots) */}
+        {/* Espaços da Palavra (Slots de Sílabas) */}
         <View style={styles.wordSlotsRow}>
-          {currentWord.split('').map((char, index) => {
-            const isFilled = index < typedLetters.length;
+          {targetSyllables.map((part, index) => {
+            const isFilled = index < typedSyllables.length;
             return (
-              <View key={index} style={[styles.slot, isFilled && styles.slotFilled]}>
+              <View key={index} style={[styles.slot, isFilled && styles.slotFilled, { width: Math.max(64, part.length * 28) }]}>
                 <Text style={styles.slotText}>
-                  {isFilled ? typedLetters[index] : ''}
+                  {isFilled ? typedSyllables[index] : ''}
                 </Text>
               </View>
             );
@@ -299,20 +490,20 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           )}
         </View>
 
-        {/* Letras Embaralhadas para Clicar */}
+        {/* Sílabas Embaralhadas para Clicar */}
         {!roundCompleted && (
           <View style={styles.lettersRow}>
-            {shuffledLetters.map((item) => {
+            {shuffledSyllables.map((item) => {
               return (
                 <TouchableOpacity
                   key={item.id}
                   activeOpacity={0.8}
-                  style={[styles.letterBtn, item.used && styles.letterBtnUsed]}
-                  onPress={() => handleLetterTap(item)}
+                  style={[styles.letterBtn, item.used && styles.letterBtnUsed, { width: Math.max(76, item.part.length * 26) }]}
+                  onPress={() => handleSyllableTap(item)}
                   disabled={item.used}
                 >
                   <Text style={[styles.letterBtnText, item.used && styles.letterBtnTextUsed]}>
-                    {item.char}
+                    {item.part}
                   </Text>
                 </TouchableOpacity>
               );
