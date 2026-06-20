@@ -4,7 +4,6 @@ import { useLocalization } from '../../context/LocalizationContext';
 import { useGame } from '../../context/GameContext';
 import { MascotLumi } from '../../components/MascotLumi';
 import { ProgressBar } from '../../components/ProgressBar';
-import { StarIcon, CoinIcon } from '../../components/VectorIcons';
 import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
@@ -13,38 +12,70 @@ interface MundoDasLetrasProps {
   onBack: () => void;
 }
 
-const ITEMS = [
-  { id: 'tree', label: '🌳', name: 'Árvore' },
-  { id: 'flower', label: '🌸', name: 'Flor' },
-  { id: 'stone', label: '🪨', name: 'Pedra' },
-  { id: 'chest', label: '📦', name: 'Baú' }
-];
+// Dicionário completo de dicas (Imagem/Emoji + Palavra + Sílaba) para todas as 26 letras do alfabeto
+const LETTER_HINTS: Record<string, { emoji: string; word: string; syllable: string }> = {
+  A: { emoji: '🐝', word: 'Abelha', syllable: 'A' },
+  B: { emoji: '⚽', word: 'Bola', syllable: 'BO' },
+  C: { emoji: '🏠', word: 'Casa', syllable: 'CA' },
+  D: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
+  E: { emoji: '🐘', word: 'Elefante', syllable: 'E' },
+  F: { emoji: '🔥', word: 'Fogo', syllable: 'FO' },
+  G: { emoji: '🐱', word: 'Gato', syllable: 'GA' },
+  H: { emoji: '🚁', word: 'Helicóptero', syllable: 'HE' },
+  I: { emoji: '🏝️', word: 'Ilha', syllable: 'I' },
+  J: { emoji: '🐊', word: 'Jacaré', syllable: 'JA' },
+  K: { emoji: '🥝', word: 'Kiwi', syllable: 'KI' },
+  L: { emoji: '🦁', word: 'Leão', syllable: 'LE' },
+  M: { emoji: '🍎', word: 'Maçã', syllable: 'MA' },
+  N: { emoji: '☁️', word: 'Nuvem', syllable: 'NU' },
+  O: { emoji: '🥚', word: 'Ovo', syllable: 'O' },
+  P: { emoji: '🦆', word: 'Pato', syllable: 'PA' },
+  Q: { emoji: '🧀', word: 'Queijo', syllable: 'QUE' },
+  R: { emoji: '🐭', word: 'Rato', syllable: 'RA' },
+  S: { emoji: '☀️', word: 'Sol', syllable: 'SO' },
+  T: { emoji: '🍅', word: 'Tomate', syllable: 'TO' },
+  U: { emoji: '🍇', word: 'Uva', syllable: 'U' },
+  V: { emoji: '🐮', word: 'Vaca', syllable: 'VA' },
+  W: { emoji: '🧇', word: 'Waffle', syllable: 'WA' },
+  X: { emoji: '🍵', word: 'Xícara', syllable: 'XI' },
+  Y: { emoji: '🍜', word: 'Yakisoba', syllable: 'YA' },
+  Z: { emoji: '🦓', word: 'Zebra', syllable: 'ZE' },
+};
 
 const TARGET_LETTERS = ['A', 'E', 'I', 'O', 'U', 'B', 'M', 'P', 'T'];
+
+interface ItemData {
+  slotIndex: number;
+  letter: string;
+  emoji: string;
+  word: string;
+  syllable: string;
+  revealed: boolean;
+}
 
 export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
 
   const [targetLetter, setTargetLetter] = useState('A');
-  const [itemsData, setItemsData] = useState<{ id: string; letter: string; revealed: boolean }[]>([]);
+  const [itemsData, setItemsData] = useState<ItemData[]>([]);
   const [round, setRound] = useState(1);
   const [roundCompleted, setRoundCompleted] = useState(false);
 
-  // Animações de revelação (posição Y) para cada um dos 4 itens
+  // Animações de revelação (posição Y) para cada um dos 4 slots
   const anims = {
-    tree: useRef(new Animated.Value(0)).current,
-    flower: useRef(new Animated.Value(0)).current,
-    stone: useRef(new Animated.Value(0)).current,
-    chest: useRef(new Animated.Value(0)).current
+    0: useRef(new Animated.Value(0)).current,
+    1: useRef(new Animated.Value(0)).current,
+    2: useRef(new Animated.Value(0)).current,
+    3: useRef(new Animated.Value(0)).current
   };
 
-  // Animações de opacidade para cada um dos 4 itens (fadem para revelar o fundo)
+  // Animações de opacidade para cada um dos 4 slots (fadem para revelar o fundo)
   const opacities = {
-    tree: useRef(new Animated.Value(1)).current,
-    flower: useRef(new Animated.Value(1)).current,
-    stone: useRef(new Animated.Value(1)).current,
-    chest: useRef(new Animated.Value(1)).current
+    0: useRef(new Animated.Value(1)).current,
+    1: useRef(new Animated.Value(1)).current,
+    2: useRef(new Animated.Value(1)).current,
+    3: useRef(new Animated.Value(1)).current
   };
 
   // Iniciar nova rodada
@@ -60,41 +91,66 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
 
     // Resetar animações
     Object.keys(anims).forEach(key => {
-      Animated.timing(anims[key as keyof typeof anims], { toValue: 0, duration: 200, useNativeDriver: true }).start();
-      Animated.timing(opacities[key as keyof typeof opacities], { toValue: 1, duration: 200, useNativeDriver: true }).start();
+      const idx = Number(key) as keyof typeof anims;
+      Animated.timing(anims[idx], { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      Animated.timing(opacities[idx], { toValue: 1, duration: 200, useNativeDriver: true }).start();
     });
 
-    // Distribuir letras nos itens
-    const shuffledItems = [...ITEMS].sort(() => Math.random() - 0.5);
+    // Distribuir letras nos slots
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l => l !== selectedTarget);
     
-    const newItemsData = shuffledItems.map((item, idx) => {
-      // O primeiro item embaralhado ganha a letra alvo
-      const letter = idx === 0 ? selectedTarget : alphabet[Math.floor(Math.random() * alphabet.length)];
-      return { id: item.id, letter, revealed: false };
+    // O primeiro slot ganha a letra alvo, os outros ganham letras aleatórias não repetidas
+    const selectedWrongLetters: string[] = [];
+    while (selectedWrongLetters.length < 3) {
+      const randomIdx = Math.floor(Math.random() * alphabet.length);
+      const chosenLetter = alphabet[randomIdx];
+      if (!selectedWrongLetters.includes(chosenLetter)) {
+        selectedWrongLetters.push(chosenLetter);
+        alphabet.splice(randomIdx, 1); // remove do pool para não repetir
+      }
+    }
+
+    const slots = [selectedTarget, ...selectedWrongLetters];
+
+    // Embaralhar os slots
+    const shuffledSlots = slots
+      .map((letter) => ({ letter }))
+      .sort(() => Math.random() - 0.5);
+
+    // Mapear os dados dos cartões com as dicas correspondentes
+    const newItemsData = shuffledSlots.map((item, index) => {
+      const hint = LETTER_HINTS[item.letter] || { emoji: '❓', word: 'Desconhecido', syllable: item.letter };
+      return {
+        slotIndex: index,
+        letter: item.letter,
+        emoji: hint.emoji,
+        word: hint.word,
+        syllable: hint.syllable,
+        revealed: false
+      };
     });
 
     setItemsData(newItemsData);
   };
 
-  const handleTapItem = (itemId: string, itemLetter: string) => {
+  const handleTapItem = (slotIndex: number, itemLetter: string) => {
     if (roundCompleted) return;
 
     // Revelar o item específico
-    setItemsData(prev => prev.map(item => item.id === itemId ? { ...item, revealed: true } : item));
+    setItemsData(prev => prev.map((item, idx) => idx === slotIndex ? { ...item, revealed: true } : item));
     
     // Animação paralela: deslizar para cima e sumir (fade-out)
-    const animRef = anims[itemId as keyof typeof anims];
-    const opacityRef = opacities[itemId as keyof typeof opacities];
+    const animRef = anims[slotIndex as keyof typeof anims];
+    const opacityRef = opacities[slotIndex as keyof typeof opacities];
 
     Animated.parallel([
       Animated.timing(animRef, {
-        toValue: -80, // desliza mais para cima
+        toValue: -85, // desliza para cima
         duration: 350,
         useNativeDriver: true
       }),
       Animated.timing(opacityRef, {
-        toValue: 0, // desaparece por completo revelando a letra perfeitamente
+        toValue: 0, // desaparece por completo
         duration: 350,
         useNativeDriver: true
       })
@@ -120,9 +176,9 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       playSound('pop', soundEnabled);
       // Fazer o item vibrar levemente antes de falar
       Animated.sequence([
-        Animated.timing(animRef, { toValue: -70, duration: 100, useNativeDriver: true }),
-        Animated.timing(animRef, { toValue: -90, duration: 100, useNativeDriver: true }),
-        Animated.timing(animRef, { toValue: -80, duration: 100, useNativeDriver: true })
+        Animated.timing(animRef, { toValue: -75, duration: 100, useNativeDriver: true }),
+        Animated.timing(animRef, { toValue: -95, duration: 100, useNativeDriver: true }),
+        Animated.timing(animRef, { toValue: -85, duration: 100, useNativeDriver: true })
       ]).start(() => {
         speak(t('tryAgain'), language);
       });
@@ -146,42 +202,39 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       {/* LUMI COM INSTRUÇÃO NARRADA */}
       <MascotLumi text={t('game1Prompt', { letter: targetLetter })} />
 
-      {/* CENÁRIO FLORESTA INTERATIVA */}
+      {/* CENÁRIO FLORESTA INTERATIVA COM DICAS EDUCACIONAIS */}
       <View style={styles.forestScene}>
-        {ITEMS.map((item) => {
-          const itemState = itemsData.find(i => i.id === item.id);
-          const letterBehind = itemState ? itemState.letter : '';
-          const isRevealed = itemState ? itemState.revealed : false;
-          
+        {itemsData.map((item) => {
           const animStyle = {
-            transform: [{ translateY: anims[item.id as keyof typeof anims] }],
-            opacity: opacities[item.id as keyof typeof opacities]
+            transform: [{ translateY: anims[item.slotIndex as keyof typeof anims] }],
+            opacity: opacities[item.slotIndex as keyof typeof opacities]
           };
 
           return (
-            <View key={item.id} style={styles.itemWrapper}>
+            <View key={item.slotIndex} style={styles.itemWrapper}>
               {/* Letra Oculta de Trás (fica no centro do wrapper) */}
               <View style={styles.letterContainer}>
-                {isRevealed && (
+                {item.revealed && (
                   <Text style={[
                     styles.letterText,
-                    letterBehind === targetLetter ? styles.letterSuccess : styles.letterWrong
+                    item.letter === targetLetter ? styles.letterSuccess : styles.letterWrong
                   ]}>
-                    {letterBehind}
+                    {item.letter}
                   </Text>
                 )}
               </View>
 
-              {/* Elemento Interativo da Frente (Árvore, Flor...) */}
-              <Animated.View style={[styles.coverContainer, animStyle]} pointerEvents={isRevealed ? 'none' : 'auto'}>
+              {/* Elemento Interativo da Frente (Emoji + Sílaba + Palavra) */}
+              <Animated.View style={[styles.coverContainer, animStyle]} pointerEvents={item.revealed ? 'none' : 'auto'}>
                 <TouchableOpacity
                   activeOpacity={0.8}
-                  disabled={isRevealed || roundCompleted}
-                  onPress={() => handleTapItem(item.id, letterBehind)}
+                  disabled={item.revealed || roundCompleted}
+                  onPress={() => handleTapItem(item.slotIndex, item.letter)}
                   style={styles.coverButton}
                 >
-                  <Text style={styles.coverEmoji}>{item.label}</Text>
-                  <Text style={styles.coverLabel}>{item.name}</Text>
+                  <Text style={styles.coverEmoji}>{item.emoji}</Text>
+                  {/* Exibe sílaba e palavra dica para pareamento fonético, ex: "BO - BOLA" */}
+                  <Text style={styles.coverLabel}>{item.syllable} - {item.word.toUpperCase()}</Text>
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -231,7 +284,7 @@ const styles = StyleSheet.create({
   itemWrapper: {
     width: '44%',
     aspectRatio: 0.9,
-    marginVertical: 15,
+    marginVertical: 12,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -261,7 +314,7 @@ const styles = StyleSheet.create({
     color: '#4CAF50', // Letra certa verde
   },
   letterWrong: {
-    color: '#B0BEC5', // Letra errada cinza suave (sem punição visual!)
+    color: '#B0BEC5', // Letra errada cinza suave
   },
   coverContainer: {
     width: '100%',
@@ -283,14 +336,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    paddingHorizontal: 5,
   },
   coverEmoji: {
-    fontSize: 52,
+    fontSize: 54,
   },
   coverLabel: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#2E7D32',
-    marginTop: 5,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
