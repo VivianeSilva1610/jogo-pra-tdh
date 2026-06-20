@@ -244,6 +244,24 @@ export default function App() {
       const parentId = session.user.id;
       setActiveParentId(parentId);
 
+      // Garantir que a linha do pai exista na tabela public.parents para evitar erro de chave estrangeira
+      try {
+        const { data: parentData } = await supabase
+          .from('parents')
+          .select('id')
+          .eq('id', parentId)
+          .maybeSingle();
+
+        if (!parentData) {
+          console.log('Pai não encontrado na tabela public.parents. Criando...');
+          await supabase
+            .from('parents')
+            .insert([{ id: parentId, email: session.user.email }]);
+        }
+      } catch (err) {
+        console.warn('Erro ao verificar/criar pai na tabela public.parents:', err);
+      }
+
       // Buscar filhos cadastrados
       const kids = await fetchChildren();
 
