@@ -157,18 +157,37 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const [showPerfect, setShowPerfect] = useState(false);
 
-  // Inicializar fila
+  // Inicializar fila com base na dificuldade
   useEffect(() => {
+    const activeLang = language || 'pt';
+    const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
+    
+    // Filtrar ITEMS_POOL com base na dificuldade
+    let pool = ITEMS_POOL.filter(item => {
+      const w = item.wordKeys[activeLang] || item.wordKeys['pt'];
+      if (difficulty === 0) {
+        return w.length <= 4;
+      } else if (difficulty === 1) {
+        return w.length === 5 || w.length === 6;
+      } else {
+        return w.length >= 5;
+      }
+    });
+
+    if (pool.length < 3) {
+      pool = [...ITEMS_POOL];
+    }
+
     const selectedTargets: ForestItem[] = [];
-    const pool = [...ITEMS_POOL];
-    while (selectedTargets.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      selectedTargets.push(pool[idx]);
-      pool.splice(idx, 1);
+    const poolCopy = [...pool];
+    while (selectedTargets.length < 3 && poolCopy.length > 0) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      selectedTargets.push(poolCopy[idx]);
+      poolCopy.splice(idx, 1);
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, []);
+  }, [challengesCompleted, language]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {

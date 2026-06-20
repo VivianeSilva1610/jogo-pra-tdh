@@ -85,6 +85,9 @@ export interface Translations {
   game7Prompt: string;
   listenAgain: string;
   castleOpened: string;
+  difficultyEasy: string;
+  difficultyMedium: string;
+  difficultyHard: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -169,6 +172,9 @@ const translations: Record<LanguageType, Translations> = {
     game7Prompt: "Ouça a frase e monte-a com as palavras abaixo! 🔊",
     listenAgain: "Ouvir Novamente",
     castleOpened: "O portão do castelo se abriu!",
+    difficultyEasy: "🟢 Fácil",
+    difficultyMedium: "🟡 Médio",
+    difficultyHard: "🔴 Difícil",
   },
   en: {
     appName: "Letter Adventure",
@@ -251,6 +257,9 @@ const translations: Record<LanguageType, Translations> = {
     game7Prompt: "Listen to the sentence and build it with the words below! 🔊",
     listenAgain: "Listen Again",
     castleOpened: "The castle gate has opened!",
+    difficultyEasy: "🟢 Easy",
+    difficultyMedium: "🟡 Medium",
+    difficultyHard: "🔴 Hard",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -332,7 +341,10 @@ const translations: Record<LanguageType, Translations> = {
     game7Desc: "Ordina le parole per leggere la frase e aprire il castello!",
     game7Prompt: "Ascolta la frase e costruiscila con le parole qui sotto! 🔊",
     listenAgain: "Ascolta di Nuovo",
-    castleOpened: "Il portone del castello si è aperto!",
+    castleOpened: "Il portone del castelo si è aperto!",
+    difficultyEasy: "🟢 Facile",
+    difficultyMedium: "🟡 Medio",
+    difficultyHard: "🔴 Difficile",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -415,6 +427,9 @@ const translations: Record<LanguageType, Translations> = {
     game7Prompt: "¡Escucha la frase y arma con las palabras de abajo! 🔊",
     listenAgain: "Escuchar de Nuevo",
     castleOpened: "¡El portón del castillo se ha abierto!",
+    difficultyEasy: "🟢 Fácil",
+    difficultyMedium: "🟡 Medio",
+    difficultyHard: "🔴 Difícil",
   }
 };
 

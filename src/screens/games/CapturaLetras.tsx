@@ -46,10 +46,19 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
   const [showPerfect, setShowPerfect] = useState(false);
   const gameAreaWidthRef = useRef(SCREEN_WIDTH > 600 ? 500 : SCREEN_WIDTH);
 
-  // Inicializar fila
+  // Inicializar fila com base na dificuldade
   useEffect(() => {
+    const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
+    let pool = [...TARGET_LETTERS];
+    if (difficulty === 0) {
+      pool = ['A', 'B', 'C', 'D', 'E', 'I', 'L', 'M', 'N', 'O', 'P', 'T', 'U', 'V'];
+    } else if (difficulty === 1) {
+      pool = ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'];
+    } else {
+      pool = ['K', 'W', 'X', 'Y'];
+    }
+
     const selectedTargets: string[] = [];
-    const pool = [...TARGET_LETTERS];
     while (selectedTargets.length < 3 && pool.length > 0) {
       const idx = Math.floor(Math.random() * pool.length);
       selectedTargets.push(pool[idx]);
@@ -57,7 +66,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, []);
+  }, [challengesCompleted]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {

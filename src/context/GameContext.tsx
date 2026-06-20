@@ -303,7 +303,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
 
   const completeChallenge = async (type: 'letter' | 'syllable' | 'word', value: string) => {
     const earnedCoins = 10;
-    const earnedStars = 1;
+    const difficulty = Math.floor(challengesCompleted / 7) % 3;
+    const earnedStars = difficulty + 1; // Easy: 1 star, Moderate: 2 stars, Hard: 3 stars
 
     const newCoins = coins + earnedCoins;
     const newStars = stars + earnedStars;

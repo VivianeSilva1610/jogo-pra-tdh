@@ -36,18 +36,30 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const [showPerfect, setShowPerfect] = useState(false);
 
-  // Inicializar fila com 3 sílabas distintas
+  const getActivePool = () => {
+    const difficulty = Math.floor(challengesCompleted / 7) % 3;
+    if (difficulty === 0) {
+      return ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'MO', 'PO', 'BO', 'CO', 'TO', 'DO', 'ME', 'PE', 'BE', 'LE', 'TE', 'DE', 'MI', 'PI', 'LI', 'TI'];
+    } else if (difficulty === 1) {
+      return ['GA', 'FA', 'SA', 'VA', 'GO', 'FO', 'SO', 'VO', 'GE', 'FE', 'SE', 'NE', 'VI', 'SI'];
+    } else {
+      return ['RA', 'RO', 'RE', 'RI', 'JO'];
+    }
+  };
+
+  // Inicializar fila com 3 sílabas distintas com base na dificuldade
   useEffect(() => {
+    const pool = getActivePool();
     const selectedTargets: string[] = [];
-    const pool = [...SYLLABLES_POOL];
-    while (selectedTargets.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      selectedTargets.push(pool[idx]);
-      pool.splice(idx, 1);
+    const poolCopy = [...pool];
+    while (selectedTargets.length < 3 && poolCopy.length > 0) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      selectedTargets.push(poolCopy[idx]);
+      poolCopy.splice(idx, 1);
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, []);
+  }, [challengesCompleted]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {
@@ -62,10 +74,11 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
     setSelectedIdx(null);
     hadErrorInRound.current = false;
 
+    const pool = getActivePool();
     // Gerar 2 alternativas distintas
     const alternatives: string[] = [];
     while (alternatives.length < 2) {
-      const alt = SYLLABLES_POOL[Math.floor(Math.random() * SYLLABLES_POOL.length)];
+      const alt = pool[Math.floor(Math.random() * pool.length)];
       if (alt !== selectedTarget && !alternatives.includes(alt)) {
         alternatives.push(alt);
       }

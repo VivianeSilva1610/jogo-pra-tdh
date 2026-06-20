@@ -121,18 +121,36 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   // Animação para abrir o portão do castelo (desliza para cima ou baixo)
   const gateTranslateY = useRef(new Animated.Value(0)).current;
 
-  // Inicializar fila com 3 frases distintas
+  // Inicializar fila com base na dificuldade
   useEffect(() => {
+    const activeLang = language || 'pt';
+    const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
+    
+    // Filtrar PHRASES_POOL com base na contagem de palavras da frase no idioma ativo
+    let pool = PHRASES_POOL.filter(item => {
+      const phraseData = item.langMap[activeLang] || item.langMap['pt'];
+      const wordCount = phraseData.words.length;
+      if (difficulty === 0) {
+        return wordCount <= 3;
+      } else {
+        return wordCount >= 4;
+      }
+    });
+
+    if (pool.length < 3) {
+      pool = [...PHRASES_POOL];
+    }
+
     const selectedTargets: PhraseOption[] = [];
-    const pool = [...PHRASES_POOL];
-    while (selectedTargets.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      selectedTargets.push(pool[idx]);
-      pool.splice(idx, 1);
+    const poolCopy = [...pool];
+    while (selectedTargets.length < 3 && poolCopy.length > 0) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      selectedTargets.push(poolCopy[idx]);
+      poolCopy.splice(idx, 1);
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, []);
+  }, [challengesCompleted, language]);
 
   // Iniciar rodada quando muda o índice na fila ou idioma
   useEffect(() => {

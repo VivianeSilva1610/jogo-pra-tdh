@@ -316,18 +316,38 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
 
   const buildScale = useRef(new Animated.Value(0)).current;
 
-  // Inicializar fila com 3 palavras distintas
+  // Inicializar fila com base na dificuldade
   useEffect(() => {
+    const activeLang = language || 'pt';
+    const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
+    
+    // Filtrar WORDS_POOL com base na dificuldade
+    let pool = WORDS_POOL.filter(item => {
+      const w = item.langMap[activeLang]?.word || item.langMap['pt'].word;
+      if (difficulty === 0) {
+        return w.length <= 4;
+      } else if (difficulty === 1) {
+        return w.length === 5;
+      } else {
+        return w.length >= 6;
+      }
+    });
+
+    // Se por acaso a lista filtrada for menor que 3 (segurança contra pools vazios em certas línguas), usar fallback
+    if (pool.length < 3) {
+      pool = [...WORDS_POOL];
+    }
+
     const selectedTargets: WordOption[] = [];
-    const pool = [...WORDS_POOL];
-    while (selectedTargets.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      selectedTargets.push(pool[idx]);
-      pool.splice(idx, 1);
+    const poolCopy = [...pool];
+    while (selectedTargets.length < 3 && poolCopy.length > 0) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      selectedTargets.push(poolCopy[idx]);
+      poolCopy.splice(idx, 1);
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, []);
+  }, [challengesCompleted, language]);
 
   // Iniciar nova rodada quando muda o índice ou idioma
   useEffect(() => {

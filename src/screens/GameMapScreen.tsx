@@ -57,11 +57,10 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
   const [claimedChests, setClaimedChests] = useState<string[]>([]);
   const glowAnim = useRef(new Animated.Value(0.7)).current;
 
-  // Determinar o nó atual onde o personagem deve começar
-  const currentActiveIndex = Math.min(challengesCompleted, 7); // 0 a 7
-  const initialNode = currentActiveIndex === 7 
-    ? { x: 200, y: 170 } // Posição da Biblioteca
-    : GAMES_LIST[currentActiveIndex];
+  // Determinar o nível de dificuldade ativo (Fácil, Médio, Difícil) e o nó correspondente
+  const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
+  const currentActiveIndex = challengesCompleted % 7; // 0 a 6
+  const initialNode = GAMES_LIST[currentActiveIndex];
 
   // Referência para animação do avatar
   const avatarX = useRef(new Animated.Value(initialNode.x)).current;
@@ -167,6 +166,19 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.mapCanvas}>
+          
+          {/* BANDEIRA DE DIFICULDADE */}
+          <View style={[
+            styles.difficultyBanner,
+            difficulty === 0 ? styles.bannerEasy : difficulty === 1 ? styles.bannerMedium : styles.bannerHard
+          ]}>
+            <Text style={[
+              styles.difficultyText,
+              difficulty === 0 ? styles.textEasy : difficulty === 1 ? styles.textMedium : styles.textHard
+            ]}>
+              {difficulty === 0 ? t('difficultyEasy') : difficulty === 1 ? t('difficultyMedium') : t('difficultyHard')}
+            </Text>
+          </View>
           
           {/* SVG DO CAMINHO E DOS MUNDOS */}
           <Svg style={StyleSheet.absoluteFill} width="100%" height="1200">
@@ -295,8 +307,8 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
           {/* NÓS DOS MINIJOGOS */}
           {GAMES_LIST.map((game, index) => {
-            const isCompleted = challengesCompleted > index;
-            const isUnlocked = challengesCompleted >= index;
+            const isCompleted = (challengesCompleted % 7) > index;
+            const isUnlocked = (challengesCompleted % 7) >= index;
 
             return (
               <TouchableOpacity
@@ -566,5 +578,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 6,
+  },
+  difficultyBanner: {
+    position: 'absolute',
+    top: 20,
+    alignSelf: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderWidth: 3,
+    borderBottomWidth: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+    zIndex: 20,
+  },
+  bannerEasy: {
+    borderColor: '#81C784',
+  },
+  bannerMedium: {
+    borderColor: '#FFB74D',
+  },
+  bannerHard: {
+    borderColor: '#FF8A80',
+  },
+  difficultyText: {
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  textEasy: {
+    color: '#2E7D32',
+  },
+  textMedium: {
+    color: '#E65100',
+  },
+  textHard: {
+    color: '#C62828',
   },
 });
