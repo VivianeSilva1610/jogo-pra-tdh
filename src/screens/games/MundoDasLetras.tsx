@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '../../styles/theme';
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, SafeAreaView } from 'react-native';
 import { useLocalization } from '../../context/LocalizationContext';
@@ -192,7 +193,7 @@ interface ItemData {
 
 export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -366,10 +367,15 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       {/* HEADER DO JOGO */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ArrowLeft size={24} color="#37474F" />
+          <ArrowLeft size={24} color="#5D4037" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game1Title')}</Text>
-        <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+        <View style={styles.headerRight}>
+          <View style={styles.starsBadge}>
+            <Text style={styles.starsBadgeText}>⭐ {stars}</Text>
+          </View>
+          <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+        </View>
       </View>
 
       {/* BARRA DE PROGRESSO DO TDAH */}
@@ -442,9 +448,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 10,
+    backgroundColor: THEME_COLORS.softWhite,
+    borderBottomWidth: 3,
+    borderColor: '#C8E6C9',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starsBadge: {
     backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginRight: 8,
+    borderWidth: 1.5,
+    borderColor: THEME_COLORS.goldenYellow,
+  },
+  starsBadgeText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#5D4037',
   },
   backButton: {
     padding: 5,
@@ -452,7 +476,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2E7D32',
+    color: THEME_COLORS.brownDark,
   },
   roundText: {
     fontSize: 14,

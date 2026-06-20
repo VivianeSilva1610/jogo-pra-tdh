@@ -48,6 +48,8 @@ export interface Translations {
   itemUnlocked: string;
   chestTitle: string;
   chestInstructions: string;
+  chestAlreadyClaimed: string;
+  attention: string;
   chestOpen: string;
   chestClaim: string;
   premiumClub: string;
@@ -130,6 +132,8 @@ const translations: Record<LanguageType, Translations> = {
     itemUnlocked: "Você desbloqueou um novo item!",
     chestTitle: "Baú Surpresa!",
     chestInstructions: "Toque no baú para abri-lo!",
+    chestAlreadyClaimed: "Você já abriu este baú!",
+    attention: "Atenção",
     chestOpen: "Abrir Baú",
     chestClaim: "Pegar Recompensa!",
     premiumClub: "Clube das Letras Premium",
@@ -210,6 +214,8 @@ const translations: Record<LanguageType, Translations> = {
     itemUnlocked: "You unlocked a new item!",
     chestTitle: "Surprise Chest!",
     chestInstructions: "Tap the chest to open it!",
+    chestAlreadyClaimed: "You have already opened this chest!",
+    attention: "Attention",
     chestOpen: "Open Chest",
     chestClaim: "Claim Reward!",
     premiumClub: "Premium Letter Club",
@@ -290,6 +296,8 @@ const translations: Record<LanguageType, Translations> = {
     itemUnlocked: "Hai sbloccato un nuovo oggetto!",
     chestTitle: "Baule a Sorpresa!",
     chestInstructions: "Tocca il baule per aprirlo!",
+    chestAlreadyClaimed: "Hai già aperto questo baule!",
+    attention: "Attenzione",
     chestOpen: "Apri Baule",
     chestClaim: "Prendi la Ricompensa!",
     premiumClub: "Club Premium delle Lettere",
@@ -370,6 +378,8 @@ const translations: Record<LanguageType, Translations> = {
     itemUnlocked: "¡Has desbloqueado un nuevo objeto!",
     chestTitle: "¡Cofre Sorpresa!",
     chestInstructions: "¡Toca el cofre para abrirlo!",
+    chestAlreadyClaimed: "¡Ya has abierto este cofre!",
+    attention: "Atención",
     chestOpen: "Abrir Cofre",
     chestClaim: "¡Recibir Recompensa!",
     premiumClub: "Club Premium de Letras",
