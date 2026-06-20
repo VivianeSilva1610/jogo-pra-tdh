@@ -432,9 +432,12 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       const locales = Localization.getLocales();
       if (locales && locales.length > 0) {
-        const langCode = locales[0].languageCode;
-        if (langCode === 'pt' || langCode === 'en' || langCode === 'it' || langCode === 'es') {
-          return langCode as LanguageType;
+        const rawCode = locales[0].languageCode;
+        if (rawCode) {
+          const langCode = rawCode.substring(0, 2).toLowerCase();
+          if (langCode === 'pt' || langCode === 'en' || langCode === 'it' || langCode === 'es') {
+            return langCode as LanguageType;
+          }
         }
       }
     } catch (e) {
