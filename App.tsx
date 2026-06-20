@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LocalizationProvider, useLocalization } from './src/context/LocalizationContext';
 import { GameProvider, useGame } from './src/context/GameContext';
@@ -166,8 +166,10 @@ function GameAppContent() {
     }
   };
 
-  return (
-    <View style={styles.appContainer}>
+  const isWeb = Platform.OS === 'web';
+
+  const content = (
+    <View style={[styles.appContainer, isWeb && styles.appContainerWeb]}>
       <StatusBar style="auto" />
       {renderScreen()}
 
@@ -181,7 +183,7 @@ function GameAppContent() {
         animationType="slide"
       >
         <SafeAreaView style={styles.breakOverlay}>
-          <View style={styles.breakCard}>
+          <View style={[styles.breakCard, isWeb && { maxWidth: 500 }]}>
             <Text style={styles.breakTitle}>🧸 {t('timeForBreak')}</Text>
             
             <MascotLumi text={t('breakSubtitle')} />
@@ -203,6 +205,16 @@ function GameAppContent() {
       </Modal>
     </View>
   );
+
+  if (isWeb) {
+    return (
+      <View style={styles.outerContainer}>
+        {content}
+      </View>
+    );
+  }
+
+  return content;
 }
 
 export default function App() {
@@ -216,9 +228,30 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F1F5F9', // Sleek soft cool gray background for desktop margins
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   appContainer: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  appContainerWeb: {
+    width: '100%',
+    maxWidth: 600,
+    height: '100%',
+    alignSelf: 'center',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
   },
   breakOverlay: {
     flex: 1,
