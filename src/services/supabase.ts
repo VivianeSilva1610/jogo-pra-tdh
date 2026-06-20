@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://rhzqijryyjoesuwodiln.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoenFpanJ5eWpvZXN1d29kaWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NzkzMTMsImV4cCI6MjA5NzI1NTMxM30.6kaptqeEmOp2YFqDmnZXO79iiVZUsUQcRboPefe5xTo';

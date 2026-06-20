@@ -17,7 +17,7 @@ export const LoginScreen: React.FC = () => {
       setLoading(true);
 
       const redirectUri = Platform.OS === 'web' 
-        ? window.location.origin 
+        ? window.location.origin + '/' 
         : 'aventuradasletras://';
 
       const { data, error } = await supabase.auth.signInWithOAuth({
