@@ -323,7 +323,7 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
                   </>
                 )}
                 {/* Nome do Jogo flutuante lateral */}
-                <View style={[styles.titleBubble, index % 2 === 0 ? styles.titleRight : styles.titleLeft]}>
+                <View style={[styles.titleBubble, game.x >= 200 ? styles.titleLeft : styles.titleRight]}>
                   <Text style={styles.titleBubbleText}>{t(game.titleKey)}</Text>
                 </View>
               </TouchableOpacity>
