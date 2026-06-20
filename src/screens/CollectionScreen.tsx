@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Image } from 'react-native';
 import { useLocalization } from '../context/LocalizationContext';
 import { useGame, STICKERS_LIST, CLOTHING_LIST, StickerItem, ClothingItem } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
@@ -141,8 +141,12 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
                       <Text style={styles.premiumBlockText}>PRO</Text>
                     </View>
                   ) : isUnlocked ? (
-                    <View style={styles.stickerEmojiContainer}>
-                      <Text style={styles.stickerEmoji}>{sticker.emoji}</Text>
+                    <View style={styles.stickerImageContainer}>
+                      <Image 
+                        source={{ uri: sticker.imageUrl }} 
+                        style={styles.stickerImage} 
+                        resizeMode="cover"
+                      />
                     </View>
                   ) : (
                     <TouchableOpacity 
@@ -364,6 +368,18 @@ const styles = StyleSheet.create({
   stickerUnlocked: {
     backgroundColor: '#E0F7FA',
     borderColor: '#4DD0E1',
+    padding: 2,
+  },
+  stickerImageContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  stickerImage: {
+    width: '100%',
+    height: '100%',
   },
   stickerEmojiContainer: {
     flex: 1,

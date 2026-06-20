@@ -10,6 +10,7 @@ export interface StickerItem {
   emoji: string;
   cost: number;
   category: 'animals' | 'nature' | 'fantasy';
+  imageUrl: string;
 }
 
 export interface ClothingItem {
@@ -20,16 +21,16 @@ export interface ClothingItem {
 }
 
 export const STICKERS_LIST: StickerItem[] = [
-  { id: 'sticker_lion', nameKey: 'stickerLion', emoji: '🦁', cost: 30, category: 'animals' },
-  { id: 'sticker_elephant', nameKey: 'stickerElephant', emoji: '🐘', cost: 35, category: 'animals' },
-  { id: 'sticker_bunny', nameKey: 'stickerBunny', emoji: '🐰', cost: 25, category: 'animals' },
-  { id: 'sticker_dino', nameKey: 'stickerDino', emoji: '🦖', cost: 40, category: 'animals' },
-  { id: 'sticker_unicorn', nameKey: 'stickerUnicorn', emoji: '🦄', cost: 50, category: 'fantasy' },
-  { id: 'sticker_dragon', nameKey: 'stickerDragon', emoji: '🐉', cost: 45, category: 'fantasy' },
-  { id: 'sticker_dolphin', nameKey: 'stickerDolphin', emoji: '🐬', cost: 30, category: 'animals' },
-  { id: 'sticker_butterfly', nameKey: 'stickerButterfly', emoji: '🦋', cost: 20, category: 'nature' },
-  { id: 'sticker_flower', nameKey: 'stickerFlower', emoji: '🌸', cost: 15, category: 'nature' },
-  { id: 'sticker_rainbow', nameKey: 'stickerRainbow', emoji: '🌈', cost: 25, category: 'nature' },
+  { id: 'sticker_lion', nameKey: 'stickerLion', emoji: '🦁', cost: 30, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=300&auto=format&fit=crop' },
+  { id: 'sticker_elephant', nameKey: 'stickerElephant', emoji: '🐘', cost: 35, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=300&auto=format&fit=crop' },
+  { id: 'sticker_bunny', nameKey: 'stickerBunny', emoji: '🐰', cost: 25, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop' },
+  { id: 'sticker_dino', nameKey: 'stickerDino', emoji: '🦖', cost: 40, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1606856527040-9f9e41d0224c?w=300&auto=format&fit=crop' },
+  { id: 'sticker_unicorn', nameKey: 'stickerUnicorn', emoji: '🦄', cost: 50, category: 'fantasy', imageUrl: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa52?w=300&auto=format&fit=crop' },
+  { id: 'sticker_dragon', nameKey: 'stickerDragon', emoji: '🐉', cost: 45, category: 'fantasy', imageUrl: 'https://images.unsplash.com/photo-1504450758481-7338eaa75e61?w=300&auto=format&fit=crop' },
+  { id: 'sticker_dolphin', nameKey: 'stickerDolphin', emoji: '🐬', cost: 30, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1570481662006-a3a13746fe4f?w=300&auto=format&fit=crop' },
+  { id: 'sticker_butterfly', nameKey: 'stickerButterfly', emoji: '🦋', cost: 20, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=300&auto=format&fit=crop' },
+  { id: 'sticker_flower', nameKey: 'stickerFlower', emoji: '🌸', cost: 15, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300&auto=format&fit=crop' },
+  { id: 'sticker_rainbow', nameKey: 'stickerRainbow', emoji: '🌈', cost: 25, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1443694903671-41e90b9b3d93?w=300&auto=format&fit=crop' },
 ];
 
 export const CLOTHING_LIST: ClothingItem[] = [
