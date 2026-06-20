@@ -153,6 +153,11 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
         }));
 
       setShuffledWords(wordsList);
+
+      // Narrar a frase automaticamente após 1.2s para o carregamento da tela
+      setTimeout(() => {
+        speak(phraseData.sentence, language);
+      }, 1200);
     }
   }, [currentIndex, queue, language]);
 
@@ -267,7 +272,18 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
 
       <ProgressBar current={challengesCompleted} />
 
-      <MascotLumi text={t('game7Prompt', { phrase: phraseData.sentence })} />
+      <MascotLumi text={t('game7Prompt')} />
+
+      {/* Botão de Ouvir a Frase — a criança aperta para escutar em vez de ler */}
+      {!roundCompleted && (
+        <TouchableOpacity
+          style={styles.listenBtn}
+          onPress={() => speak(phraseData.sentence, language)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.listenBtnText}>🔊 {language === 'pt' ? 'Ouvir a frase' : language === 'en' ? 'Hear the sentence' : language === 'it' ? 'Ascolta la frase' : 'Escuchar la frase'}</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.gameArea}>
         
@@ -410,5 +426,28 @@ const styles = StyleSheet.create({
   },
   wordBtnTextUsed: {
     color: '#8D6E63',
+  },
+  listenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5D4037',
+    borderRadius: 30,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    marginHorizontal: 24,
+    marginTop: 4,
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  listenBtnText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    letterSpacing: 0.5,
   },
 });

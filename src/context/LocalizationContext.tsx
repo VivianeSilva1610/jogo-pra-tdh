@@ -161,7 +161,7 @@ const translations: Record<LanguageType, Translations> = {
     game6Prompt: "Que imagem é essa?",
     game7Title: "Castelo das Frases",
     game7Desc: "Ordene as palavras para ler a frase e abrir o castelo!",
-    game7Prompt: "Ordene as palavras: {phrase}",
+    game7Prompt: "Ouça a frase e monte-a com as palavras abaixo! 🔊",
     castleOpened: "O portão do castelo se abriu!",
   },
   en: {
@@ -240,7 +240,7 @@ const translations: Record<LanguageType, Translations> = {
     game6Prompt: "What is this image?",
     game7Title: "Sentence Castle",
     game7Desc: "Order the words to read the sentence and open the castle!",
-    game7Prompt: "Order the words: {phrase}",
+    game7Prompt: "Listen to the sentence and build it with the words below! 🔊",
     castleOpened: "The castle gate has opened!",
   },
   it: {
@@ -319,7 +319,7 @@ const translations: Record<LanguageType, Translations> = {
     game6Prompt: "Cos'è questa immagine?",
     game7Title: "Castello delle Frasi",
     game7Desc: "Ordina le parole per leggere la frase e aprire il castello!",
-    game7Prompt: "Ordina le parole: {phrase}",
+    game7Prompt: "Ascolta la frase e costruiscila con le parole qui sotto! 🔊",
     castleOpened: "Il portone del castello si è aperto!",
   },
   es: {
@@ -398,7 +398,7 @@ const translations: Record<LanguageType, Translations> = {
     game6Prompt: "¿Qué imagen es esta?",
     game7Title: "Castillo de las Frases",
     game7Desc: "¡Ordena las palabras para leer la frase y abrir el castillo!",
-    game7Prompt: "Ordena las palabras: {phrase}",
+    game7Prompt: "¡Escucha la frase y arma con las palabras de abajo! 🔊",
     castleOpened: "¡El portón del castillo se ha abierto!",
   }
 };
