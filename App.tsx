@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LocalizationProvider, useLocalization } from './src/context/LocalizationContext';
 import { GameProvider, useGame } from './src/context/GameContext';
@@ -11,6 +11,7 @@ import { GameMapScreen } from './src/screens/GameMapScreen';
 import { ParentsPanelScreen } from './src/screens/ParentsPanelScreen';
 import { CollectionScreen } from './src/screens/CollectionScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 
 // Import Minigames
 import { MundoDasLetras } from './src/screens/games/MundoDasLetras';
@@ -26,6 +27,7 @@ import { RewardChest } from './src/components/RewardChest';
 import { MascotLumi } from './src/components/MascotLumi';
 import { CustomButton } from './src/components/CustomButton';
 import { startBgMusic, stopBgMusic } from './src/services/audio';
+import { supabase } from './src/services/supabase';
 
 function GameAppContent() {
   const { character, soundEnabled } = useGame();
@@ -38,18 +40,39 @@ function GameAppContent() {
   const [secondsPlayed, setSecondsPlayed] = useState(0);
   const [showBreakModal, setShowBreakModal] = useState(false);
 
+  // Estados de Autenticação Supabase
+  const [session, setSession] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Monitorar estado de autenticação
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
+      setSession(session);
+      setCheckingAuth(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      setSession(session);
+      setCheckingAuth(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Monitorar carregamento do personagem inicial
   useEffect(() => {
-    if (character === null) {
+    // Só exige seleção se já estiver logado e não tiver personagem salvo
+    if (session && character === null) {
       setCurrentScreen('character_select');
-    } else if (currentScreen === 'character_select') {
+    } else if (character !== null && currentScreen === 'character_select') {
       setCurrentScreen('home');
     }
-  }, [character]);
+  }, [character, session]);
 
   // Trilha sonora de fundo
   useEffect(() => {
-    if (soundEnabled) {
+    // Só toca música se estiver logado
+    if (session && soundEnabled) {
       startBgMusic(true);
     } else {
       stopBgMusic();
@@ -57,10 +80,13 @@ function GameAppContent() {
     return () => {
       stopBgMusic();
     };
-  }, [soundEnabled]);
+  }, [soundEnabled, session]);
 
   // Cronômetro para TDAH: Lembrete de descanso a cada 5 minutos (300 segundos)
   useEffect(() => {
+    // Só conta tempo se estiver logado
+    if (!session) return;
+
     const interval = setInterval(() => {
       setSecondsPlayed((prev) => {
         const next = prev + 5;
@@ -73,7 +99,7 @@ function GameAppContent() {
     }, 5000); // rodar a cada 5s para controle interno
 
     return () => clearInterval(interval);
-  }, []);
+  }, [session]);
 
   const handleSelectGame = (gameId: string) => {
     setActiveGameId(gameId);
@@ -87,6 +113,19 @@ function GameAppContent() {
 
   // Roteador de Telas por Estado
   const renderScreen = () => {
+    if (checkingAuth) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Carregando o mundo das letras...</Text>
+        </View>
+      );
+    }
+
+    if (!session) {
+      return <LoginScreen />;
+    }
+
     switch (currentScreen) {
       case 'character_select':
         return <CharacterSelectScreen onNavigate={setCurrentScreen} />;
@@ -221,5 +260,17 @@ const styles = StyleSheet.create({
   },
   breakEmoji: {
     fontSize: 34,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
   },
 });
