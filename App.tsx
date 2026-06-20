@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Platform, TextInput } from 'react-native';
+import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LocalizationProvider, useLocalization } from './src/context/LocalizationContext';
 import { GameProvider, useGame } from './src/context/GameContext';
@@ -229,134 +229,60 @@ function GameAppContent({ childId, parentId }: { childId: string | null; parentI
 }
 
 // ─────────────────────────────────────────────────────────────
-// Root App: gerencia autenticação e seleção de filho
+// Root App: um único filho por conta, criado automaticamente
 // ─────────────────────────────────────────────────────────────
 export default function App() {
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
-  const [children, setChildren] = useState<any[]>([]);
-  const [showChildPicker, setShowChildPicker] = useState(false);
-  const [showCreateChild, setShowCreateChild] = useState(false);
-  const [newChildName, setNewChildName] = useState('');
-  const [newChildAge, setNewChildAge] = useState('6');
-  const [creatingChild, setCreatingChild] = useState(false);
 
-  // Carregar filhos após login
   useEffect(() => {
-    const loadChildren = async () => {
-      const { data: { session } } = await supabase.auth.getSession() as any;
-      if (!session) return;
+    const initChild = async (session: any) => {
+      if (!session) {
+        setActiveChildId(null);
+        setActiveParentId(null);
+        return;
+      }
 
       const parentId = session.user.id;
       setActiveParentId(parentId);
 
+      // Buscar filhos cadastrados
       const kids = await fetchChildren();
-      setChildren(kids);
 
-      if (kids.length === 0) {
-        // Nenhum filho cadastrado → mostrar formulário de criação
-        setShowCreateChild(true);
-      } else if (kids.length === 1) {
-        // Só um filho → selecionar automaticamente
+      if (kids.length > 0) {
+        // Já existe filho → usar o primeiro (e único)
         setActiveChildId(kids[0].id);
       } else {
-        // Múltiplos filhos → mostrar picker
-        setShowChildPicker(true);
+        // Primeiro acesso → criar filho automaticamente com nome genérico
+        // O nome real pode ser editado depois no perfil
+        const defaultName = session.user.user_metadata?.full_name
+          ? session.user.user_metadata.full_name.split(' ')[0]
+          : 'Aventureiro';
+
+        const child = await createChildWithProfile(parentId, defaultName, 6, 'panda');
+        if (child) {
+          setActiveChildId(child.id);
+        }
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      if (session) {
-        setActiveParentId(session.user.id);
-        loadChildren();
-      } else {
-        // Logout: limpar tudo
-        setActiveChildId(null);
-        setActiveParentId(null);
-        setChildren([]);
-      }
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
+      initChild(session);
     });
 
-    loadChildren();
+    // Ouvir mudanças de login/logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      initChild(session);
+    });
+
     return () => subscription.unsubscribe();
   }, []);
-
-  const handleCreateChild = async () => {
-    if (!newChildName.trim() || !activeParentId) return;
-    setCreatingChild(true);
-    const child = await createChildWithProfile(
-      activeParentId,
-      newChildName.trim(),
-      parseInt(newChildAge) || 6,
-      'panda'
-    );
-    setCreatingChild(false);
-    if (child) {
-      setChildren([child]);
-      setActiveChildId(child.id);
-      setShowCreateChild(false);
-    }
-  };
 
   return (
     <LocalizationProvider>
       <GameProvider childId={activeChildId} parentId={activeParentId}>
         <GameAppContent childId={activeChildId} parentId={activeParentId} />
-
-        {/* Seletor de filho (quando há múltiplas crianças) */}
-        <Modal visible={showChildPicker} transparent animationType="slide">
-          <View style={styles.childPickerOverlay}>
-            <View style={styles.childPickerCard}>
-              <Text style={styles.childPickerTitle}>👶 Quem vai jogar hoje?</Text>
-              {children.map(child => (
-                <TouchableOpacity
-                  key={child.id}
-                  style={styles.childPickerBtn}
-                  onPress={() => {
-                    setActiveChildId(child.id);
-                    setShowChildPicker(false);
-                  }}
-                >
-                  <Text style={styles.childPickerBtnText}>🎮 {child.name} ({child.age} anos)</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </Modal>
-
-        {/* Criar primeiro filho */}
-        <Modal visible={showCreateChild} transparent animationType="slide">
-          <View style={styles.childPickerOverlay}>
-            <View style={styles.childPickerCard}>
-              <Text style={styles.childPickerTitle}>🌟 Bem-vindo! Vamos criar o perfil da criança</Text>
-              <TextInput
-                style={styles.childInput}
-                placeholder="Nome da criança"
-                value={newChildName}
-                onChangeText={setNewChildName}
-                maxLength={50}
-              />
-              <TextInput
-                style={styles.childInput}
-                placeholder="Idade (ex: 6)"
-                value={newChildAge}
-                onChangeText={setNewChildAge}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-              <TouchableOpacity
-                style={[styles.childPickerBtn, { backgroundColor: '#4CAF50' }]}
-                onPress={handleCreateChild}
-                disabled={creatingChild}
-              >
-                {creatingChild
-                  ? <ActivityIndicator color="#FFF" />
-                  : <Text style={styles.childPickerBtnText}>✅ Criar Perfil</Text>
-                }
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </GameProvider>
     </LocalizationProvider>
   );
@@ -440,56 +366,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2E7D32',
-  },
-  childPickerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  childPickerCard: {
-    width: '85%',
-    maxWidth: 420,
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    padding: 28,
-    alignItems: 'center',
-    gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  childPickerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  childPickerBtn: {
-    width: '100%',
-    backgroundColor: '#E8F5E9',
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#A5D6A7',
-  },
-  childPickerBtnText: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-  },
-  childInput: {
-    width: '100%',
-    borderWidth: 2,
-    borderColor: '#A5D6A7',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#F9FFF9',
   },
 });
