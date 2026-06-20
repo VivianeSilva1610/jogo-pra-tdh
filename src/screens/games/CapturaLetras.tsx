@@ -44,6 +44,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const [showPerfect, setShowPerfect] = useState(false);
+  const gameAreaWidthRef = useRef(SCREEN_WIDTH > 600 ? 500 : SCREEN_WIDTH);
 
   // Inicializar fila
   useEffect(() => {
@@ -129,9 +130,10 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     const anim = new Animated.Value(SCREEN_HEIGHT); // Começa na base da tela
     const color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
     
-    // Calcular posição horizontal randômica segura (20px de margem)
-    const maxX = Math.max(SCREEN_WIDTH - 90, 100);
-    const x = Math.floor(Math.random() * (maxX - 20)) + 20;
+    // Calcular posição horizontal randômica segura baseada na largura medida da área do jogo
+    const currentWidth = gameAreaWidthRef.current;
+    const maxX = Math.max(currentWidth - 85, 100);
+    const x = Math.floor(Math.random() * (maxX - 25)) + 15;
 
     const newBubble: Bubble = {
       id,
@@ -205,7 +207,15 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
       </TouchableOpacity>
 
       {/* ÁREA DE JOGO DAS BOLHAS */}
-      <View style={styles.gameArea}>
+      <View 
+        style={styles.gameArea}
+        onLayout={(e) => {
+          const { width } = e.nativeEvent.layout;
+          if (width > 0) {
+            gameAreaWidthRef.current = width;
+          }
+        }}
+      >
         {bubbles.map((bubble) => {
           if (bubble.popped) return null;
 
