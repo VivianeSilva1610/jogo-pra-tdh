@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncChildProfile, loadChildProfile, ChildProgressProfile } from '../services/supabase';
 
 export type CharacterType = 'boy' | 'girl' | 'fox' | 'panda' | 'kitten' | 'robot';
 
@@ -40,6 +41,8 @@ export const CLOTHING_LIST: ClothingItem[] = [
 ];
 
 interface GameContextProps {
+  childId: string | null;
+  parentId: string | null;
   stars: number;
   coins: number;
   character: CharacterType | null;
@@ -52,10 +55,11 @@ interface GameContextProps {
   readWords: string[];
   soundEnabled: boolean;
   isPremium: boolean;
-  dailyUsageSeconds: Record<string, number>; // e.g. { 'Mon': 120, 'Tue': 0... }
+  dailyUsageSeconds: Record<string, number>;
   showChestModal: boolean;
+  isLoadingProfile: boolean;
   setShowChestModal: (show: boolean) => void;
-  
+
   selectCharacter: (char: CharacterType) => Promise<void>;
   addStars: (count: number) => Promise<void>;
   addCoins: (count: number) => Promise<void>;
@@ -73,7 +77,16 @@ const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// ─────────────────────────────────────────────────────────────
+// GameProvider recebe childId e parentId para isolar dados
+// ─────────────────────────────────────────────────────────────
+interface GameProviderProps {
+  children: React.ReactNode;
+  childId: string | null;
+  parentId: string | null;
+}
+
+export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, parentId }) => {
   const [stars, setStars] = useState<number>(0);
   const [coins, setCoins] = useState<number>(0);
   const [character, setCharacter] = useState<CharacterType | null>(null);
@@ -90,48 +103,121 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     'Dom': 0, 'Seg': 0, 'Ter': 0, 'Qua': 0, 'Qui': 0, 'Sex': 0, 'Sáb': 0
   });
   const [showChestModal, setShowChestModal] = useState<boolean>(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true);
 
   const usageTimerRef = useRef<any>(null);
 
-  // Carregar dados na inicialização
+  // ─────────────────────────────────────────────────────────────
+  // Prefixo de chave: isolado por childId no AsyncStorage
+  // ─────────────────────────────────────────────────────────────
+  const prefix = childId ? `child_${childId}_` : 'guest_';
+
+  const key = useCallback((k: string) => `${prefix}${k}`, [prefix]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Carregar progresso: 1º tenta Supabase, fallback AsyncStorage
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!childId) {
+      setIsLoadingProfile(false);
+      return;
+    }
+
     const loadProgress = async () => {
+      setIsLoadingProfile(true);
       try {
-        const keys = [
-          'game_stars', 'game_coins', 'game_character',
-          'game_stickers', 'game_clothing', 'game_equipped_clothing',
-          'game_challenges_count', 'game_letters', 'game_syllables',
-          'game_words', 'game_sound', 'game_premium', 'game_usage'
-        ];
-        const stores = await AsyncStorage.multiGet(keys);
-        
-        stores.forEach(([key, val]) => {
-          if (!val) return;
-          switch (key) {
-            case 'game_stars': setStars(Number(val)); break;
-            case 'game_coins': setCoins(Number(val)); break;
-            case 'game_character': setCharacter(val as CharacterType); break;
-            case 'game_stickers': setUnlockedStickers(JSON.parse(val)); break;
-            case 'game_clothing': setUnlockedClothing(JSON.parse(val)); break;
-            case 'game_equipped_clothing': setEquippedClothing(val); break;
-            case 'game_challenges_count': setChallengesCompleted(Number(val)); break;
-            case 'game_letters': setLearnedLetters(JSON.parse(val)); break;
-            case 'game_syllables': setMasteredSyllables(JSON.parse(val)); break;
-            case 'game_words': setReadWords(JSON.parse(val)); break;
-            case 'game_sound': setSoundEnabledState(val === 'true'); break;
-            case 'game_premium': setIsPremiumState(val === 'true'); break;
-            case 'game_usage': setDailyUsageSeconds(JSON.parse(val)); break;
-          }
-        });
+        // Tentar carregar da nuvem primeiro
+        let profile: ChildProgressProfile | null = null;
+        if (parentId) {
+          profile = await loadChildProfile(childId, parentId);
+        }
+
+        if (profile) {
+          // Dados da nuvem (fonte de verdade)
+          setStars(profile.stars);
+          setCoins(profile.coins);
+          setChallengesCompleted(profile.challengesCompleted);
+          setCharacter((profile.character as CharacterType) ?? null);
+          setEquippedClothing(profile.equippedClothing);
+          setUnlockedStickers(profile.unlockedStickers);
+          setUnlockedClothing(profile.unlockedClothing);
+          setLearnedLetters(profile.learnedLetters);
+          setMasteredSyllables(profile.masteredSyllables);
+          setReadWords(profile.readWords);
+          setDailyUsageSeconds(profile.dailyUsageSeconds ?? {
+            'Dom': 0, 'Seg': 0, 'Ter': 0, 'Qua': 0, 'Qui': 0, 'Sex': 0, 'Sáb': 0
+          });
+        } else {
+          // Fallback: AsyncStorage local (prefixado por child)
+          const keys = [
+            key('game_stars'), key('game_coins'), key('game_character'),
+            key('game_stickers'), key('game_clothing'), key('game_equipped_clothing'),
+            key('game_challenges_count'), key('game_letters'), key('game_syllables'),
+            key('game_words'), key('game_sound'), key('game_premium'), key('game_usage')
+          ];
+          const stores = await AsyncStorage.multiGet(keys);
+
+          stores.forEach(([k, val]) => {
+            if (!val) return;
+            const shortKey = k.replace(prefix, '');
+            switch (shortKey) {
+              case 'game_stars': setStars(Number(val)); break;
+              case 'game_coins': setCoins(Number(val)); break;
+              case 'game_character': setCharacter(val as CharacterType); break;
+              case 'game_stickers': setUnlockedStickers(JSON.parse(val)); break;
+              case 'game_clothing': setUnlockedClothing(JSON.parse(val)); break;
+              case 'game_equipped_clothing': setEquippedClothing(val); break;
+              case 'game_challenges_count': setChallengesCompleted(Number(val)); break;
+              case 'game_letters': setLearnedLetters(JSON.parse(val)); break;
+              case 'game_syllables': setMasteredSyllables(JSON.parse(val)); break;
+              case 'game_words': setReadWords(JSON.parse(val)); break;
+              case 'game_sound': setSoundEnabledState(val === 'true'); break;
+              case 'game_premium': setIsPremiumState(val === 'true'); break;
+              case 'game_usage': setDailyUsageSeconds(JSON.parse(val)); break;
+            }
+          });
+        }
+
+        // Configurações globais (não isoladas por criança)
+        const soundVal = await AsyncStorage.getItem('global_sound');
+        if (soundVal !== null) setSoundEnabledState(soundVal === 'true');
+
       } catch (e) {
         console.error('Falha ao carregar progresso', e);
+      } finally {
+        setIsLoadingProfile(false);
       }
     };
+
     loadProgress();
-  }, []);
+  }, [childId, parentId]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Sincronizar com Supabase após cada mudança relevante (debounce 3s)
+  // ─────────────────────────────────────────────────────────────
+  const syncTimeout = useRef<any>(null);
+
+  const scheduleSync = useCallback((overrides: Partial<ChildProgressProfile> = {}) => {
+    if (!childId || !parentId) return;
+    if (syncTimeout.current) clearTimeout(syncTimeout.current);
+    syncTimeout.current = setTimeout(() => {
+      const currentProfile: ChildProgressProfile = {
+        stars, coins, challengesCompleted,
+        character, equippedClothing,
+        unlockedStickers, unlockedClothing,
+        learnedLetters, masteredSyllables, readWords,
+        dailyUsageSeconds, isPremium,
+        ...overrides,
+      };
+      syncChildProfile(childId, parentId, currentProfile);
+    }, 3000);
+  }, [childId, parentId, stars, coins, challengesCompleted, character, equippedClothing,
+    unlockedStickers, unlockedClothing, learnedLetters, masteredSyllables, readWords,
+    dailyUsageSeconds, isPremium]);
 
   // Monitorar tempo de uso da sessão
   useEffect(() => {
+    if (!childId) return;
     usageTimerRef.current = setInterval(() => {
       const todayIndex = new Date().getDay();
       const todayName = DAYS_OF_WEEK[todayIndex];
@@ -139,46 +225,54 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDailyUsageSeconds((prev) => {
         const updated = {
           ...prev,
-          [todayName]: (prev[todayName] || 0) + 10, // adiciona 10 segundos
+          [todayName]: (prev[todayName] || 0) + 10,
         };
-        AsyncStorage.setItem('game_usage', JSON.stringify(updated));
+        AsyncStorage.setItem(key('game_usage'), JSON.stringify(updated));
         return updated;
       });
-    }, 10000); // roda a cada 10s para não sobrecarregar escrita
+    }, 10000);
 
     return () => {
       if (usageTimerRef.current) clearInterval(usageTimerRef.current);
     };
-  }, []);
+  }, [childId]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Actions
+  // ─────────────────────────────────────────────────────────────
 
   const selectCharacter = async (char: CharacterType) => {
     setCharacter(char);
-    await AsyncStorage.setItem('game_character', char);
+    await AsyncStorage.setItem(key('game_character'), char);
+    scheduleSync({ character: char });
   };
 
   const addStars = async (count: number) => {
     const updated = stars + count;
     setStars(updated);
-    await AsyncStorage.setItem('game_stars', String(updated));
+    await AsyncStorage.setItem(key('game_stars'), String(updated));
+    scheduleSync({ stars: updated });
   };
 
   const addCoins = async (count: number) => {
     const updated = coins + count;
     setCoins(updated);
-    await AsyncStorage.setItem('game_coins', String(updated));
+    await AsyncStorage.setItem(key('game_coins'), String(updated));
+    scheduleSync({ coins: updated });
   };
 
   const buySticker = async (id: string, cost: number): Promise<boolean> => {
     if (coins < cost) return false;
-    
+
     const updatedCoins = coins - cost;
     const updatedStickers = [...unlockedStickers, id];
-    
+
     setCoins(updatedCoins);
     setUnlockedStickers(updatedStickers);
-    
-    await AsyncStorage.setItem('game_coins', String(updatedCoins));
-    await AsyncStorage.setItem('game_stickers', JSON.stringify(updatedStickers));
+
+    await AsyncStorage.setItem(key('game_coins'), String(updatedCoins));
+    await AsyncStorage.setItem(key('game_stickers'), JSON.stringify(updatedStickers));
+    scheduleSync({ coins: updatedCoins, unlockedStickers: updatedStickers });
     return true;
   };
 
@@ -191,25 +285,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCoins(updatedCoins);
     setUnlockedClothing(updatedClothing);
 
-    await AsyncStorage.setItem('game_coins', String(updatedCoins));
-    await AsyncStorage.setItem('game_clothing', JSON.stringify(updatedClothing));
+    await AsyncStorage.setItem(key('game_coins'), String(updatedCoins));
+    await AsyncStorage.setItem(key('game_clothing'), JSON.stringify(updatedClothing));
+    scheduleSync({ coins: updatedCoins, unlockedClothing: updatedClothing });
     return true;
   };
 
   const equipClothing = async (id: string | null) => {
     setEquippedClothing(id);
     if (id) {
-      await AsyncStorage.setItem('game_equipped_clothing', id);
+      await AsyncStorage.setItem(key('game_equipped_clothing'), id);
     } else {
-      await AsyncStorage.removeItem('game_equipped_clothing');
+      await AsyncStorage.removeItem(key('game_equipped_clothing'));
     }
+    scheduleSync({ equippedClothing: id });
   };
 
   const completeChallenge = async (type: 'letter' | 'syllable' | 'word', value: string) => {
-    // 1. Ganho de moedas e estrelas padrão
     const earnedCoins = 10;
     const earnedStars = 1;
-    
+
     const newCoins = coins + earnedCoins;
     const newStars = stars + earnedStars;
     const newCount = challengesCompleted + 1;
@@ -218,65 +313,77 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStars(newStars);
     setChallengesCompleted(newCount);
 
-    await AsyncStorage.setItem('game_coins', String(newCoins));
-    await AsyncStorage.setItem('game_stars', String(newStars));
-    await AsyncStorage.setItem('game_challenges_count', String(newCount));
+    await AsyncStorage.setItem(key('game_coins'), String(newCoins));
+    await AsyncStorage.setItem(key('game_stars'), String(newStars));
+    await AsyncStorage.setItem(key('game_challenges_count'), String(newCount));
 
-    // 2. Atualizar letras, sílabas ou palavras aprendidas
     const upperVal = value.toUpperCase();
+    let newLetters = learnedLetters;
+    let newSyllables = masteredSyllables;
+    let newWords = readWords;
+
     if (type === 'letter') {
       if (!learnedLetters.includes(upperVal)) {
-        const updated = [...learnedLetters, upperVal];
-        setLearnedLetters(updated);
-        await AsyncStorage.setItem('game_letters', JSON.stringify(updated));
+        newLetters = [...learnedLetters, upperVal];
+        setLearnedLetters(newLetters);
+        await AsyncStorage.setItem(key('game_letters'), JSON.stringify(newLetters));
       }
     } else if (type === 'syllable') {
       if (!masteredSyllables.includes(upperVal)) {
-        const updated = [...masteredSyllables, upperVal];
-        setMasteredSyllables(updated);
-        await AsyncStorage.setItem('game_syllables', JSON.stringify(updated));
+        newSyllables = [...masteredSyllables, upperVal];
+        setMasteredSyllables(newSyllables);
+        await AsyncStorage.setItem(key('game_syllables'), JSON.stringify(newSyllables));
       }
     } else if (type === 'word') {
       if (!readWords.includes(upperVal)) {
-        const updated = [...readWords, upperVal];
-        setReadWords(updated);
-        await AsyncStorage.setItem('game_words', JSON.stringify(updated));
+        newWords = [...readWords, upperVal];
+        setReadWords(newWords);
+        await AsyncStorage.setItem(key('game_words'), JSON.stringify(newWords));
       }
     }
 
-    // 3. Mecânica TDAH: Baú surpresa a cada 5 desafios completos!
+    // Mecânica TDAH: Baú surpresa a cada 5 desafios
     if (newCount > 0 && newCount % 5 === 0) {
       setShowChestModal(true);
     }
+
+    // Sincronizar na nuvem
+    scheduleSync({
+      coins: newCoins,
+      stars: newStars,
+      challengesCompleted: newCount,
+      learnedLetters: newLetters,
+      masteredSyllables: newSyllables,
+      readWords: newWords,
+    });
   };
 
   const claimChestReward = async (): Promise<string> => {
-    // Dá um adesivo aleatório ou roupas, ou muitas moedas se tudo já estiver comprado
     const lockedStickers = STICKERS_LIST.filter(s => !unlockedStickers.includes(s.id));
     const lockedClothing = CLOTHING_LIST.filter(c => !unlockedClothing.includes(c.id));
 
     let rewardText = '';
-    
+
     if (lockedStickers.length > 0 && (lockedClothing.length === 0 || Math.random() > 0.4)) {
-      // Ganha adesivo
       const chosen = lockedStickers[Math.floor(Math.random() * lockedStickers.length)];
       const updatedStickers = [...unlockedStickers, chosen.id];
       setUnlockedStickers(updatedStickers);
-      await AsyncStorage.setItem('game_stickers', JSON.stringify(updatedStickers));
+      await AsyncStorage.setItem(key('game_stickers'), JSON.stringify(updatedStickers));
+      scheduleSync({ unlockedStickers: updatedStickers });
       rewardText = `Figurinha: ${chosen.emoji}`;
     } else if (lockedClothing.length > 0) {
-      // Ganha roupa
       const chosen = lockedClothing[Math.floor(Math.random() * lockedClothing.length)];
       const updatedClothing = [...unlockedClothing, chosen.id];
       setUnlockedClothing(updatedClothing);
-      await AsyncStorage.setItem('game_clothing', JSON.stringify(updatedClothing));
+      await AsyncStorage.setItem(key('game_clothing'), JSON.stringify(updatedClothing));
+      scheduleSync({ unlockedClothing: updatedClothing });
       rewardText = `Roupa: ${chosen.emoji}`;
     } else {
-      // Ganha super bônus de moedas
       const bonus = 50;
       const updatedCoins = coins + bonus;
       setCoins(updatedCoins);
-      await AsyncStorage.setItem('game_coins', String(updatedCoins));
+      await AsyncStorage.setItem(key('game_coins'), String(updatedCoins));
+      scheduleSync({ coins: updatedCoins });
       rewardText = `Super Moedas: +${bonus} 🪙`;
     }
 
@@ -286,12 +393,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setSoundEnabled = async (enabled: boolean) => {
     setSoundEnabledState(enabled);
-    await AsyncStorage.setItem('game_sound', String(enabled));
+    // Som é configuração global (não por criança)
+    await AsyncStorage.setItem('global_sound', String(enabled));
   };
 
   const setIsPremium = async (premium: boolean) => {
     setIsPremiumState(premium);
-    await AsyncStorage.setItem('game_premium', String(premium));
+    await AsyncStorage.setItem(key('game_premium'), String(premium));
   };
 
   const resetGameProgress = async () => {
@@ -309,20 +417,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'Dom': 0, 'Seg': 0, 'Ter': 0, 'Qua': 0, 'Qui': 0, 'Sex': 0, 'Sáb': 0
     });
     setIsPremiumState(false);
-    
-    await AsyncStorage.multiRemove([
-      'game_stars', 'game_coins', 'game_character',
-      'game_stickers', 'game_clothing', 'game_equipped_clothing',
-      'game_challenges_count', 'game_letters', 'game_syllables',
-      'game_words', 'game_usage', 'game_premium'
-    ]);
+
+    // Limpar apenas as chaves desta criança
+    const keysToRemove = [
+      key('game_stars'), key('game_coins'), key('game_character'),
+      key('game_stickers'), key('game_clothing'), key('game_equipped_clothing'),
+      key('game_challenges_count'), key('game_letters'), key('game_syllables'),
+      key('game_words'), key('game_usage'), key('game_premium')
+    ];
+    await AsyncStorage.multiRemove(keysToRemove);
+
+    // Sincronizar reset na nuvem
+    if (childId && parentId) {
+      await syncChildProfile(childId, parentId, {
+        stars: 0, coins: 0, challengesCompleted: 0, character: null,
+        equippedClothing: null, unlockedStickers: [], unlockedClothing: [],
+        learnedLetters: [], masteredSyllables: [], readWords: [],
+        dailyUsageSeconds: {}, isPremium: false,
+      });
+    }
   };
 
   return (
     <GameContext.Provider value={{
+      childId, parentId,
       stars, coins, character, unlockedStickers, unlockedClothing, equippedClothing,
       challengesCompleted, learnedLetters, masteredSyllables, readWords, soundEnabled, isPremium,
-      dailyUsageSeconds, showChestModal, setShowChestModal,
+      dailyUsageSeconds, showChestModal, isLoadingProfile, setShowChestModal,
       selectCharacter, addStars, addCoins, buySticker, buyClothing, equipClothing,
       completeChallenge, resetGameProgress, setSoundEnabled, setIsPremium, claimChestReward
     }}>
