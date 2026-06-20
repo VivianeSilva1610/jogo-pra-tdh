@@ -13,8 +13,33 @@ interface LetrasCamufladasProps {
   onBack: () => void;
 }
 
-const SHUFFLED_EMOJIS = ['🌳', '🐝', '🚗', '🐱', '🐶', '⚽', '🍎', '🧸', '🚀', '⭐', '🎈', '🍉', '🐟'];
-const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V'];
+
+// Letras distratoras visualmente parecidas com cada letra alvo
+const SIMILAR_LETTERS: Record<string, string[]> = {
+  A: ['H', 'N', 'M', 'R', 'K'],
+  B: ['D', 'P', 'R', 'E', 'F'],
+  C: ['G', 'O', 'Q', 'D', 'U'],
+  D: ['B', 'O', 'P', 'Q', 'G'],
+  E: ['F', 'B', 'L', 'P', 'T'],
+  F: ['E', 'P', 'T', 'L', 'I'],
+  G: ['C', 'O', 'Q', 'D', 'U'],
+  H: ['N', 'M', 'K', 'A', 'R'],
+  I: ['L', 'T', 'F', 'J', 'Y'],
+  J: ['I', 'L', 'T', 'Y', 'F'],
+  K: ['H', 'N', 'R', 'X', 'Y'],
+  L: ['I', 'T', 'F', 'E', 'J'],
+  M: ['N', 'H', 'W', 'A', 'K'],
+  N: ['M', 'H', 'K', 'R', 'A'],
+  O: ['C', 'D', 'G', 'Q', 'U'],
+  P: ['B', 'D', 'F', 'R', 'E'],
+  Q: ['O', 'C', 'G', 'D', 'U'],
+  R: ['B', 'P', 'K', 'N', 'H'],
+  S: ['Z', 'C', 'G', 'O', 'U'],
+  T: ['I', 'F', 'L', 'Y', 'J'],
+  U: ['V', 'C', 'O', 'W', 'Y'],
+  V: ['U', 'W', 'Y', 'N', 'M'],
+};
 
 export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
@@ -56,17 +81,14 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
     setSelectedIdx(null);
     hadErrorInRound.current = false;
 
-    // Selecionar 4 emojis aleatórios distintos
-    const emojis: string[] = [];
-    while (emojis.length < 4) {
-      const randomEmoji = SHUFFLED_EMOJIS[Math.floor(Math.random() * SHUFFLED_EMOJIS.length)];
-      if (!emojis.includes(randomEmoji)) {
-        emojis.push(randomEmoji);
-      }
-    }
+    // Pegar letras distratoras (parecidas com a alvo para dificultar visualmente)
+    const pool = SIMILAR_LETTERS[selectedTarget] ?? 
+      'ABCDEFGHIJKLMNOPRSTUVXY'.split('').filter(l => l !== selectedTarget);
+    // Embaralhar e pegar 4
+    const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
 
-    // Misturar com a letra alvo
-    const allChoices = [...emojis, selectedTarget].sort(() => Math.random() - 0.5);
+    // Misturar com a letra alvo → 5 opções no total, todas letras
+    const allChoices = [...shuffled, selectedTarget].sort(() => Math.random() - 0.5);
     setChoices(allChoices);
 
     // Tocar o som alvo ao iniciar
@@ -237,34 +259,37 @@ const styles = StyleSheet.create({
     maxWidth: 500,
   },
   bubble: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: '#FFF',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#FFF8F0',
     borderWidth: 3,
-    borderColor: '#FFE082',
+    borderColor: '#FFB74D',
+    borderBottomWidth: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    margin: 9,
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   bubbleCorrect: {
     borderColor: '#4CAF50',
+    borderBottomColor: '#2E7D32',
     backgroundColor: '#E8F5E9',
-    transform: [{ scale: 1.08 }],
+    transform: [{ scale: 1.12 }],
   },
   bubbleIncorrect: {
-    borderColor: '#B0BEC5', // Erro cinza neutro
+    borderColor: '#B0BEC5',
+    borderBottomColor: '#B0BEC5',
     backgroundColor: '#ECEFF1',
-    opacity: 0.6,
+    opacity: 0.5,
   },
   bubbleText: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 42,
+    fontWeight: '900',
     color: '#5D4037',
   },
   bubbleTextCorrect: {
