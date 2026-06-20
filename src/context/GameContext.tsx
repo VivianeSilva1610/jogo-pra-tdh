@@ -33,12 +33,40 @@ export const STICKERS_LIST: StickerItem[] = [
   { id: 'sticker_rainbow', nameKey: 'stickerRainbow', emoji: '🌈', cost: 25, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1443694903671-41e90b9b3d93?w=300&auto=format&fit=crop' },
 ];
 
+export const CLOTHING_CATEGORIES: Record<string, 'head' | 'face' | 'body' | 'back' | 'hand'> = {
+  hat_explorer: 'head',
+  crown: 'head',
+  pirate_hat: 'head',
+  sunglasses: 'face',
+  detective_lens: 'face',
+  cape_wizard: 'body',
+  princess_dress: 'body',
+  superhero_cape: 'body',
+  dino_costume: 'body',
+  backpack_rocket: 'back',
+  balloon: 'back',
+  teddy_bear: 'hand',
+  toy_train: 'hand',
+  magic_wand: 'hand',
+  gamepad: 'hand',
+};
+
 export const CLOTHING_LIST: ClothingItem[] = [
   { id: 'hat_explorer', nameKey: 'hat_explorer', emoji: '🤠', cost: 50 },
   { id: 'crown', nameKey: 'crown', emoji: '👑', cost: 100 },
   { id: 'sunglasses', nameKey: 'sunglasses', emoji: '🕶️', cost: 30 },
   { id: 'cape_wizard', nameKey: 'cape_wizard', emoji: '🧙‍♂️', cost: 80 },
   { id: 'backpack_rocket', nameKey: 'backpack_rocket', emoji: '🚀', cost: 120 },
+  { id: 'teddy_bear', nameKey: 'teddy_bear', emoji: '🧸', cost: 60 },
+  { id: 'toy_train', nameKey: 'toy_train', emoji: '🚂', cost: 70 },
+  { id: 'balloon', nameKey: 'balloon', emoji: '🎈', cost: 40 },
+  { id: 'magic_wand', nameKey: 'magic_wand', emoji: '🪄', cost: 80 },
+  { id: 'gamepad', nameKey: 'gamepad', emoji: '🎮', cost: 90 },
+  { id: 'princess_dress', nameKey: 'princess_dress', emoji: '👗', cost: 100 },
+  { id: 'superhero_cape', nameKey: 'superhero_cape', emoji: '🦸', cost: 90 },
+  { id: 'dino_costume', nameKey: 'dino_costume', emoji: '🦖', cost: 110 },
+  { id: 'pirate_hat', nameKey: 'pirate_hat', emoji: '🏴‍☠️', cost: 85 },
+  { id: 'detective_lens', nameKey: 'detective_lens', emoji: '🔍', cost: 50 },
 ];
 
 interface GameContextProps {
@@ -293,13 +321,34 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
   };
 
   const equipClothing = async (id: string | null) => {
-    setEquippedClothing(id);
-    if (id) {
-      await AsyncStorage.setItem(key('game_equipped_clothing'), id);
+    let newEquipped: string | null = null;
+    
+    if (id === null) {
+      newEquipped = null;
+    } else {
+      // Obter lista atual de itens equipados
+      const currentList = equippedClothing ? equippedClothing.split(',').map(x => x.trim()).filter(Boolean) : [];
+      
+      if (currentList.includes(id)) {
+        // Desequipar se já estiver na lista
+        const filtered = currentList.filter(x => x !== id);
+        newEquipped = filtered.length > 0 ? filtered.join(',') : null;
+      } else {
+        // Equipar: remover qualquer item na mesma categoria, e adicionar este
+        const targetCategory = CLOTHING_CATEGORIES[id];
+        const filtered = currentList.filter(x => CLOTHING_CATEGORIES[x] !== targetCategory);
+        filtered.push(id);
+        newEquipped = filtered.join(',');
+      }
+    }
+
+    setEquippedClothing(newEquipped);
+    if (newEquipped) {
+      await AsyncStorage.setItem(key('game_equipped_clothing'), newEquipped);
     } else {
       await AsyncStorage.removeItem(key('game_equipped_clothing'));
     }
-    scheduleSync({ equippedClothing: id });
+    scheduleSync({ equippedClothing: newEquipped });
   };
 
   const completeChallenge = async (type: 'letter' | 'syllable' | 'word', value: string) => {

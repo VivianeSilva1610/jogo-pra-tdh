@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Image } from 'react-native';
 import { useLocalization } from '../context/LocalizationContext';
-import { useGame, STICKERS_LIST, CLOTHING_LIST, StickerItem, ClothingItem } from '../context/GameContext';
+import { useGame, STICKERS_LIST, CLOTHING_LIST, StickerItem, ClothingItem, CLOTHING_CATEGORIES } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { StarIcon, CoinIcon, getAvatarComponent } from '../components/VectorIcons';
 import { ArrowLeft, Gift } from 'lucide-react-native';
@@ -28,6 +28,27 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
 
   const [activeTab, setActiveTab] = useState<'stickers' | 'shop'>('stickers');
   const [errorMsg, setErrorMsg] = useState('');
+  const [previewItems, setPreviewItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    setPreviewItems(equippedClothing ? equippedClothing.split(',').map(x => x.trim()).filter(Boolean) : []);
+  }, [equippedClothing]);
+
+  const handleTryOn = (item: ClothingItem) => {
+    const targetCategory = CLOTHING_CATEGORIES[item.id];
+    if (previewItems.includes(item.id)) {
+      // Tirar do provador
+      setPreviewItems(previewItems.filter(x => x !== item.id));
+    } else {
+      // Colocar no provador: remove qualquer outro da mesma categoria
+      const filtered = previewItems.filter(x => CLOTHING_CATEGORIES[x] !== targetCategory);
+      setPreviewItems([...filtered, item.id]);
+    }
+  };
+
+  const handleClearPreview = () => {
+    setPreviewItems(equippedClothing ? equippedClothing.split(',').map(x => x.trim()).filter(Boolean) : []);
+  };
 
   const handleBuySticker = async (sticker: StickerItem) => {
     setErrorMsg('');
@@ -48,11 +69,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
   };
 
   const handleEquip = (clothingId: string) => {
-    if (equippedClothing === clothingId) {
-      equipClothing(null); // Desequipar
-    } else {
-      equipClothing(clothingId); // Equipar
-    }
+    equipClothing(clothingId);
   };
 
   return (
@@ -173,30 +190,51 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
             {/* Visualização em tempo real do Personagem no Provador */}
             {character && (
               <View style={styles.dressingRoom}>
-                <Text style={styles.dressingRoomTitle}>Provador Virtual</Text>
-                {getAvatarComponent(character, 110, equippedClothing)}
+                <View style={styles.dressingRoomHeader}>
+                  <Text style={styles.dressingRoomTitle}>Provador Virtual</Text>
+                  {previewItems.join(',') !== (equippedClothing || '') && (
+                    <TouchableOpacity style={styles.resetButton} onPress={handleClearPreview}>
+                      <Text style={styles.resetButtonText}>Limpar 🔄</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={styles.dressingRoomAvatar}>
+                  {getAvatarComponent(character, 110, previewItems.join(','))}
+                </View>
+                <Text style={styles.dressingRoomTip}>Toque nos itens abaixo para experimentar combinando slots!</Text>
               </View>
             )}
 
             <View style={styles.clothingList}>
               {CLOTHING_LIST.map((item) => {
                 const isUnlocked = unlockedClothing.includes(item.id);
-                const isEquipped = equippedClothing === item.id;
+                const isEquipped = equippedClothing ? equippedClothing.split(',').map(x => x.trim()).filter(Boolean).includes(item.id) : false;
+                const isPreviewed = previewItems.includes(item.id);
 
                 return (
-                  <View key={item.id} style={styles.clothingCard}>
-                    <View style={styles.clothingIconBg}>
-                      <Text style={styles.clothingEmoji}>{item.emoji}</Text>
-                    </View>
-                    
-                    <View style={styles.clothingInfo}>
-                      <Text style={styles.clothingName}>
-                        {t(item.nameKey as any)}
-                      </Text>
-                      <Text style={styles.clothingCostText}>
-                        {isUnlocked ? t('equipped') : `🪙 ${item.cost}`}
-                      </Text>
-                    </View>
+                  <View key={item.id} style={[styles.clothingCard, isPreviewed && styles.clothingCardPreviewed]}>
+                    <TouchableOpacity 
+                      style={styles.clothingPressableArea} 
+                      onPress={() => handleTryOn(item)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.clothingIconBg, isPreviewed && styles.clothingIconBgPreviewed]}>
+                        <Text style={styles.clothingEmoji}>{item.emoji}</Text>
+                        {isPreviewed && <Text style={styles.previewIndicator}>👁️</Text>}
+                      </View>
+                      
+                      <View style={styles.clothingInfo}>
+                        <Text style={styles.clothingName}>
+                          {t(item.nameKey as any)}
+                        </Text>
+                        <Text style={styles.clothingCostText}>
+                          {isUnlocked ? (isEquipped ? 'Equipado' : 'Desequipado') : `🪙 ${item.cost}`}
+                        </Text>
+                        {isPreviewed && (
+                          <Text style={styles.previewTextStatus}>👁️ Provando</Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
 
                     <View style={styles.clothingAction}>
                       {isUnlocked ? (
@@ -501,5 +539,66 @@ const styles = StyleSheet.create({
   },
   clothingAction: {
     width: 100,
+  },
+  dressingRoomHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 5,
+  },
+  resetButton: {
+    backgroundColor: '#FF7043',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  resetButtonText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  dressingRoomAvatar: {
+    marginVertical: 10,
+  },
+  dressingRoomTip: {
+    fontSize: 11,
+    color: '#00838F',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 5,
+  },
+  clothingPressableArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  clothingCardPreviewed: {
+    borderColor: '#00BCD4',
+    borderWidth: 2,
+    backgroundColor: '#E0F7FA',
+  },
+  clothingIconBgPreviewed: {
+    borderColor: '#00BCD4',
+    backgroundColor: '#FFF',
+  },
+  previewIndicator: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#00BCD4',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    textAlign: 'center',
+    lineHeight: 14,
+    fontSize: 10,
+    overflow: 'hidden',
+  },
+  previewTextStatus: {
+    fontSize: 10,
+    color: '#00BCD4',
+    fontWeight: 'bold',
+    marginTop: 4,
   },
 });

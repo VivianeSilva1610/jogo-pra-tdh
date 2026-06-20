@@ -88,6 +88,21 @@ export interface Translations {
   difficultyEasy: string;
   difficultyMedium: string;
   difficultyHard: string;
+  hat_explorer: string;
+  crown: string;
+  sunglasses: string;
+  cape_wizard: string;
+  backpack_rocket: string;
+  teddy_bear: string;
+  toy_train: string;
+  balloon: string;
+  magic_wand: string;
+  gamepad: string;
+  princess_dress: string;
+  superhero_cape: string;
+  dino_costume: string;
+  pirate_hat: string;
+  detective_lens: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -175,6 +190,21 @@ const translations: Record<LanguageType, Translations> = {
     difficultyEasy: "🟢 Fácil",
     difficultyMedium: "🟡 Médio",
     difficultyHard: "🔴 Difícil",
+    hat_explorer: "Chapéu de Explorador",
+    crown: "Coroa Real",
+    sunglasses: "Óculos de Sol",
+    cape_wizard: "Capa de Mago",
+    backpack_rocket: "Mochila de Foguete",
+    teddy_bear: "Ursinho de Pelúcia",
+    toy_train: "Trem de Brinquedo",
+    balloon: "Balão Mágico",
+    magic_wand: "Varinha Mágica",
+    gamepad: "Controle de Videogame",
+    princess_dress: "Vestido de Princesa",
+    superhero_cape: "Capa de Super-herói",
+    dino_costume: "Fantasia de Dinossauro",
+    pirate_hat: "Chapéu de Pirata",
+    detective_lens: "Lupa de Detetive",
   },
   en: {
     appName: "Letter Adventure",
@@ -260,6 +290,21 @@ const translations: Record<LanguageType, Translations> = {
     difficultyEasy: "🟢 Easy",
     difficultyMedium: "🟡 Medium",
     difficultyHard: "🔴 Hard",
+    hat_explorer: "Explorer Hat",
+    crown: "Royal Crown",
+    sunglasses: "Sunglasses",
+    cape_wizard: "Wizard Cape",
+    backpack_rocket: "Rocket Backpack",
+    teddy_bear: "Teddy Bear",
+    toy_train: "Toy Train",
+    balloon: "Magic Balloon",
+    magic_wand: "Magic Wand",
+    gamepad: "Video Game Controller",
+    princess_dress: "Princess Dress",
+    superhero_cape: "Superhero Cape",
+    dino_costume: "Dino Costume",
+    pirate_hat: "Pirate Hat",
+    detective_lens: "Detective Magnifier",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -345,6 +390,21 @@ const translations: Record<LanguageType, Translations> = {
     difficultyEasy: "🟢 Facile",
     difficultyMedium: "🟡 Medio",
     difficultyHard: "🔴 Difficile",
+    hat_explorer: "Cappello da Esploratore",
+    crown: "Corona Reale",
+    sunglasses: "Occhiali da Sole",
+    cape_wizard: "Mantello da Mago",
+    backpack_rocket: "Zaino a Razzo",
+    teddy_bear: "Orsetto di Peluche",
+    toy_train: "Trenino Giocattolo",
+    balloon: "Palloncino Magico",
+    magic_wand: "Bacchetta Magica",
+    gamepad: "Controller per Videogiochi",
+    princess_dress: "Vestito da Principessa",
+    superhero_cape: "Mantello da Supereroe",
+    dino_costume: "Costume da Dinosauro",
+    pirate_hat: "Cappello da Pirata",
+    detective_lens: "Lente da Investigatore",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -430,6 +490,21 @@ const translations: Record<LanguageType, Translations> = {
     difficultyEasy: "🟢 Fácil",
     difficultyMedium: "🟡 Medio",
     difficultyHard: "🔴 Difícil",
+    hat_explorer: "Sombrero de Explorador",
+    crown: "Corona Real",
+    sunglasses: "Gafas de Sol",
+    cape_wizard: "Capa de Mago",
+    backpack_rocket: "Mochila de Cohete",
+    teddy_bear: "Oso de Peluche",
+    toy_train: "Tren de Juguete",
+    balloon: "Globo Mágico",
+    magic_wand: "Varita Mágica",
+    gamepad: "Mando de Videojuego",
+    princess_dress: "Vestido de Princesa",
+    superhero_cape: "Capa de Superhéroe",
+    dino_costume: "Disfraz de Dinosaurio",
+    pirate_hat: "Sombrero de Pirata",
+    detective_lens: "Lupa de Detective",
   }
 };
 

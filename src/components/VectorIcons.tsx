@@ -71,6 +71,27 @@ export const ChestIcon: React.FC<{ size?: number; isOpen?: boolean }> = ({ size 
   );
 };
 
+// Categorias de acessórios para ordenação de camadas
+const isBackAccessory = (acc: string | null | undefined) => 
+  acc === 'backpack_rocket' || acc === 'balloon';
+
+const isBodyAccessory = (acc: string | null | undefined) => 
+  acc === 'cape_wizard' || acc === 'princess_dress' || acc === 'superhero_cape' || acc === 'dino_costume' || acc === 'toy_train';
+
+const renderAccessoryGroup = (accessory: string | null | undefined, filterFn: (acc: string) => boolean) => {
+  if (!accessory) return null;
+  const list = accessory.split(',').map(x => x.trim()).filter(Boolean);
+  return (
+    <>
+      {list.filter(filterFn).map(acc => (
+        <G key={acc}>
+          {renderAccessory(acc)}
+        </G>
+      ))}
+    </>
+  );
+};
+
 // Renderizar acessórios sobre os personagens
 const renderAccessory = (accessory: string | null | undefined) => {
   if (!accessory) return null;
@@ -128,6 +149,167 @@ const renderAccessory = (accessory: string | null | undefined) => {
           <Path d="M6 35L8 42L10 35Z" fill="#FFEA00" />
         </G>
       );
+    case 'teddy_bear':
+      return (
+        <G id="accessory-teddy-bear">
+          {/* Corpo do Ursinho de Pelúcia */}
+          <Circle cx="72" cy="78" r="10.5" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5" />
+          <Circle cx="72" cy="78" r="5.5" fill="#D7CCC8" />
+          {/* Cabeça */}
+          <Circle cx="72" cy="63" r="8" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5" />
+          {/* Orelhas */}
+          <Circle cx="65" cy="56" r="3" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5" />
+          <Circle cx="65" cy="56" r="1.5" fill="#FF8A80" />
+          <Circle cx="79" cy="56" r="3" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5" />
+          <Circle cx="79" cy="56" r="1.5" fill="#FF8A80" />
+          {/* Focinho */}
+          <Path d="M69 65C69 63.5 70.3 63 72 63C73.7 63 75 63.5 75 65C75 66.5 73.7 67 72 67C70.3 67 69 66.5 69 65Z" fill="#D7CCC8" />
+          <Circle cx="72" cy="64.5" r="0.8" fill="#3E2723" />
+          {/* Olhos */}
+          <Circle cx="69" cy="61" r="1" fill="#3E2723" />
+          <Circle cx="75" cy="61" r="1" fill="#3E2723" />
+          {/* Patas/Braços */}
+          <Circle cx="62" cy="74" r="3.5" fill="#8D6E63" stroke="#5D4037" strokeWidth="1" />
+          <Circle cx="82" cy="74" r="3.5" fill="#8D6E63" stroke="#5D4037" strokeWidth="1" />
+        </G>
+      );
+    case 'toy_train':
+      return (
+        <G id="accessory-toy-train">
+          {/* Trilho */}
+          <Rect x="22" y="87" width="56" height="2" fill="#78909C" />
+          {/* Cabine */}
+          <Rect x="35" y="68" width="14" height="16" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5" rx="1" />
+          <Rect x="38" y="71" width="8" height="6" fill="#81D4FA" />
+          {/* Caldeira/Motor */}
+          <Rect x="49" y="74" width="16" height="10" fill="#1E88E5" stroke="#0D47A1" strokeWidth="1.5" rx="1" />
+          {/* Chaminé */}
+          <Rect x="60" y="67" width="3" height="7" fill="#FFB300" />
+          <Path d="M58 67H65V69H58V67Z" fill="#FF8F00" />
+          {/* Rodas */}
+          <Circle cx="40" cy="85" r="4.5" fill="#37474F" stroke="#212121" strokeWidth="1" />
+          <Circle cx="40" cy="85" r="1.5" fill="#ECEFF1" />
+          <Circle cx="52" cy="85" r="4.5" fill="#37474F" stroke="#212121" strokeWidth="1" />
+          <Circle cx="52" cy="85" r="1.5" fill="#ECEFF1" />
+          <Circle cx="62" cy="85" r="4.5" fill="#37474F" stroke="#212121" strokeWidth="1" />
+          <Circle cx="62" cy="85" r="1.5" fill="#ECEFF1" />
+          {/* Limpa-trilhos */}
+          <Polygon points="65,80 70,84 65,84" fill="#FFB300" />
+        </G>
+      );
+    case 'balloon':
+      return (
+        <G id="accessory-balloon">
+          {/* Fio do balão */}
+          <Path d="M78 36 Q82 52 72 64 T68 76" stroke="#B0BEC5" strokeWidth="1.5" fill="none" strokeDasharray="2,2" />
+          {/* Balão */}
+          <Path d="M68 24C68 17.4 72.5 12 78 12C83.5 12 88 17.4 88 24C88 30.6 83.5 36 78 36C72.5 36 68 30.6 68 24Z" fill="#FF1744" stroke="#D50000" strokeWidth="1.5" />
+          {/* Nó */}
+          <Polygon points="76,36 80,36 78,39" fill="#FF1744" stroke="#D50000" strokeWidth="1" />
+          {/* Brilho */}
+          <Path d="M74 18 A 6 8 0 0 1 78 15" stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.6" />
+        </G>
+      );
+    case 'magic_wand':
+      return (
+        <G id="accessory-magic-wand" transform="translate(68, 62) rotate(-25)">
+          {/* Bastão */}
+          <Rect x="-2" y="0" width="4" height="24" rx="1" fill="#8D6E63" stroke="#4E342E" strokeWidth="1" />
+          <Rect x="-2" y="-4" width="4" height="4" fill="#FFD54F" />
+          {/* Estrela */}
+          <Polygon points="0,-16 3,-9 10,-9 5,-4 7,3 0,-1 -7,3 -5,-4 -10,-9 -3,-9" fill="#FFD700" stroke="#FFA000" strokeWidth="1.2" />
+          {/* Brilhos extras */}
+          <Circle cx="-12" cy="-14" r="1.2" fill="#FFF" />
+          <Circle cx="12" cy="-12" r="1.5" fill="#FFF" />
+          <Circle cx="0" cy="-24" r="1" fill="#FFF" />
+        </G>
+      );
+    case 'gamepad':
+      return (
+        <G id="accessory-gamepad">
+          {/* Corpo do Controle */}
+          <Rect x="36" y="73" width="28" height="14" rx="7" fill="#37474F" stroke="#212121" strokeWidth="1.5" />
+          {/* Direcional D-Pad */}
+          <Path d="M41 77H43V79H45V81H43V83H41V81H39V79H41Z" fill="#ECEFF1" />
+          {/* Botões A/B */}
+          <Circle cx="57" cy="81" r="1.5" fill="#4CAF50" />
+          <Circle cx="60.5" cy="78" r="1.5" fill="#F44336" />
+          {/* Analógicos */}
+          <Circle cx="47" cy="81" r="2.2" fill="#212121" />
+          <Circle cx="53" cy="81" r="2.2" fill="#212121" />
+        </G>
+      );
+    case 'princess_dress':
+      return (
+        <G id="accessory-princess-dress">
+          {/* Saia rodada */}
+          <Path d="M33 70L23 92H77L67 70Z" fill="#F48FB1" stroke="#C2185B" strokeWidth="2" />
+          {/* Parte superior */}
+          <Path d="M33 70C33 70 37 64 50 64C63 64 67 70 67 70L60 78H40Z" fill="#F06292" stroke="#C2185B" strokeWidth="1.5" />
+          {/* Cinto dourado */}
+          <Rect x="36.5" y="69.5" width="27" height="3" fill="#FFD700" />
+          {/* Decote/Colar branco */}
+          <Path d="M42 65C45 68 55 68 58 65" stroke="#FFF" strokeWidth="1.8" fill="none" />
+          {/* Brilhos na saia */}
+          <Polygon points="32,83 34,80 36,83 34,86" fill="#FFF" />
+          <Polygon points="68,81 70,78 72,81 70,84" fill="#FFF" />
+        </G>
+      );
+    case 'superhero_cape':
+      return (
+        <G id="accessory-superhero-cape" transform="translate(0, 52)">
+          {/* Capa */}
+          <Path d="M25 15L12 40H88L75 15Z" fill="#D50000" stroke="#900C3F" strokeWidth="2" />
+          {/* Gola/Alça */}
+          <Path d="M31 15C37 9 63 9 69 15" stroke="#FFD700" strokeWidth="3.5" fill="none" />
+          {/* Escudo no peito */}
+          <Polygon points="50,22 56,17 56,25 50,29 44,25 44,17" fill="#FFD700" stroke="#D50000" strokeWidth="1.2" />
+          <Path d="M47 19H53L47 24H53" stroke="#D50000" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </G>
+      );
+    case 'dino_costume':
+      return (
+        <G id="accessory-dino-costume" transform="translate(0, 52)">
+          {/* Corpo do dinossauro */}
+          <Path d="M30 18C30 18 35 15 50 15C65 15 70 18 70 18V38H30V18Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2" />
+          {/* Espinhos laterais */}
+          <Polygon points="26,22 30,20 30,24" fill="#FF9800" />
+          <Polygon points="74,22 70,20 70,24" fill="#FF9800" />
+          {/* Barriga amarela/verde claro */}
+          <Circle cx="50" cy="28" r="7.5" fill="#C8E6C9" />
+          {/* Cauda */}
+          <Path d="M28 32 C20 32 15 25 15 20 C18 20 22 25 28 28" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.5" />
+          <Polygon points="15,20 18,17 18,22" fill="#FF9800" />
+        </G>
+      );
+    case 'pirate_hat':
+      return (
+        <G id="accessory-pirate-hat" transform="translate(0, -18)">
+          {/* Brim do chapéu de pirata */}
+          <Path d="M20 44C32 30 68 30 80 44C68 38 32 38 20 44Z" fill="#212121" stroke="#000" strokeWidth="2" />
+          <Path d="M32 40 C42 22 58 22 68 40 Z" fill="#212121" stroke="#000" strokeWidth="2" />
+          {/* Detalhe dourado */}
+          <Path d="M20 44C32 30 68 30 80 44" stroke="#FFD700" strokeWidth="1.5" fill="none" />
+          <Path d="M32 40C42 22 58 22 68 40" stroke="#FFD700" strokeWidth="1.5" fill="none" />
+          {/* Caveira e ossos cruzados */}
+          <Path d="M44 28L56 36M56 28L44 36" stroke="#FFF" strokeWidth="1" />
+          <Circle cx="50" cy="31" r="3.2" fill="#FFF" />
+          <Rect x="48.5" y="33.8" width="3" height="2" rx="0.5" fill="#FFF" />
+          <Circle cx="48.7" cy="31" r="0.6" fill="#000" />
+          <Circle cx="51.3" cy="31" r="0.6" fill="#000" />
+        </G>
+      );
+    case 'detective_lens':
+      return (
+        <G id="accessory-detective-lens" transform="translate(0, 10)">
+          {/* Lente e anel no olho esquerdo (X=41) */}
+          <Circle cx="41" cy="36" r="7.5" stroke="#795548" strokeWidth="2" fill="#81D4FA" fillOpacity="0.4" />
+          {/* Cabo da lupa */}
+          <Path d="M36 40L29 47C28.2 47.8 28.2 49 29 49.8C29.8 50.6 31 50.6 31.8 49.8L38.8 42.8Z" fill="#795548" />
+          {/* Brilho da lente */}
+          <Path d="M41 30C43 30 46 32 46 35" stroke="#FFF" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+        </G>
+      );
     default:
       return null;
   }
@@ -140,7 +322,7 @@ const Ellipse: React.FC<any> = (props) => <Circle {...props} />;
 export const BoyAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Cabelo de Trás */}
       <Path d="M25 40C25 40 18 60 25 70" stroke="#5D4037" strokeWidth="8" strokeLinecap="round" />
       <Path d="M75 40C75 40 82 60 75 70" stroke="#5D4037" strokeWidth="8" strokeLinecap="round" />
@@ -164,8 +346,8 @@ export const BoyAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       {/* Roupa (Corpo) */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#4CAF50" />
       <Path d="M42 70L50 78L58 70" stroke="#FFE0B2" strokeWidth="2" fill="none" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
@@ -174,7 +356,7 @@ export const BoyAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
 export const GirlAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Cabelo Comprido de Trás (Marias chiquinhas) */}
       <Circle cx="20" cy="62" r="12" fill="#FFB74D" />
       <Circle cx="80" cy="62" r="12" fill="#FFB74D" />
@@ -202,8 +384,8 @@ export const GirlAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       {/* Roupa */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#E91E63" />
       <Circle cx="50" cy="76" r="2.5" fill="#FFF" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
@@ -212,7 +394,7 @@ export const GirlAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
 export const FoxAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Orelhas de Raposa */}
       <Polygon points="26,38 15,10 40,28" fill="#FF6D00" stroke="#D84315" strokeWidth="2" />
       <Polygon points="28,34 20,18 36,28" fill="#FFAB91" />
@@ -237,8 +419,8 @@ export const FoxAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       <Path d="M46 64C48 66 50 66 50 64C50 66 52 66 54 64" stroke="#212121" strokeWidth="1.5" strokeLinecap="round" fill="none" />
       {/* Corpo (Roupa) */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#FF8F00" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
@@ -247,7 +429,7 @@ export const FoxAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
 export const PandaAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Orelhas Pretas redondas */}
       <Circle cx="28" cy="28" r="10" fill="#212121" />
       <Circle cx="72" cy="28" r="10" fill="#212121" />
@@ -272,8 +454,8 @@ export const PandaAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       <Circle cx="68" cy="53" r="2.5" fill="#FF8A80" opacity="0.5" />
       {/* Corpo (Roupa) */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#37474F" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
@@ -282,7 +464,7 @@ export const PandaAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
 export const KittenAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Orelhas de Gato */}
       <Polygon points="26,35 18,12 38,28" fill="#CFD8DC" stroke="#90A4AE" strokeWidth="1.5" />
       <Polygon points="27,31 22,20 34,28" fill="#FFCDD2" />
@@ -308,8 +490,8 @@ export const KittenAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       <Path d="M47 57C49 59 50 59 50 57C50 59 51 59 53 57" stroke="#263238" strokeWidth="1.5" strokeLinecap="round" fill="none" />
       {/* Corpo (Roupa) */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#00ACC1" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
@@ -318,7 +500,7 @@ export const KittenAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
 export const RobotAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
-      {accessory === 'backpack_rocket' && renderAccessory('backpack_rocket')}
+      {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Antena */}
       <Rect x="48" y="14" width="4" height="12" fill="#78909C" />
       <Circle cx="50" cy="12" r="4" fill="#FFD54F" />
@@ -341,8 +523,8 @@ export const RobotAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
       <Circle cx="70" cy="30" r="1" fill="#78909C" />
       {/* Corpo (Metal) */}
       <Path d="M30 78C30 78 35 70 50 70C65 70 70 78 70 78V90H30V78Z" fill="#78909C" stroke="#607D8B" strokeWidth="2" />
-      {accessory === 'cape_wizard' && renderAccessory('cape_wizard')}
-      {renderAccessory(accessory !== 'backpack_rocket' && accessory !== 'cape_wizard' ? accessory : null)}
+      {renderAccessoryGroup(accessory, isBodyAccessory)}
+      {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
   </Svg>
 );
