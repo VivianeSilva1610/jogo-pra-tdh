@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 
 export type LanguageType = 'pt' | 'en' | 'it' | 'es';
 
@@ -411,13 +412,34 @@ interface LocalizationContextProps {
 const LocalizationContext = createContext<LocalizationContextProps | undefined>(undefined);
 
 export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Determina o idioma com base na localidade de instalação/download do dispositivo
+  const getSystemLanguage = (): LanguageType => {
+    try {
+      const locales = Localization.getLocales();
+      if (locales && locales.length > 0) {
+        const langCode = locales[0].languageCode;
+        if (langCode === 'pt' || langCode === 'en' || langCode === 'it' || langCode === 'es') {
+          return langCode as LanguageType;
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao obter idioma padrão do sistema:', e);
+    }
+    return 'pt'; // Fallback padrão caso não encontre
+  };
+
   const [language, setLanguageState] = useState<LanguageType>('pt');
 
   useEffect(() => {
-    // Carregar idioma salvo
+    // Carregar idioma salvo pelo usuário
     AsyncStorage.getItem('game_language').then((savedLang) => {
       if (savedLang && (savedLang === 'pt' || savedLang === 'en' || savedLang === 'it' || savedLang === 'es')) {
         setLanguageState(savedLang);
+      } else {
+        // Primeiro acesso: define com base na região/idioma do dispositivo
+        const initialLang = getSystemLanguage();
+        setLanguageState(initialLang);
+        AsyncStorage.setItem('game_language', initialLang);
       }
     });
   }, []);
