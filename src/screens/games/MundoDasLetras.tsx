@@ -241,6 +241,10 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     setRoundCompleted(false);
     hadErrorInRound.current = false;
 
+    // Falar a letra alvo no início da rodada
+    speak(selectedTarget, language);
+
+
     // Resetar animações
     Object.keys(anims).forEach(key => {
       const idx = Number(key) as keyof typeof anims;
@@ -364,7 +368,16 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       <ProgressBar current={challengesCompleted} />
 
       {/* LUMI COM INSTRUÇÃO NARRADA */}
-      <MascotLumi text={t('game1Prompt', { letter: targetLetter })} />
+      <MascotLumi text={t('game1Prompt')} />
+      
+      {/* BOTÃO OUVIR NOVAMENTE */}
+      <TouchableOpacity 
+        style={styles.listenButton} 
+        onPress={() => speak(targetLetter, language)}
+      >
+        <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
+      </TouchableOpacity>
+
 
       {/* CENÁRIO FLORESTA INTERATIVA COM DICAS LOCALIZADAS */}
       <View style={styles.forestScene}>
@@ -444,6 +457,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignContent: 'center',
     paddingHorizontal: 10,
+  },
+  listenButton: {
+    backgroundColor: '#81C784',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginVertical: 10,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  listenButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   itemWrapper: {
     width: '44%',

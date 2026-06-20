@@ -187,6 +187,9 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
     // Misturar
     const allChoices = [correctWord, ...wrongs].sort(() => Math.random() - 0.5);
     setChoices(allChoices);
+
+    // Tocar a palavra alvo automaticamente
+    speak(correctWord, language);
   };
 
   const handleSelect = (choice: string, index: number) => {
@@ -241,6 +244,17 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
 
       <MascotLumi text={t('game6Prompt')} />
 
+      <TouchableOpacity 
+        style={styles.listenButton} 
+        onPress={() => {
+          const lang = language as string;
+          const correctWord = currentItem.wordKeys[lang] || currentItem.wordKeys['pt'];
+          speak(correctWord, language);
+        }}
+      >
+        <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
+      </TouchableOpacity>
+
       <View style={styles.gameArea}>
         
         {/* Imagem em Vetor/Emoji Central */}
@@ -290,6 +304,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F1F8E9', // Verde mata clarinho acolhedor
+  },
+  listenButton: {
+    backgroundColor: '#81C784',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginVertical: 10,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  listenButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',

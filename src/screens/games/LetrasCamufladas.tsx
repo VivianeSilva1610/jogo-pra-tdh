@@ -65,7 +65,11 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
     // Misturar com a letra alvo
     const allChoices = [...emojis, selectedTarget].sort(() => Math.random() - 0.5);
     setChoices(allChoices);
+
+    // Tocar o som alvo ao iniciar
+    speak(selectedTarget, language);
   };
+
 
   const handleSelect = (item: string, index: number) => {
     if (roundCompleted) return;
@@ -116,7 +120,14 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
 
       <ProgressBar current={challengesCompleted} />
 
-      <MascotLumi text={t('game2Prompt', { letter: targetLetter })} />
+      <MascotLumi text={t('game2Prompt')} />
+      
+      <TouchableOpacity 
+        style={styles.listenButton} 
+        onPress={() => speak(targetLetter, language)}
+      >
+        <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
+      </TouchableOpacity>
 
       <View style={styles.gameplayArea}>
         <View style={styles.row}>
@@ -181,6 +192,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#757575',
+  },
+  listenButton: {
+    backgroundColor: '#81C784',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginVertical: 10,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  listenButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   gameplayArea: {
     flex: 1,

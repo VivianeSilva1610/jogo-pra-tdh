@@ -127,7 +127,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
 
       <ProgressBar current={challengesCompleted} />
 
-      <MascotLumi text={t('game4Prompt', { syllable: targetSyllable })} />
+      <MascotLumi text={t('game4Prompt')} />
 
       <View style={styles.gameArea}>
         {/* Alto-falante Gigante para repetir som */}
@@ -137,7 +137,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
           onPress={() => speakSyllable(targetSyllable)}
         >
           <Volume2 size={54} color="#5E35B1" />
-          <Text style={styles.speakerText}>Ouvir de novo</Text>
+          <Text style={styles.speakerText}>{t('listenAgain') || 'Ouvir de novo'}</Text>
         </TouchableOpacity>
 
         {/* Botões de Opção das Sílabas */}

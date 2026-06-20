@@ -74,6 +74,9 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     gameIntervalRef.current = setInterval(() => {
       spawnBubble(selectedTarget);
     }, 1800);
+
+    // Tocar a letra automaticamente no começo da rodada
+    speak(selectedTarget, language);
   };
 
   useEffect(() => {
@@ -178,7 +181,14 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
 
       <ProgressBar current={challengesCompleted} />
 
-      <MascotLumi text={t('game3Prompt', { letter: targetLetter })} />
+      <MascotLumi text={t('game3Prompt')} />
+
+      <TouchableOpacity 
+        style={styles.listenButton} 
+        onPress={() => speak(targetLetter, language)}
+      >
+        <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
+      </TouchableOpacity>
 
       {/* ÁREA DE JOGO DAS BOLHAS */}
       <View style={styles.gameArea}>
@@ -236,6 +246,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#757575',
+  },
+  listenButton: {
+    backgroundColor: '#81C784',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginVertical: 10,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    zIndex: 10,
+  },
+  listenButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   gameArea: {
     flex: 1,
