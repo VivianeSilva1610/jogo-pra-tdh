@@ -19,12 +19,13 @@ const LANG_LOCALE_MAP: Record<LanguageType, string> = {
 // ========================================================
 const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
   it: {
-    // Metodo fonico italiano: suoni delle lettere (non i nomi)
-    A: 'a',  B: 'ba', C: 'ca', D: 'da', E: 'e',  F: 'fa',
-    G: 'ga', H: 'a',  I: 'i',  J: 'gia',K: 'ka', L: 'la',
-    M: 'ma', N: 'na', O: 'o',  P: 'pa', Q: 'qua',R: 'ra',
-    S: 'sa', T: 'ta', U: 'u',  V: 'va', W: 'wa', X: 'csi',
-    Y: 'ya', Z: 'za',
+    // Metodo fonico italiano: suoni delle lettere per TTS
+    // Usiamo sillabe che il motore TTS italiano pronuncia correttamente
+    A: 'a',    B: 'bi',   C: 'ci',   D: 'di',   E: 'e',    F: 'effe',
+    G: 'gi',   H: 'acca', I: 'i',    J: 'gi lunga', K: 'cappa', L: 'elle',
+    M: 'emme', N: 'enne', O: 'o',    P: 'pi',   Q: 'cu',   R: 'erre',
+    S: 'esse', T: 'ti',   U: 'u',    V: 've',   W: 'doppia vu', X: 'ics',
+    Y: 'i greca', Z: 'dzeta',
   },
   pt: {
     // Método fônico português: sons das letras
@@ -44,11 +45,11 @@ const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
   },
   es: {
     // Método fónico español: sonidos de las letras
-    A: 'a',  B: 'ba', C: 'ca', D: 'da', E: 'e',  F: 'fa',
-    G: 'ga', H: 'a',  I: 'i',  J: 'ja', K: 'ka', L: 'la',
-    M: 'ma', N: 'na', O: 'o',  P: 'pa', Q: 'qua',R: 'ra',
-    S: 'sa', T: 'ta', U: 'u',  V: 'ba', W: 'ua', X: 'csa',
-    Y: 'ya', Z: 'za',
+    A: 'a',  B: 'be',  C: 'ce',  D: 'de', E: 'e',  F: 'efe',
+    G: 'gue',H: 'a',   I: 'i',   J: 'je', K: 'ca', L: 'ele',
+    M: 'eme',N: 'ene', O: 'o',   P: 'pe', Q: 'cu', R: 'erre',
+    S: 'ese',T: 'te',  U: 'u',   V: 'uve',W: 'uve doble', X: 'equis',
+    Y: 'ye', Z: 'ceta',
   },
 };
 
@@ -132,21 +133,21 @@ export const speak = async (text: string, language: LanguageType) => {
     // OPÇÃO C: Web Speech API (Nativa do navegador - gratuita, sem CORS, funciona sempre)
     // Esta é a opção padrão para a versão web do app.
     if (Platform.OS === 'web') {
-      webSpeechSynth(phoneticText, locale);
+      webSpeechSynth(phoneticText, locale, language);
       return;
     }
 
     // OPÇÃO D: Expo Speech (Motor de voz nativo do celular)
-    await mobileLocalSpeech(phoneticText, locale);
+    await mobileLocalSpeech(phoneticText, locale, language);
 
   } catch (error) {
     console.warn('Erro ao reproduzir voz:', error);
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
     const phoneticFallback = toPhoneticText(text, language);
     if (Platform.OS === 'web') {
-      webSpeechSynth(phoneticFallback, locale);
+      webSpeechSynth(phoneticFallback, locale, language);
     } else {
-      mobileLocalSpeech(phoneticFallback, locale);
+      mobileLocalSpeech(phoneticFallback, locale, language);
     }
   }
 };
@@ -156,55 +157,102 @@ export const speak = async (text: string, language: LanguageType) => {
  * Não requer internet extra, não tem CORS, funciona com voz local do sistema ou da nuvem (Chrome).
  * Lida com carregamento assíncrono de vozes no Chrome (evento voiceschanged).
  */
-const selectBestVoice = (locale: string): SpeechSynthesisVoice | null => {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  return (
-    voices.find(v => v.lang === locale && v.name.toLowerCase().includes('google')) ||
-    voices.find(v => v.lang === locale && !v.localService) ||
-    voices.find(v => v.lang === locale) ||
-    voices.find(v => v.lang.startsWith(locale.split('-')[0])) ||
-    null
-  );
+// ========================================================
+// PARÂMETROS DE VOZ POR IDIOMA
+// Ajuste fino de velocidade e tom para melhor dicção em cada língua
+// ========================================================
+const LANG_RATE_MAP: Record<LanguageType, number> = {
+  pt: 0.88,
+  en: 0.88,
+  it: 0.80,  // Italiano mais lento para clareza fonética
+  es: 0.85,
 };
 
-const doSpeak = (text: string, locale: string) => {
+const LANG_PITCH_MAP: Record<LanguageType, number> = {
+  pt: 1.15,
+  en: 1.10,
+  it: 1.05,  // Tom mais natural para italiano
+  es: 1.10,
+};
+
+// Nomes de vozes de alta qualidade conhecidas, por idioma (ordem de preferência)
+const PREFERRED_VOICE_NAMES: Record<LanguageType, string[]> = {
+  it: ['Google italiano', 'Alice', 'Paola', 'Luca', 'Federica', 'Cosimo', 'Elsa'],
+  pt: ['Google português do Brasil', 'Google português', 'Luciana', 'Fernanda', 'Joana'],
+  en: ['Google US English', 'Google UK English Female', 'Samantha', 'Karen', 'Moira'],
+  es: ['Google español', 'Google español de Estados Unidos', 'Monica', 'Paulina', 'Jorge'],
+};
+
+const selectBestVoice = (locale: string, language: LanguageType): SpeechSynthesisVoice | null => {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  const preferred = PREFERRED_VOICE_NAMES[language] || [];
+
+  // 1. Tentar voz preferida por nome exato (locale exato)
+  for (const name of preferred) {
+    const found = voices.find(v => v.lang === locale && v.name.toLowerCase().includes(name.toLowerCase()));
+    if (found) return found;
+  }
+
+  // 2. Tentar voz preferida por nome (qualquer locale compatível)
+  for (const name of preferred) {
+    const found = voices.find(v => v.lang.startsWith(locale.split('-')[0]) && v.name.toLowerCase().includes(name.toLowerCase()));
+    if (found) return found;
+  }
+
+  // 3. Voz Google no locale exato
+  const googleExact = voices.find(v => v.lang === locale && v.name.toLowerCase().includes('google'));
+  if (googleExact) return googleExact;
+
+  // 4. Qualquer voz de rede (online) no locale exato
+  const networkExact = voices.find(v => v.lang === locale && !v.localService);
+  if (networkExact) return networkExact;
+
+  // 5. Qualquer voz local no locale exato
+  const localExact = voices.find(v => v.lang === locale);
+  if (localExact) return localExact;
+
+  // 6. Fallback: qualquer voz compatível com o idioma base
+  return voices.find(v => v.lang.startsWith(locale.split('-')[0])) || null;
+};
+
+const doSpeak = (text: string, locale: string, language: LanguageType) => {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = locale;
-  utterance.pitch = 1.15; // Tom ligeiramente infantil
-  utterance.rate = 0.88;  // Fala pausada para TDAH
+  utterance.pitch  = LANG_PITCH_MAP[language] ?? 1.1;
+  utterance.rate   = LANG_RATE_MAP[language]  ?? 0.88;
   utterance.volume = 1.0;
 
-  const voice = selectBestVoice(locale);
+  const voice = selectBestVoice(locale, language);
   if (voice) utterance.voice = voice;
 
   (window as any)._currentSpeechUtterance = utterance;
   window.speechSynthesis.speak(utterance);
 };
 
-const webSpeechSynth = (text: string, locale: string) => {
+const webSpeechSynth = (text: string, locale: string, language: LanguageType) => {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
     console.warn('Web Speech API não disponível neste navegador.');
     return;
   }
 
   // No Chrome, a lista de vozes carrega de forma assíncrona.
-  // Se ainda não estiver pronta, aguarda o evento 'voiceschanged'.
   if (window.speechSynthesis.getVoices().length === 0) {
     const handler = () => {
       window.speechSynthesis.removeEventListener('voiceschanged', handler);
-      doSpeak(text, locale);
+      doSpeak(text, locale, language);
     };
     window.speechSynthesis.addEventListener('voiceschanged', handler);
     // Timeout de segurança: falar mesmo sem vozes premium (usa voz padrão do sistema)
     setTimeout(() => {
       window.speechSynthesis.removeEventListener('voiceschanged', handler);
-      doSpeak(text, locale);
-    }, 500);
+      doSpeak(text, locale, language);
+    }, 600);
   } else {
-    doSpeak(text, locale);
+    doSpeak(text, locale, language);
   }
 };
 
@@ -233,12 +281,14 @@ const playAudioFromUrl = async (url: string) => {
 /**
  * Motor de voz nativo do sistema operacional (iOS / Android) via expo-speech
  */
-const mobileLocalSpeech = async (text: string, locale: string) => {
+const mobileLocalSpeech = async (text: string, locale: string, language?: LanguageType) => {
   await Speech.stop();
+  const rate  = language ? (LANG_RATE_MAP[language]  ?? 0.88) : 0.88;
+  const pitch = language ? (LANG_PITCH_MAP[language] ?? 1.1)  : 1.1;
   Speech.speak(text, {
     language: locale,
-    pitch: 1.15, // Tom infantil/animado
-    rate: 0.9,   // Fala pausada para TDAH
+    pitch,
+    rate,
   });
 };
 
