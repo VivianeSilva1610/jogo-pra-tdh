@@ -105,6 +105,7 @@ ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 -- Responsáveis (Parents)
 CREATE POLICY "Pais podem ver seu próprio perfil" ON public.parents FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Pais podem atualizar seu próprio perfil" ON public.parents FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Pais podem inserir seu próprio perfil" ON public.parents FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Crianças (Children)
 CREATE POLICY "Pais podem ver dados de seus filhos" ON public.children FOR SELECT USING (auth.uid() = parent_id);
@@ -133,6 +134,7 @@ WITH CHECK (EXISTS (SELECT 1 FROM public.children WHERE id = child_id AND parent
 
 -- Assinaturas (Subscriptions)
 CREATE POLICY "Pais podem ver suas assinaturas" ON public.subscriptions FOR SELECT USING (auth.uid() = parent_id);
+CREATE POLICY "Pais podem inserir suas próprias assinaturas" ON public.subscriptions FOR INSERT WITH CHECK (auth.uid() = parent_id);
 
 -- Desafios e Conquistas Estáticas (Leitura livre para usuários logados)
 CREATE POLICY "Permitir leitura para usuarios autenticados" ON public.achievements FOR SELECT TO authenticated USING (true);

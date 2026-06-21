@@ -30,7 +30,17 @@ import { CustomButton } from './src/components/CustomButton';
 import { startBgMusic, stopBgMusic } from './src/services/audio';
 import { supabase } from './src/services/supabase';
 
-function GameAppContent({ childId, parentId }: { childId: string | null; parentId: string | null }) {
+function GameAppContent({ 
+  childId, 
+  parentId,
+  initError,
+  onRetry
+}: { 
+  childId: string | null; 
+  parentId: string | null;
+  initError: string | null;
+  onRetry: () => void;
+}) {
   const { character, soundEnabled, isLoadingProfile } = useGame();
   const { t } = useLocalization();
 
@@ -123,6 +133,35 @@ function GameAppContent({ childId, parentId }: { childId: string | null; parentI
 
     if (!session) {
       return <LoginScreen />;
+    }
+
+    // Se houver erro de inicialização (ex: falha ao criar perfil), mostra tela de erro e recuperação
+    if (initError) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: '#D32F2F', textAlign: 'center', marginHorizontal: 20, marginBottom: 10 }]}>
+            ⚠️ {initError}
+          </Text>
+          <View style={{ width: '80%', maxWidth: 300, marginTop: 15 }}>
+            <CustomButton
+              title="Tentar Novamente"
+              color="#4CAF50"
+              borderColor="#388E3C"
+              onPress={onRetry}
+            />
+          </View>
+          <View style={{ width: '80%', maxWidth: 300, marginTop: 12 }}>
+            <CustomButton
+              title="Sair da Conta"
+              color="#FF5252"
+              borderColor="#D32F2F"
+              onPress={async () => {
+                await supabase.auth.signOut();
+              }}
+            />
+          </View>
+        </View>
+      );
     }
 
     // Se não tem filho selecionado, não mostra o jogo
@@ -232,53 +271,90 @@ function GameAppContent({ childId, parentId }: { childId: string | null; parentI
 export default function App() {
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState<number>(0);
+
+  const handleRetry = () => {
+    setRetryTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     const initChild = async (session: any) => {
       if (!session) {
         setActiveChildId(null);
         setActiveParentId(null);
+        setInitError(null);
         return;
       }
 
       const parentId = session.user.id;
       setActiveParentId(parentId);
+      setInitError(null);
 
       // Garantir que a linha do pai exista na tabela public.parents para evitar erro de chave estrangeira
       try {
-        const { data: parentData } = await supabase
+        const { data: parentData, error: fetchParentError } = await supabase
           .from('parents')
           .select('id')
           .eq('id', parentId)
           .maybeSingle();
 
+        if (fetchParentError) {
+          throw new Error('Falha ao verificar perfil do responsável: ' + fetchParentError.message);
+        }
+
         if (!parentData) {
           console.log('Pai não encontrado na tabela public.parents. Criando...');
-          await supabase
+          
+          const parentEmail = session.user.email || 'sem-email@oauth.com';
+          const { error: insertParentError } = await supabase
             .from('parents')
-            .insert([{ id: parentId, email: session.user.email }]);
+            .insert([{ id: parentId, email: parentEmail }]);
+
+          if (insertParentError) {
+            throw new Error('Erro ao cadastrar perfil do responsável: ' + insertParentError.message);
+          } else {
+            console.log('Cadastro do pai inserido manualmente com sucesso.');
+            // Se o trigger da DB falhou ou não existe, criar também a assinatura padrão inicial
+            const { error: insertSubError } = await supabase
+              .from('subscriptions')
+              .insert([{ parent_id: parentId, plan: 'free', status: 'active' }]);
+            
+            if (insertSubError) {
+              console.warn('Aviso ao cadastrar assinatura padrão:', insertSubError.message);
+            }
+          }
         }
-      } catch (err) {
-        console.warn('Erro ao verificar/criar pai na tabela public.parents:', err);
+      } catch (err: any) {
+        console.error('Erro de permissão ou conexão na verificação do responsável:', err);
+        setInitError(err.message || 'Erro ao conectar ao banco de dados do responsável.');
+        return;
       }
 
       // Buscar filhos cadastrados
-      const kids = await fetchChildren();
+      try {
+        const kids = await fetchChildren();
 
-      if (kids.length > 0) {
-        // Já existe filho → usar o primeiro (e único)
-        setActiveChildId(kids[0].id);
-      } else {
-        // Primeiro acesso → criar filho automaticamente com nome genérico
-        // O nome real pode ser editado depois no perfil
-        const defaultName = session.user.user_metadata?.full_name
-          ? session.user.user_metadata.full_name.split(' ')[0]
-          : 'Aventureiro';
+        if (kids.length > 0) {
+          // Já existe filho → usar o primeiro (e único)
+          setActiveChildId(kids[0].id);
+        } else {
+          // Primeiro acesso → criar filho automaticamente com nome genérico
+          // O nome real pode ser editado depois no perfil
+          const defaultName = session.user.user_metadata?.full_name
+            ? session.user.user_metadata.full_name.split(' ')[0]
+            : 'Aventureiro';
 
-        const child = await createChildWithProfile(parentId, defaultName, 6, 'panda');
-        if (child) {
-          setActiveChildId(child.id);
+          const child = await createChildWithProfile(parentId, defaultName, 6, 'panda');
+          if (child) {
+            setActiveChildId(child.id);
+          } else {
+            setInitError('Não foi possível criar o perfil inicial da criança. Verifique sua conexão e tente novamente.');
+          }
         }
+      } catch (err: any) {
+        console.error('Erro de permissão ou conexão na criação/busca da criança:', err);
+        setInitError(err.message || 'Erro ao criar ou buscar o perfil da criança.');
       }
     };
 
@@ -293,16 +369,22 @@ export default function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [retryTrigger]);
 
   return (
     <LocalizationProvider>
       <GameProvider childId={activeChildId} parentId={activeParentId}>
-        <GameAppContent childId={activeChildId} parentId={activeParentId} />
+        <GameAppContent 
+          childId={activeChildId} 
+          parentId={activeParentId} 
+          initError={initError}
+          onRetry={handleRetry}
+        />
       </GameProvider>
     </LocalizationProvider>
   );
 }
+
 
 const styles = StyleSheet.create({
   outerContainer: {
