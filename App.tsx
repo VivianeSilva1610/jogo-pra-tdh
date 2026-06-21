@@ -273,8 +273,13 @@ export default function App() {
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState<number>(0);
+  // Referência para evitar chamadas duplicadas ao initChild para a mesma sessão
+  const lastInitedUserId = React.useRef<string | null>(null);
 
   const handleRetry = () => {
+    lastInitedUserId.current = null;
+    setActiveChildId(null);
+    setInitError(null);
     setRetryTrigger(prev => prev + 1);
   };
 
@@ -284,10 +289,18 @@ export default function App() {
         setActiveChildId(null);
         setActiveParentId(null);
         setInitError(null);
+        lastInitedUserId.current = null;
         return;
       }
 
       const parentId = session.user.id;
+
+      // Evitar re-inicializar se já foi feito para este usuário neste ciclo
+      if (lastInitedUserId.current === parentId) {
+        return;
+      }
+      lastInitedUserId.current = parentId;
+
       setActiveParentId(parentId);
       setInitError(null);
 
@@ -358,14 +371,23 @@ export default function App() {
       }
     };
 
-    // Verificar sessão atual
+    // Verificar sessão atual primeiro
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       initChild(session);
     });
 
-    // Ouvir mudanças de login/logout
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      initChild(session);
+    // Ouvir mudanças de autenticação (login, logout, token refresh)
+    // SIGNED_IN pode duplicar com getSession, por isso usamos a ref lastInitedUserId para deduplicar
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
+      if (event === 'SIGNED_OUT') {
+        // Ao sair, limpar tudo
+        lastInitedUserId.current = null;
+        setActiveChildId(null);
+        setActiveParentId(null);
+        setInitError(null);
+      } else {
+        initChild(session);
+      }
     });
 
     return () => subscription.unsubscribe();
