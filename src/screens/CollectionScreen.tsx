@@ -160,27 +160,39 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
               const isPremiumSticker = sticker.id === 'sticker_unicorn' || sticker.id === 'sticker_dragon';
               const shouldBlock = isPremiumSticker && !isPremium;
 
+              const categoryColors: Record<string, string> = {
+                animals: '#E8F5E9',
+                nature: '#E3F2FD',
+                fantasy: '#F3E5F5',
+              };
+              const categoryBorder: Record<string, string> = {
+                animals: '#A5D6A7',
+                nature: '#90CAF9',
+                fantasy: '#CE93D8',
+              };
+              const bgColor = categoryColors[sticker.category] || '#F5F5F5';
+              const borderColor = categoryBorder[sticker.category] || '#E0E0E0';
+
               return (
-                <View key={sticker.id} style={[styles.stickerCard, isUnlocked && styles.stickerUnlocked]}>
+                <View key={sticker.id} style={[styles.stickerCard, isUnlocked && { ...styles.stickerUnlocked, backgroundColor: bgColor, borderColor }]}>
                   {shouldBlock ? (
                     <View style={styles.premiumBlock}>
                       <Text style={styles.padlock}>🔒</Text>
                       <Text style={styles.premiumBlockText}>PRO</Text>
                     </View>
                   ) : isUnlocked ? (
-                    <View style={styles.stickerImageContainer}>
-                      <Image 
-                        source={{ uri: sticker.imageUrl }} 
-                        style={styles.stickerImage} 
-                        resizeMode="cover"
-                      />
+                    <View style={[styles.stickerEmojiContainer, { backgroundColor: bgColor }]}>
+                      <Text style={styles.stickerEmoji}>{sticker.emoji}</Text>
+                      <View style={styles.unlockedBadge}>
+                        <Text style={styles.unlockedBadgeText}>✓</Text>
+                      </View>
                     </View>
                   ) : (
                     <TouchableOpacity 
                       style={styles.stickerLockContainer}
                       onPress={() => handleBuySticker(sticker)}
                     >
-                      <Text style={styles.stickerLockEmoji}>❓</Text>
+                      <Text style={[styles.stickerLockEmoji, { opacity: 0.35 }]}>{sticker.emoji}</Text>
                       <View style={styles.costBadge}>
                         <CoinIcon size={12} />
                         <Text style={styles.costText}>{sticker.cost}</Text>
@@ -438,11 +450,31 @@ const styles = StyleSheet.create({
   },
   stickerEmojiContainer: {
     flex: 1,
+    width: '100%',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  stickerEmoji: {
+    fontSize: 42,
+  },
+  unlockedBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  stickerEmoji: {
-    fontSize: 34,
+  unlockedBadgeText: {
+    fontSize: 10,
+    color: '#FFF',
+    fontWeight: 'bold',
+    lineHeight: 13,
   },
   stickerLockContainer: {
     flex: 1,
