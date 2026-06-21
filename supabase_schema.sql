@@ -142,25 +142,9 @@ CREATE POLICY "Permitir leitura de desafios de letras" ON public.letters_challen
 CREATE POLICY "Permitir leitura de desafios de palavras" ON public.word_challenges FOR SELECT TO authenticated USING (true);
 
 -- ========================================================
--- GATILHO AUTOMÁTICO (TRIGGER) NO CADASTRO DE USUÁRIO
+-- CADASTRO DE USUÁRIO E FALLBACK CLIENTE
 -- ========================================================
--- Cria automaticamente uma linha na tabela parents quando um novo usuário se cadastra no Supabase Auth
-
-CREATE OR REPLACE FUNCTION public.handle_new_parent_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.parents (id, email)
-  VALUES (new.id, new.email);
-  
-  -- Cria uma assinatura gratuita padrão inicial
-  INSERT INTO public.subscriptions (parent_id, plan, status)
-  VALUES (new.id, 'free', 'active');
-  
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Registra o gatilho
-CREATE OR REPLACE TRIGGER on_auth_user_signup
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_parent_user();
+-- Os gatilhos automáticos (triggers) no cadastro do auth.users foram removidos
+-- para evitar erros de bloqueio/rollback durante o cadastro OAuth ("Database error saving new user").
+-- A inserção e inicialização dos dados de parents e subscriptions são agora 
+-- geridas de forma robusta e resiliente via código cliente (App.tsx) após a autenticação.
