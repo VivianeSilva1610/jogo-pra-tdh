@@ -126,7 +126,7 @@ const LETTER_HINTS: Record<string, Record<string, Hint>> = {
   },
   Q: {
     pt: { emoji: '🧀', word: 'Queijo', syllable: 'QUE' },
-    en: { emoji: '👑', word: 'Queen', syllable: 'QUE' },
+    en: { emoji: '👑', word: 'Queen', syllable: 'KWEE' },
     it: { emoji: '📜', word: 'Quaderno', syllable: 'QUA' },
     es: { emoji: '🧀', word: 'Queso', syllable: 'QUE' },
   },

@@ -15,12 +15,9 @@ const LANG_LOCALE_MAP: Record<LanguageType, string> = {
 // Quando o TTS recebe uma letra isolada, pronuncia o NOME da letra.
 // Este mapa converte a letra para sua representação fonética (o SOM),
 // que o motor TTS pronunciará corretamente em cada idioma.
-// Ex: Italiano B → "ba" (som /b/) em vez de "bi" (nome da letra)
 // ========================================================
 const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
   it: {
-    // Metodo fonico italiano: suoni delle lettere per TTS
-    // Invece del nome della lettera ("bi", "effe"), usiamo il suono fonico ("be", "fe") con accento grave per forzare la pronuncia aperta
     A: 'a',    B: 'bè',   C: 'cè',   D: 'dè',   E: 'e',    F: 'fè',
     G: 'gè',   H: 'acca', I: 'i',    J: 'i lunga', K: 'cappa', L: 'lè',
     M: 'mè',   N: 'nè',   O: 'o',    P: 'pè',   Q: 'qu',   R: 'rè',
@@ -28,7 +25,6 @@ const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
     Y: 'i greca', Z: 'zè',
   },
   pt: {
-    // Método fônico português: sons das letras
     A: 'a',    B: 'be',   C: 'ce',   D: 'de',    E: 'e',     F: 'fe',
     G: 'gue',  H: 'a',    I: 'i',    J: 'je',    K: 'ca',    L: 'le',
     M: 'me',   N: 'ne',   O: 'o',    P: 'pe',    Q: 'que',   R: 're',
@@ -36,7 +32,6 @@ const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
     Y: 'ya',   Z: 'ze',
   },
   en: {
-    // English synthetic phonics: consonant sounds
     A: 'ay',  B: 'buh', C: 'cuh', D: 'duh', E: 'eh',  F: 'fuh',
     G: 'guh', H: 'huh', I: 'ih',  J: 'juh', K: 'kuh', L: 'luh',
     M: 'muh', N: 'nuh', O: 'oh',  P: 'puh', Q: 'kwuh',R: 'ruh',
@@ -44,7 +39,6 @@ const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
     Y: 'yuh', Z: 'zuh',
   },
   es: {
-    // Método fónico español: sonidos de las letras
     A: 'a',  B: 'be',  C: 'ce',  D: 'de', E: 'e',  F: 'efe',
     G: 'gue',H: 'a',   I: 'i',   J: 'je', K: 'ca', L: 'ele',
     M: 'eme',N: 'ene', O: 'o',   P: 'pe', Q: 'cu', R: 'erre',
@@ -53,15 +47,9 @@ const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
   },
 };
 
-/**
- * Converte uma letra isolada para sua representação fonética no idioma indicado.
- * Permite que o TTS pronuncie o SOM da letra em vez do seu NOME.
- * Sílabas e palavras completas são retornadas sem alteração.
- */
 const toPhoneticText = (text: string, language: LanguageType): string => {
   const trimmed = text.trim();
   const upper = trimmed.toUpperCase();
-  // Aplicar apenas para letra única (A–Z)
   if (upper.length === 1 && upper >= 'A' && upper <= 'Z') {
     const map = PHONETIC_LETTER_MAP[language];
     if (map && map[upper]) return map[upper];
@@ -70,113 +58,225 @@ const toPhoneticText = (text: string, language: LanguageType): string => {
 };
 
 // ========================================================
-// CONFIGURAÇÕES DA VOZ COM INTEGRAÇÃO DE IA
+// CONFIGURAÇÕES DE TTS
 // ========================================================
 
-// 1. (Recomendado para Produção Segura) URL da sua Edge Function no Supabase.
-// Ex: 'https://rhzqijryyjoesuwodiln.supabase.co/functions/v1/tts'
+// ElevenLabs API Key
+const ELEVENLABS_API_KEY = process.env.EXPO_PUBLIC_ELEVENLABS_API_KEY || '';
+
+// Supabase Edge Function (alternativa segura para produção)
 const SUPABASE_TTS_FUNCTION_URL = '';
 
-// 2. (Para testes rápidos na Web) Sua chave de API da OpenAI.
-// ATENÇÃO: Não envie para produção com a chave exposta aqui!
-const OPENAI_API_KEY = ''
+// OpenAI TTS (alternativa para testes na Web)
+const OPENAI_API_KEY = '';
 
 let currentSound: Audio.Sound | null = null;
 
-export const speak = async (text: string, language: LanguageType) => {
-  try {
-    // Parar qualquer voz anterior
-    await stopSpeech();
+// ========================================================
+// ÁUDIOS PRÉ-GERADOS: Cache local de frases repetitivas
+// Esses áudios foram gerados uma vez com Google Cloud TTS
+// e são reproduzidos instantaneamente sem chamada de API.
+// ========================================================
+const PREGENERATED_AUDIO: Record<string, Record<string, any>> = {
+  pt: {
+    'vamos tentar novamente?': require('../../assets/audio/voices/pt/tryAgain.mp3'),
+    'muito bem!': require('../../assets/audio/voices/pt/wellDone.mp3'),
+    'fantástico!': require('../../assets/audio/voices/pt/fantastic.mp3'),
+    'incrível!': require('../../assets/audio/voices/pt/amazing.mp3'),
+    'você consegue!': require('../../assets/audio/voices/pt/youCanDoIt.mp3'),
+    'o portão do castelo se abriu!': require('../../assets/audio/voices/pt/castleOpened.mp3'),
+    'perfeito!!!': require('../../assets/audio/voices/pt/perfect_1.mp3'),
+    'incrível! você mandou bem!': require('../../assets/audio/voices/pt/perfect_2.mp3'),
+    'arrasou! 3 de 3!': require('../../assets/audio/voices/pt/perfect_3.mp3'),
+  },
+  en: {
+    "let's try again?": require('../../assets/audio/voices/en/tryAgain.mp3'),
+    'well done!': require('../../assets/audio/voices/en/wellDone.mp3'),
+    'fantastic!': require('../../assets/audio/voices/en/fantastic.mp3'),
+    'amazing!': require('../../assets/audio/voices/en/amazing.mp3'),
+    'you can do it!': require('../../assets/audio/voices/en/youCanDoIt.mp3'),
+    'the castle gate has opened!': require('../../assets/audio/voices/en/castleOpened.mp3'),
+    'perfect!!!': require('../../assets/audio/voices/en/perfect_1.mp3'),
+    'amazing! you nailed it!': require('../../assets/audio/voices/en/perfect_2.mp3'),
+    'flawless! 3 for 3!': require('../../assets/audio/voices/en/perfect_3.mp3'),
+  },
+  it: {
+    'riproviamo?': require('../../assets/audio/voices/it/tryAgain.mp3'),
+    'ben fatto!': require('../../assets/audio/voices/it/wellDone.mp3'),
+    'fantastico!': require('../../assets/audio/voices/it/fantastic.mp3'),
+    'incredibile!': require('../../assets/audio/voices/it/amazing.mp3'),
+    "ce la puoi fare!": require('../../assets/audio/voices/it/youCanDoIt.mp3'),
+    "il portone del castelo si è aperto!": require('../../assets/audio/voices/it/castleOpened.mp3'),
+    'perfetto!!!': require('../../assets/audio/voices/it/perfect_1.mp3'),
+    "incredibile! ce l'hai fatta!": require('../../assets/audio/voices/it/perfect_2.mp3'),
+    'perfetto! 3 su 3!': require('../../assets/audio/voices/it/perfect_3.mp3'),
+  },
+  es: {
+    '¿intentamos de nuevo?': require('../../assets/audio/voices/es/tryAgain.mp3'),
+    '¡muy bien!': require('../../assets/audio/voices/es/wellDone.mp3'),
+    '¡fantástico!': require('../../assets/audio/voices/es/fantastic.mp3'),
+    '¡increíble!': require('../../assets/audio/voices/es/amazing.mp3'),
+    '¡tú puedes!': require('../../assets/audio/voices/es/youCanDoIt.mp3'),
+    '¡el portón del castillo se ha abierto!': require('../../assets/audio/voices/es/castleOpened.mp3'),
+    '¡perfecto!!!': require('../../assets/audio/voices/es/perfect_1.mp3'),
+    '¡increíble! ¡lo lograste!': require('../../assets/audio/voices/es/perfect_2.mp3'),
+    '¡sin errores! 3 de 3!': require('../../assets/audio/voices/es/perfect_3.mp3'),
+  },
+};
 
-    // Converter letra isolada para sua representação fonética (som, não nome)
-    // E converter para minúsculas para evitar que o motor de voz (TTS) soletre sílabas e palavras em maiúsculas (ex: "MA" lido como "M. A.")
-    const phoneticText = toPhoneticText(text, language).toLowerCase();
-    const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
+/**
+ * Verifica se o texto corresponde a um áudio pré-gerado.
+ * Retorna o asset do require() ou null se não encontrado.
+ */
+const findPregeneratedAudio = (text: string, language: LanguageType): any | null => {
+  const langCache = PREGENERATED_AUDIO[language];
+  if (!langCache) return null;
+  // Normalizar para minúsculas e remover emojis/espaços extras
+  const normalized = text.toLowerCase().replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+  return langCache[normalized] || null;
+};
 
-    // OPÇÃO A: Supabase Edge Function (IA Premium Segura - para mobile e web)
-    if (SUPABASE_TTS_FUNCTION_URL) {
-      const url = `${SUPABASE_TTS_FUNCTION_URL}?text=${encodeURIComponent(phoneticText)}&lang=${locale}`;
-      if (Platform.OS === 'web') {
-        const htmlAudio = new window.Audio(url);
-        (window as any)._currentSpeechAudio = htmlAudio;
-        await htmlAudio.play();
-      } else {
-        await playAudioFromUrl(url);
+/**
+ * Reproduz um áudio pré-gerado (asset local) usando expo-av.
+ */
+const playPregeneratedAudio = async (asset: any): Promise<void> => {
+  if (Platform.OS === 'web') {
+    // Na web, usar expo-av com o asset
+    const { sound } = await Audio.Sound.createAsync(asset, { shouldPlay: true });
+    currentSound = sound;
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync();
+        currentSound = null;
       }
-      return;
-    }
+    });
+  } else {
+    // No mobile, expo-av carrega assets nativamente
+    const { sound } = await Audio.Sound.createAsync(asset, { shouldPlay: true });
+    currentSound = sound;
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync();
+        currentSound = null;
+      }
+    });
+  }
+};
 
-    // OPÇÃO B: OpenAI TTS Direta (IA Premium - Testes na Web)
-    if (OPENAI_API_KEY && Platform.OS === 'web') {
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
+// ========================================================
+// ELEVENLABS TTS
+// Vozes de altíssima qualidade (multilingual)
+// ========================================================
+
+const ELEVENLABS_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Soft American female, mas fala todos os idiomas)
+
+/**
+ * Chama a API do ElevenLabs e retorna o áudio em base64.
+ */
+const elevenLabsTTS = async (text: string): Promise<string> => {
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+    {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
         },
-        body: JSON.stringify({
-          model: 'tts-1',
-          input: phoneticText,
-          voice: 'nova', // Voz feminina amigável e nítida para crianças
-        })
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        const htmlAudio = new window.Audio(audioUrl);
-        (window as any)._currentSpeechAudio = htmlAudio;
-        htmlAudio.play();
-        return;
-      }
+      }),
     }
+  );
 
-    // OPÇÃO C: Web Speech API (Nativa do navegador - gratuita, sem CORS, funciona sempre)
-    // Esta é a opção padrão para a versão web do app.
-    if (Platform.OS === 'web') {
-      webSpeechSynth(phoneticText, locale, language);
-      return;
-    }
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`ElevenLabs error ${response.status}: ${errorText}`);
+  }
 
-    // OPÇÃO D: Expo Speech (Motor de voz nativo do celular)
-    await mobileLocalSpeech(phoneticText, locale, language);
-
-  } catch (error) {
-    console.warn('Erro ao reproduzir voz:', error);
-    const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
-    const phoneticFallback = toPhoneticText(text, language);
-    if (Platform.OS === 'web') {
-      webSpeechSynth(phoneticFallback, locale, language);
-    } else {
-      mobileLocalSpeech(phoneticFallback, locale, language);
-    }
+  // Converter ArrayBuffer para Base64 (necessário para React Native)
+  const arrayBuffer = await response.arrayBuffer();
+  if (Platform.OS === 'web') {
+    // Na web, podemos usar o buffer direto convertendo pra URL
+    const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        resolve(base64data.split(',')[1]); // Retorna apenas os dados base64
+      };
+      reader.readAsDataURL(blob);
+    });
+  } else {
+    // No mobile, precisamos de uma solução que não use Blob se não suportado,
+    // mas o fetch do React Native suporta ArrayBuffer que pode ser convertido (idealmente com react-native-fs ou buffer)
+    // Para simplificar, assumimos que o polyfill de Buffer existe ou usamos a abordagem Web se funcionar.
+    // Vamos usar a mesma abordagem da Web que o Expo costuma suportar.
+    const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        resolve(base64data.split(',')[1]);
+      };
+      reader.readAsDataURL(blob);
+    });
   }
 };
 
 /**
- * Web Speech API - API nativa de todos os navegadores modernos.
- * Não requer internet extra, não tem CORS, funciona com voz local do sistema ou da nuvem (Chrome).
- * Lida com carregamento assíncrono de vozes no Chrome (evento voiceschanged).
+ * Reproduz áudio do ElevenLabs na web.
  */
+const playElevenLabsWeb = async (text: string) => {
+  const audioBase64 = await elevenLabsTTS(text);
+  const audioUrl = `data:audio/mp3;base64,${audioBase64}`;
+  const htmlAudio = new window.Audio(audioUrl);
+  (window as any)._currentSpeechAudio = htmlAudio;
+  await htmlAudio.play();
+};
+
+/**
+ * Reproduz áudio do ElevenLabs no mobile.
+ */
+const playElevenLabsMobile = async (text: string) => {
+  const audioBase64 = await elevenLabsTTS(text);
+  const dataUri = `data:audio/mp3;base64,${audioBase64}`;
+
+  const { sound } = await Audio.Sound.createAsync(
+    { uri: dataUri },
+    { shouldPlay: true }
+  );
+  currentSound = sound;
+  sound.setOnPlaybackStatusUpdate((status) => {
+    if (status.isLoaded && status.didJustFinish) {
+      sound.unloadAsync();
+      currentSound = null;
+    }
+  });
+};
+
 // ========================================================
-// PARÂMETROS DE VOZ POR IDIOMA
-// Ajuste fino de velocidade e tom para melhor dicção em cada língua
+// PARÂMETROS DE VOZ POR IDIOMA (para Web Speech API / Expo Speech)
 // ========================================================
 const LANG_RATE_MAP: Record<LanguageType, number> = {
   pt: 0.88,
   en: 0.88,
-  it: 0.88,  // Aumentar para evitar som robótico/picotado
+  it: 0.88,
   es: 0.85,
 };
 
 const LANG_PITCH_MAP: Record<LanguageType, number> = {
   pt: 1.15,
   en: 1.10,
-  it: 1.10,  // Tom um pouco mais agudo/infantil alegre
+  it: 1.10,
   es: 1.10,
 };
 
-// Nomes de vozes de alta qualidade conhecidas, por idioma (ordem de preferência)
 const PREFERRED_VOICE_NAMES: Record<LanguageType, string[]> = {
   it: ['Google italiano', 'Alice', 'Paola', 'Luca', 'Federica', 'Cosimo', 'Elsa'],
   pt: ['Google português do Brasil', 'Google português', 'Luciana', 'Fernanda', 'Joana'],
@@ -190,31 +290,24 @@ const selectBestVoice = (locale: string, language: LanguageType): SpeechSynthesi
 
   const preferred = PREFERRED_VOICE_NAMES[language] || [];
 
-  // 1. Tentar voz preferida por nome exato (locale exato)
   for (const name of preferred) {
     const found = voices.find(v => v.lang === locale && v.name.toLowerCase().includes(name.toLowerCase()));
     if (found) return found;
   }
-
-  // 2. Tentar voz preferida por nome (qualquer locale compatível)
   for (const name of preferred) {
     const found = voices.find(v => v.lang.startsWith(locale.split('-')[0]) && v.name.toLowerCase().includes(name.toLowerCase()));
     if (found) return found;
   }
 
-  // 3. Voz Google no locale exato
   const googleExact = voices.find(v => v.lang === locale && v.name.toLowerCase().includes('google'));
   if (googleExact) return googleExact;
 
-  // 4. Qualquer voz de rede (online) no locale exato
   const networkExact = voices.find(v => v.lang === locale && !v.localService);
   if (networkExact) return networkExact;
 
-  // 5. Qualquer voz local no locale exato
   const localExact = voices.find(v => v.lang === locale);
   if (localExact) return localExact;
 
-  // 6. Fallback: qualquer voz compatível com o idioma base
   return voices.find(v => v.lang.startsWith(locale.split('-')[0])) || null;
 };
 
@@ -240,14 +333,12 @@ const webSpeechSynth = (text: string, locale: string, language: LanguageType) =>
     return;
   }
 
-  // No Chrome, a lista de vozes carrega de forma assíncrona.
   if (window.speechSynthesis.getVoices().length === 0) {
     const handler = () => {
       window.speechSynthesis.removeEventListener('voiceschanged', handler);
       doSpeak(text, locale, language);
     };
     window.speechSynthesis.addEventListener('voiceschanged', handler);
-    // Timeout de segurança: falar mesmo sem vozes premium (usa voz padrão do sistema)
     setTimeout(() => {
       window.speechSynthesis.removeEventListener('voiceschanged', handler);
       doSpeak(text, locale, language);
@@ -257,9 +348,6 @@ const webSpeechSynth = (text: string, locale: string, language: LanguageType) =>
   }
 };
 
-/**
- * Carrega e toca um arquivo de áudio remoto usando expo-av (ideal para celulares)
- */
 const playAudioFromUrl = async (url: string) => {
   try {
     const { sound } = await Audio.Sound.createAsync(
@@ -279,9 +367,6 @@ const playAudioFromUrl = async (url: string) => {
   }
 };
 
-/**
- * Motor de voz nativo do sistema operacional (iOS / Android) via expo-speech
- */
 const mobileLocalSpeech = async (text: string, locale: string, language?: LanguageType) => {
   await Speech.stop();
   const rate  = language ? (LANG_RATE_MAP[language]  ?? 0.88) : 0.88;
@@ -293,22 +378,121 @@ const mobileLocalSpeech = async (text: string, locale: string, language?: Langua
   });
 };
 
+// ========================================================
+// FUNÇÃO PRINCIPAL: speak()
+// Prioridade:
+//   1. Áudio pré-gerado (local, instantâneo, offline)
+//   2. ElevenLabs TTS (API, alta qualidade)
+//   3. Supabase Edge Function
+//   4. OpenAI TTS
+//   5. Web Speech API (navegador)
+//   6. Expo Speech (mobile nativo)
+// ========================================================
+
+export const speak = async (text: string, language: LanguageType) => {
+  try {
+    await stopSpeech();
+
+    const phoneticText = toPhoneticText(text, language).toLowerCase();
+    const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
+
+    // OPÇÃO 1: Áudio pré-gerado (cache local - instantâneo e sem custo)
+    const pregeneratedAsset = findPregeneratedAudio(phoneticText, language);
+    if (pregeneratedAsset) {
+      try {
+        await playPregeneratedAudio(pregeneratedAsset);
+        return;
+      } catch (error) {
+        console.warn('Erro ao reproduzir áudio pré-gerado, usando fallback:', error);
+      }
+    }
+
+    // OPÇÃO 2: ElevenLabs TTS (Voz de estúdio)
+    if (ELEVENLABS_API_KEY) {
+      try {
+        if (Platform.OS === 'web') {
+          await playElevenLabsWeb(phoneticText);
+        } else {
+          await playElevenLabsMobile(phoneticText);
+        }
+        return;
+      } catch (error) {
+        console.warn('ElevenLabs TTS falhou, usando fallback:', error);
+      }
+    }
+
+    // OPÇÃO 3: Supabase Edge Function
+    if (SUPABASE_TTS_FUNCTION_URL) {
+      const url = `${SUPABASE_TTS_FUNCTION_URL}?text=${encodeURIComponent(phoneticText)}&lang=${locale}`;
+      if (Platform.OS === 'web') {
+        const htmlAudio = new window.Audio(url);
+        (window as any)._currentSpeechAudio = htmlAudio;
+        await htmlAudio.play();
+      } else {
+        await playAudioFromUrl(url);
+      }
+      return;
+    }
+
+    // OPÇÃO 4: OpenAI TTS
+    if (OPENAI_API_KEY && Platform.OS === 'web') {
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: phoneticText,
+          voice: 'nova',
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const htmlAudio = new window.Audio(audioUrl);
+        (window as any)._currentSpeechAudio = htmlAudio;
+        htmlAudio.play();
+        return;
+      }
+    }
+
+    // OPÇÃO 5: Web Speech API (gratuita, nativa do navegador)
+    if (Platform.OS === 'web') {
+      webSpeechSynth(phoneticText, locale, language);
+      return;
+    }
+
+    // OPÇÃO 6: Expo Speech (motor de voz nativo do celular)
+    await mobileLocalSpeech(phoneticText, locale, language);
+
+  } catch (error) {
+    console.warn('Erro ao reproduzir voz:', error);
+    const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
+    const phoneticFallback = toPhoneticText(text, language);
+    if (Platform.OS === 'web') {
+      webSpeechSynth(phoneticFallback, locale, language);
+    } else {
+      mobileLocalSpeech(phoneticFallback, locale, language);
+    }
+  }
+};
+
 /**
  * Interrompe qualquer narração em andamento
  */
 export const stopSpeech = async () => {
   try {
-    // Parar Expo Speech (mobile)
     await Speech.stop();
 
-    // Parar som remoto no celular
     if (currentSound) {
       await currentSound.stopAsync();
       await currentSound.unloadAsync();
       currentSound = null;
     }
 
-    // Parar Web Speech API (navegador)
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
