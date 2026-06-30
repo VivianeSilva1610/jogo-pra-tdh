@@ -15,16 +15,32 @@ interface SomELetraProps {
   onBack: () => void;
 }
 
-const SYLLABLES_POOL = [
-  'MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'GA', 'FA', 'SA', 'RA', 'VA',
-  'BO', 'CO', 'DO', 'FO', 'GO', 'JO', 'MO', 'PO', 'RO', 'SO', 'TO', 'VO',
-  'LI', 'MI', 'PI', 'RI', 'SI', 'TI', 'VI', 'PE', 'BE', 'DE', 'FE', 'GE',
-  'LE', 'ME', 'NE', 'RE', 'SE', 'TE'
-];
+const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; hard: string[] }> = {
+  pt: {
+    easy: ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'MO', 'PO', 'BO', 'CO', 'TO', 'DO', 'ME', 'PE', 'BE', 'LE', 'TE', 'DE', 'MI', 'PI', 'LI', 'TI'],
+    medium: ['GA', 'FA', 'SA', 'VA', 'GO', 'FO', 'SO', 'VO', 'GE', 'FE', 'SE', 'NE', 'VI', 'SI', 'JA', 'JO', 'JE', 'JI', 'NA', 'NO', 'NI', 'LU', 'MU', 'BU', 'DU'],
+    hard: ['RA', 'RO', 'RE', 'RI', 'RU', 'JU', 'XA', 'XO', 'XE', 'XI', 'XU', 'ZA', 'ZO', 'ZE', 'ZI', 'ZU', 'PRA', 'PLA', 'BRA', 'BLA', 'CRA', 'CLA', 'TRA', 'FRA', 'FLA', 'DRA', 'GRA', 'GLA']
+  },
+  en: {
+    easy: ['MA', 'PA', 'BA', 'CA', 'DA', 'ME', 'PE', 'BE', 'MI', 'PI', 'MO', 'PO', 'BO', 'CO', 'DO', 'MU', 'PU', 'BU', 'DU'],
+    medium: ['FA', 'HA', 'JA', 'FE', 'HE', 'JE', 'FI', 'HI', 'FO', 'HO', 'JO', 'FU', 'HU', 'JU', 'GA', 'GE', 'GO', 'GU'],
+    hard: ['LA', 'LE', 'LI', 'LO', 'LU', 'RA', 'RE', 'RI', 'RO', 'RU', 'SA', 'SE', 'SI', 'SO', 'SU', 'TA', 'TE', 'TI', 'TO', 'TU', 'WA', 'WE', 'WI', 'WO', 'ZA', 'ZE', 'ZI', 'ZO']
+  },
+  es: {
+    easy: ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'MO', 'PO', 'BO', 'CO', 'TO', 'DO', 'ME', 'PE', 'BE', 'LE', 'TE', 'DE', 'MI', 'PI', 'LI', 'TI'],
+    medium: ['GA', 'FA', 'SA', 'VA', 'GO', 'FO', 'SO', 'VO', 'GE', 'FE', 'SE', 'NE', 'VI', 'SI', 'JA', 'JO', 'JE', 'JI', 'NA', 'NO', 'NI', 'LU', 'MU', 'BU', 'DU'],
+    hard: ['RA', 'RO', 'RE', 'RI', 'RU', 'JU', 'CHA', 'CHE', 'CHI', 'CHO', 'CHU', 'LLA', 'LLE', 'LLI', 'LLO', 'LLU', 'PRA', 'PLA', 'BRA', 'BLA', 'CRA', 'CLA', 'TRA', 'FRA', 'FLA', 'DRA']
+  },
+  it: {
+    easy: ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'MO', 'PO', 'BO', 'CO', 'TO', 'DO', 'ME', 'PE', 'BE', 'LE', 'TE', 'DE', 'MI', 'PI', 'LI', 'TI'],
+    medium: ['GA', 'FA', 'SA', 'VA', 'GO', 'FO', 'SO', 'VO', 'GE', 'FE', 'SE', 'NE', 'VI', 'SI', 'JA', 'JO', 'JE', 'JI', 'NA', 'NO', 'NI', 'LU', 'MU', 'BU', 'DU'],
+    hard: ['RA', 'RO', 'RE', 'RI', 'RU', 'GNA', 'GNE', 'GNI', 'GNO', 'GNU', 'GLI', 'PRA', 'PLA', 'BRA', 'BLA', 'CRA', 'CLA', 'TRA', 'FRA', 'FLA', 'DRA', 'GRA', 'GLA']
+  }
+};
 
 export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,21 +53,31 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
   const [showPerfect, setShowPerfect] = useState(false);
 
   const getActivePool = () => {
+    const lang = (language || 'pt') as string;
+    const poolMap = LOCALIZED_SYLLABLES[lang] || LOCALIZED_SYLLABLES['pt'];
     const difficulty = Math.floor(challengesCompleted / 7) % 3;
     if (difficulty === 0) {
-      return ['MA', 'PA', 'BA', 'LA', 'CA', 'TA', 'DA', 'MO', 'PO', 'BO', 'CO', 'TO', 'DO', 'ME', 'PE', 'BE', 'LE', 'TE', 'DE', 'MI', 'PI', 'LI', 'TI'];
+      return poolMap.easy;
     } else if (difficulty === 1) {
-      return ['GA', 'FA', 'SA', 'VA', 'GO', 'FO', 'SO', 'VO', 'GE', 'FE', 'SE', 'NE', 'VI', 'SI'];
+      return poolMap.medium;
     } else {
-      return ['RA', 'RO', 'RE', 'RI', 'JO'];
+      return poolMap.hard;
     }
   };
 
   // Inicializar fila com 3 sílabas distintas com base na dificuldade
   useEffect(() => {
     const pool = getActivePool();
+    const masteredList = masteredSyllables || [];
+    
+    // Filtrar sílabas que a criança já dominou para evitar repetição
+    let unmasteredPool = pool.filter(s => !masteredList.includes(s.toUpperCase()));
+    if (unmasteredPool.length < 3) {
+      unmasteredPool = pool;
+    }
+
     const selectedTargets: string[] = [];
-    const poolCopy = [...pool];
+    const poolCopy = [...unmasteredPool];
     while (selectedTargets.length < 3 && poolCopy.length > 0) {
       const idx = Math.floor(Math.random() * poolCopy.length);
       selectedTargets.push(poolCopy[idx]);
@@ -59,7 +85,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted]);
+  }, [challengesCompleted, masteredSyllables, language]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {
@@ -148,7 +174,7 @@ export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
           <View style={styles.starsBadge}>
             <Text style={styles.starsBadgeText}>⭐ {stars}</Text>
           </View>
-          <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+          <Text style={styles.roundText}>{t('roundLabel')} {currentIndex + 1}/{queue.length}</Text>
         </View>
       </View>
 

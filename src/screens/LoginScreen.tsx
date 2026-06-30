@@ -7,7 +7,7 @@ import { MascotLumi } from '../components/MascotLumi';
 import { LumiIcon } from '../components/VectorIcons';
 import Svg, { Path, G } from 'react-native-svg';
 import { EnchantedBackground } from '../components/EnchantedBackground';
-import { THEME_COLORS } from '../styles/theme';
+import { THEME_COLORS, FONT_SIZES } from '../styles/theme';
 import { playSound } from '../services/audio';
 import { speak } from '../services/speech';
 
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoLetter: {
-    fontSize: 50,
+    fontSize: FONT_SIZES.hero,
     fontWeight: '900',
     marginHorizontal: 4,
     textShadowColor: 'rgba(93, 64, 55, 0.4)',
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   logoTitle: {
-    fontSize: 28,
+    fontSize: FONT_SIZES.title,
     fontWeight: '900',
     color: THEME_COLORS.brownDark,
     textAlign: 'center',
@@ -336,14 +336,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   welcomeTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.subheading,
     fontWeight: '900',
     color: THEME_COLORS.orangeDark,
     marginBottom: 6,
     textAlign: 'center',
   },
   welcomeText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.caption,
     fontWeight: '700',
     color: THEME_COLORS.brownDark,
     textAlign: 'center',
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   helpText: {
-    fontSize: 11,
+    fontSize: FONT_SIZES.micro,
     fontWeight: 'bold',
     color: '#78909C',
     textAlign: 'center',
@@ -383,13 +383,13 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   googleButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body,
     fontWeight: '900',
     color: THEME_COLORS.brownDark,
     letterSpacing: 0.5,
   },
   footerText: {
-    fontSize: 10,
+    fontSize: FONT_SIZES.micro,
     color: '#78909C',
     textAlign: 'center',
     lineHeight: 14,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   previewTitle: {
-    fontSize: 10,
+    fontSize: FONT_SIZES.micro,
     fontWeight: '900',
     color: THEME_COLORS.brownDark,
     letterSpacing: 1,
@@ -440,14 +440,17 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
     zIndex: 2,
   },
+  // Exceção intencional à escala FONT_SIZES: este é o emoji 🔒 dentro de um
+  // badge decorativo de 14x14px, não texto de leitura. Forçar para 12px
+  // estouraria o badge.
   lockText: {
     fontSize: 8,
   },
   worldEmoji: {
-    fontSize: 22,
+    fontSize: FONT_SIZES.heading,
   },
   worldName: {
-    fontSize: 8,
+    fontSize: FONT_SIZES.micro,
     fontWeight: '800',
     color: THEME_COLORS.brownDark,
     marginTop: 2,

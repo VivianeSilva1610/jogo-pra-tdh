@@ -20,12 +20,12 @@ const LANG_LOCALE_MAP: Record<LanguageType, string> = {
 const PHONETIC_LETTER_MAP: Record<LanguageType, Record<string, string>> = {
   it: {
     // Metodo fonico italiano: suoni delle lettere per TTS
-    // Usiamo sillabe che il motore TTS italiano pronuncia correttamente
-    A: 'a',    B: 'bi',   C: 'ci',   D: 'di',   E: 'e',    F: 'effe',
-    G: 'gi',   H: 'acca', I: 'i',    J: 'gi lunga', K: 'cappa', L: 'elle',
-    M: 'emme', N: 'enne', O: 'o',    P: 'pi',   Q: 'cu',   R: 'erre',
-    S: 'esse', T: 'ti',   U: 'u',    V: 've',   W: 'doppia vu', X: 'ics',
-    Y: 'i greca', Z: 'dzeta',
+    // Invece del nome della lettera ("bi", "effe"), usiamo il suono fonico ("be", "fe") con accento grave per forzare la pronuncia aperta
+    A: 'a',    B: 'bè',   C: 'cè',   D: 'dè',   E: 'e',    F: 'fè',
+    G: 'gè',   H: 'acca', I: 'i',    J: 'i lunga', K: 'cappa', L: 'lè',
+    M: 'mè',   N: 'nè',   O: 'o',    P: 'pè',   Q: 'qu',   R: 'rè',
+    S: 'sè',   T: 'tè',   U: 'u',    V: 'vè',   W: 'doppia vu', X: 'ics',
+    Y: 'i greca', Z: 'zè',
   },
   pt: {
     // Método fônico português: sons das letras
@@ -89,7 +89,8 @@ export const speak = async (text: string, language: LanguageType) => {
     await stopSpeech();
 
     // Converter letra isolada para sua representação fonética (som, não nome)
-    const phoneticText = toPhoneticText(text, language);
+    // E converter para minúsculas para evitar que o motor de voz (TTS) soletre sílabas e palavras em maiúsculas (ex: "MA" lido como "M. A.")
+    const phoneticText = toPhoneticText(text, language).toLowerCase();
     const locale = LANG_LOCALE_MAP[language] || 'pt-BR';
 
     // OPÇÃO A: Supabase Edge Function (IA Premium Segura - para mobile e web)
@@ -164,14 +165,14 @@ export const speak = async (text: string, language: LanguageType) => {
 const LANG_RATE_MAP: Record<LanguageType, number> = {
   pt: 0.88,
   en: 0.88,
-  it: 0.80,  // Italiano mais lento para clareza fonética
+  it: 0.88,  // Aumentar para evitar som robótico/picotado
   es: 0.85,
 };
 
 const LANG_PITCH_MAP: Record<LanguageType, number> = {
   pt: 1.15,
   en: 1.10,
-  it: 1.05,  // Tom mais natural para italiano
+  it: 1.10,  // Tom um pouco mais agudo/infantil alegre
   es: 1.10,
 };
 

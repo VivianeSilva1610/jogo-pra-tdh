@@ -53,11 +53,11 @@ const WORDS_POOL: WordOption[] = [
   { emoji: '🪁', langMap: { pt: { word: 'PIPA', soundText: 'Pipa' }, en: { word: 'KITE', soundText: 'Kite' }, it: { word: 'AQUILONE', soundText: 'Aquilone' }, es: { word: 'COMETA', soundText: 'Cometa' } } },
   { emoji: '🍞', langMap: { pt: { word: 'PÃO', soundText: 'Pão' }, en: { word: 'BREAD', soundText: 'Bread' }, it: { word: 'PANE', soundText: 'Pane' }, es: { word: 'PAN', soundText: 'Pan' } } },
   { emoji: '🍯', langMap: { pt: { word: 'MEL', soundText: 'Mel' }, en: { word: 'HONEY', soundText: 'Honey' }, it: { word: 'MIELE', soundText: 'Miele' }, es: { word: 'MIEL', soundText: 'Miel' } } },
-  { emoji: '🪑', langMap: { pt: { word: 'MESA', soundText: 'Mesa' }, en: { word: 'TABLE', soundText: 'Table' }, it: { word: 'TAVOLO', soundText: 'Tavolo' }, es: { word: 'MESA', soundText: 'Mesa' } } },
+  { emoji: '👄', langMap: { pt: { word: 'BOCA', soundText: 'Boca' }, en: { word: 'MOUTH', soundText: 'Mouth' }, it: { word: 'BOCCA', soundText: 'Bocca' }, es: { word: 'BOCA', soundText: 'Boca' } } },
   { emoji: '🛏️', langMap: { pt: { word: 'CAMA', soundText: 'Cama' }, en: { word: 'BED', soundText: 'Bed' }, it: { word: 'LETTO', soundText: 'Letto' }, es: { word: 'CAMA', soundText: 'Cama' } } },
   { emoji: '🍬', langMap: { pt: { word: 'BALA', soundText: 'Bala' }, en: { word: 'CANDY', soundText: 'Candy' }, it: { word: 'CARAMELLA', soundText: 'Caramella' }, es: { word: 'DULCE', soundText: 'Dulce' } } },
   { emoji: '🧊', langMap: { pt: { word: 'GELO', soundText: 'Gelo' }, en: { word: 'ICE', soundText: 'Ice' }, it: { word: 'GHIACCIO', soundText: 'Ghiaccio' }, es: { word: 'HIELO', soundText: 'Hielo' } } },
-  { emoji: '🪵', langMap: { pt: { word: 'LAMA', soundText: 'Lama' }, en: { word: 'MUD', soundText: 'Mud' }, it: { word: 'FANGO', soundText: 'Fango' }, es: { word: 'LODO', soundText: 'Lodo' } } },
+  { emoji: '🧚', langMap: { pt: { word: 'FADA', soundText: 'Fada' }, en: { word: 'FAIRY', soundText: 'Fairy' }, it: { word: 'FATA', soundText: 'Fata' }, es: { word: 'HADA', soundText: 'Hada' } } },
   { emoji: '🗑️', langMap: { pt: { word: 'LIXO', soundText: 'Lixo' }, en: { word: 'TRASH', soundText: 'Trash' }, it: { word: 'RIFIUTI', soundText: 'Rifiuti' }, es: { word: 'BASURA', soundText: 'Basura' } } },
   { emoji: '💼', langMap: { pt: { word: 'MALA', soundText: 'Mala' }, en: { word: 'BAG', soundText: 'Bag' }, it: { word: 'BORSA', soundText: 'Borsa' }, es: { word: 'MALETA', soundText: 'Maleta' } } },
   { emoji: '🗺️', langMap: { pt: { word: 'MAPA', soundText: 'Mapa' }, en: { word: 'MAP', soundText: 'Map' }, it: { word: 'MAPPA', soundText: 'Mappa' }, es: { word: 'MAPA', soundText: 'Mapa' } } },
@@ -196,11 +196,11 @@ function splitSyllables(word: string): string[] {
     'PERA': ['PE', 'RA'],
     'KIWI': ['KI', 'WI'],
     'PIPA': ['PI', 'PA'],
-    'MESA': ['ME', 'SA'],
+    'BOCA': ['BO', 'CA'],
     'CAMA': ['CA', 'MA'],
     'BALA': ['BA', 'LA'],
     'GELO': ['GE', 'LO'],
-    'LAMA': ['LA', 'MA'],
+    'FADA': ['FA', 'DA'],
     'LIXO': ['LI', 'XO'],
     'MALA': ['MA', 'LA'],
     'MAPA': ['MA', 'PA'],
@@ -297,7 +297,7 @@ const DECOY_SYLLABLES = ['LA', 'BO', 'MA', 'PA', 'CA', 'TA', 'DE', 'ME', 'PO', '
 
 export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
 
   const [queue, setQueue] = useState<WordOption[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -333,13 +333,18 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
       }
     });
 
-    // Se por acaso a lista filtrada for menor que 3 (segurança contra pools vazios em certas línguas), usar fallback
-    if (pool.length < 3) {
-      pool = [...WORDS_POOL];
+    const readList = readWords || [];
+    let unreadPool = pool.filter(item => {
+      const w = item.langMap[activeLang]?.word || item.langMap['pt'].word;
+      return !readList.includes(w.toUpperCase());
+    });
+
+    if (unreadPool.length < 3) {
+      unreadPool = pool;
     }
 
     const selectedTargets: WordOption[] = [];
-    const poolCopy = [...pool];
+    const poolCopy = [...unreadPool];
     while (selectedTargets.length < 3 && poolCopy.length > 0) {
       const idx = Math.floor(Math.random() * poolCopy.length);
       selectedTargets.push(poolCopy[idx]);
@@ -347,7 +352,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, language]);
+  }, [challengesCompleted, language, readWords]);
 
   // Iniciar nova rodada quando muda o índice ou idioma
   useEffect(() => {
@@ -469,7 +474,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           <View style={styles.starsBadge}>
             <Text style={styles.starsBadgeText}>⭐ {stars}</Text>
           </View>
-          <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+          <Text style={styles.roundText}>{t('roundLabel')} {currentIndex + 1}/{queue.length}</Text>
         </View>
       </View>
 

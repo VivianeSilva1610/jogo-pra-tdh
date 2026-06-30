@@ -110,6 +110,7 @@ export interface Translations {
   detective_lens: string;
   onlyOwnedCanTry: string;
   game1PromptSyllable: string;
+  roundLabel: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -127,7 +128,7 @@ const translations: Record<LanguageType, Translations> = {
     save: "Salvar",
     cancel: "Cancelar",
     unisexGirl: "Menina Aventureira",
-    unisexBoy: "Menino Aventureira",
+    unisexBoy: "Menino Aventureiro",
     fox: "Raposa",
     panda: "Panda",
     kitten: "Gatinho",
@@ -219,6 +220,7 @@ const translations: Record<LanguageType, Translations> = {
     detective_lens: "Lupa de Detetive",
     onlyOwnedCanTry: "Apenas itens adquiridos podem ser provados!",
     game1PromptSyllable: "Ouça e encontre a sílaba correspondente!",
+    roundLabel: "Rodada",
   },
   en: {
     appName: "Letter Adventure",
@@ -326,6 +328,7 @@ const translations: Record<LanguageType, Translations> = {
     detective_lens: "Detective Magnifier",
     onlyOwnedCanTry: "Only owned items can be tried on!",
     game1PromptSyllable: "Listen and find the corresponding syllable!",
+    roundLabel: "Round",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -433,6 +436,7 @@ const translations: Record<LanguageType, Translations> = {
     detective_lens: "Lente da Investigatore",
     onlyOwnedCanTry: "Solo gli articoli acquistati possono essere provati!",
     game1PromptSyllable: "Ascolta e trova la sillaba corrispondente!",
+    roundLabel: "Turno",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -540,6 +544,7 @@ const translations: Record<LanguageType, Translations> = {
     detective_lens: "Lupa de Detective",
     onlyOwnedCanTry: "¡Solo se pueden probar los artículos adquiridos!",
     game1PromptSyllable: "¡Escucha y encuentra la sílaba correspondiente!",
+    roundLabel: "Ronda",
   }
 };
 

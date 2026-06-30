@@ -352,11 +352,17 @@ export default function App() {
           // Já existe filho → usar o primeiro (e único)
           setActiveChildId(kids[0].id);
         } else {
-          // Primeiro acesso → criar filho automaticamente com nome genérico
-          // O nome real pode ser editado depois no perfil
-          const defaultName = session.user.user_metadata?.full_name
-            ? session.user.user_metadata.full_name.split(' ')[0]
-            : 'Aventureiro';
+          // Primeiro acesso → criar filho automaticamente com nome neutro.
+          //
+          // IMPORTANTE: NÃO usar session.user.user_metadata.full_name aqui.
+          // A conta logada via Google é a conta do RESPONSÁVEL, não da criança
+          // (ex: pode ser a conta do pai/mãe, ou até a própria criança logada
+          // sozinha com uma conta adulta de um tablet compartilhado). Usar o
+          // nome da conta como nome da criança causava casos como o perfil
+          // sendo criado com o nome do pai/mãe em vez de um placeholder.
+          // O nome real da criança deve ser definido manualmente depois,
+          // na tela de Perfil, como parte de um fluxo de configuração inicial.
+          const defaultName = 'Aventureiro';
 
           const child = await createChildWithProfile(parentId, defaultName, 6, 'panda');
           if (child) {

@@ -22,91 +22,366 @@ interface PhraseOption {
 }
 
 const PHRASES_POOL: PhraseOption[] = [
+  // ─── FÁCIL (3 palavras em PT) ─────────────────────────────────────────────
   {
     sentence: 'O gato corre.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'O gato corre.', words: ['O', 'gato', 'corre.'] },
-      en: { sentence: 'The cat runs.', words: ['The', 'cat', 'runs.'] },
-      it: { sentence: 'Il gatto corre.', words: ['Il', 'gatto', 'corre.'] },
-      es: { sentence: 'El gato corre.', words: ['El', 'gato', 'corre.'] }
-    }
-  },
-  {
-    sentence: 'A casa é bela.',
-    shuffledPt: [],
-    langMap: {
-      pt: { sentence: 'A casa é bela.', words: ['A', 'casa', 'é', 'bela.'] },
-      en: { sentence: 'The house is beautiful.', words: ['The', 'house', 'is', 'beautiful.'] },
-      it: { sentence: 'La casa è bella.', words: ['La', 'casa', 'è', 'bella.'] },
-      es: { sentence: 'La casa es bella.', words: ['La', 'casa', 'es', 'bella.'] }
+      pt: { sentence: 'O gato corre.',    words: ['O', 'gato', 'corre.']    },
+      en: { sentence: 'The cat runs.',    words: ['The', 'cat', 'runs.']    },
+      it: { sentence: 'Il gatto corre.',  words: ['Il', 'gatto', 'corre.']  },
+      es: { sentence: 'El gato corre.',   words: ['El', 'gato', 'corre.']   },
     }
   },
   {
     sentence: 'O cão brinca.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'O cão brinca.', words: ['O', 'cão', 'brinca.'] },
-      en: { sentence: 'The dog plays.', words: ['The', 'dog', 'plays.'] },
-      it: { sentence: 'Il cane gioca.', words: ['Il', 'cane', 'gioca.'] },
-      es: { sentence: 'El perro juega.', words: ['El', 'perro', 'juega.'] }
+      pt: { sentence: 'O cão brinca.',    words: ['O', 'cão', 'brinca.']    },
+      en: { sentence: 'The dog plays.',   words: ['The', 'dog', 'plays.']   },
+      it: { sentence: 'Il cane gioca.',   words: ['Il', 'cane', 'gioca.']   },
+      es: { sentence: 'El perro juega.',  words: ['El', 'perro', 'juega.']  },
     }
   },
   {
     sentence: 'O sol brilha.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'O sol brilha.', words: ['O', 'sol', 'brilha.'] },
-      en: { sentence: 'The sun shines.', words: ['The', 'sun', 'shines.'] },
+      pt: { sentence: 'O sol brilha.',    words: ['O', 'sol', 'brilha.']    },
+      en: { sentence: 'The sun shines.',  words: ['The', 'sun', 'shines.']  },
       it: { sentence: 'Il sole splende.', words: ['Il', 'sole', 'splende.'] },
-      es: { sentence: 'El sol brilla.', words: ['El', 'sol', 'brilla.'] }
-    }
-  },
-  {
-    sentence: 'A maçã é doce.',
-    shuffledPt: [],
-    langMap: {
-      pt: { sentence: 'A maçã é doce.', words: ['A', 'maçã', 'é', 'doce.'] },
-      en: { sentence: 'The apple is sweet.', words: ['The', 'apple', 'is', 'sweet.'] },
-      it: { sentence: 'La mela è dolce.', words: ['La', 'mela', 'è', 'dolce.'] },
-      es: { sentence: 'La manzana es dulce.', words: ['La', 'manzana', 'es', 'dulce.'] }
+      es: { sentence: 'El sol brilla.',   words: ['El', 'sol', 'brilla.']   },
     }
   },
   {
     sentence: 'A flor cresce.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'A flor cresce.', words: ['A', 'flor', 'cresce.'] },
-      en: { sentence: 'The flower grows.', words: ['The', 'flower', 'grows.'] },
+      pt: { sentence: 'A flor cresce.',   words: ['A', 'flor', 'cresce.']   },
+      en: { sentence: 'The flower grows.',words: ['The', 'flower', 'grows.']},
       it: { sentence: 'Il fiore cresce.', words: ['Il', 'fiore', 'cresce.'] },
-      es: { sentence: 'La flor crece.', words: ['La', 'flor', 'crece.'] }
+      es: { sentence: 'La flor crece.',   words: ['La', 'flor', 'crece.']   },
     }
   },
   {
     sentence: 'O pássaro voa.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'O pássaro voa.', words: ['O', 'pássaro', 'voa.'] },
-      en: { sentence: 'The bird flies.', words: ['The', 'bird', 'flies.'] },
-      it: { sentence: 'L uccello vola.', words: ['L uccello', 'vola.'] },
-      es: { sentence: 'El pájaro vuela.', words: ['El', 'pájaro', 'vuela.'] }
+      pt: { sentence: 'O pássaro voa.',   words: ['O', 'pássaro', 'voa.']   },
+      en: { sentence: 'The bird flies.',  words: ['The', 'bird', 'flies.']  },
+      it: { sentence: "L'uccello vola.",  words: ["L'uccello", 'vola.']     },
+      es: { sentence: 'El pájaro vuela.', words: ['El', 'pájaro', 'vuela.'] },
+    }
+  },
+  {
+    sentence: 'O sapo pula.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O sapo pula.',     words: ['O', 'sapo', 'pula.']     },
+      en: { sentence: 'The frog jumps.',  words: ['The', 'frog', 'jumps.']  },
+      it: { sentence: 'La rana salta.',   words: ['La', 'rana', 'salta.']   },
+      es: { sentence: 'El sapo salta.',   words: ['El', 'sapo', 'salta.']   },
+    }
+  },
+  {
+    sentence: 'A lua brilha.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A lua brilha.',    words: ['A', 'lua', 'brilha.']    },
+      en: { sentence: 'The moon shines.', words: ['The', 'moon', 'shines.'] },
+      it: { sentence: 'La luna brilla.',  words: ['La', 'luna', 'brilla.']  },
+      es: { sentence: 'La luna brilla.',  words: ['La', 'luna', 'brilla.']  },
+    }
+  },
+  {
+    sentence: 'O pato nada.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O pato nada.',     words: ['O', 'pato', 'nada.']     },
+      en: { sentence: 'The duck swims.',  words: ['The', 'duck', 'swims.']  },
+      it: { sentence: "L'anatra nuota.",  words: ["L'anatra", 'nuota.']     },
+      es: { sentence: 'El pato nada.',    words: ['El', 'pato', 'nada.']    },
+    }
+  },
+  {
+    sentence: 'O vento sopra.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O vento sopra.',   words: ['O', 'vento', 'sopra.']   },
+      en: { sentence: 'The wind blows.',  words: ['The', 'wind', 'blows.']  },
+      it: { sentence: 'Il vento soffia.', words: ['Il', 'vento', 'soffia.'] },
+      es: { sentence: 'El viento sopla.', words: ['El', 'viento', 'sopla.'] },
+    }
+  },
+  {
+    sentence: 'O peixe nada.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O peixe nada.',    words: ['O', 'peixe', 'nada.']    },
+      en: { sentence: 'The fish swims.',  words: ['The', 'fish', 'swims.']  },
+      it: { sentence: 'Il pesce nuota.',  words: ['Il', 'pesce', 'nuota.']  },
+      es: { sentence: 'El pez nada.',     words: ['El', 'pez', 'nada.']     },
+    }
+  },
+  {
+    sentence: 'A chuva cai.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A chuva cai.',     words: ['A', 'chuva', 'cai.']     },
+      en: { sentence: 'The rain falls.',  words: ['The', 'rain', 'falls.']  },
+      it: { sentence: 'La pioggia cade.', words: ['La', 'pioggia', 'cade.'] },
+      es: { sentence: 'La lluvia cae.',   words: ['La', 'lluvia', 'cae.']   },
+    }
+  },
+  {
+    sentence: 'O urso dorme.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O urso dorme.',    words: ['O', 'urso', 'dorme.']    },
+      en: { sentence: 'The bear sleeps.', words: ['The', 'bear', 'sleeps.'] },
+      it: { sentence: "L'orso dorme.",    words: ["L'orso", 'dorme.']       },
+      es: { sentence: 'El oso duerme.',   words: ['El', 'oso', 'duerme.']   },
+    }
+  },
+  {
+    sentence: 'O lobo uiva.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O lobo uiva.',     words: ['O', 'lobo', 'uiva.']     },
+      en: { sentence: 'The wolf howls.',  words: ['The', 'wolf', 'howls.']  },
+      it: { sentence: 'Il lupo ulula.',   words: ['Il', 'lupo', 'ulula.']   },
+      es: { sentence: 'El lobo aúlla.',   words: ['El', 'lobo', 'aúlla.']   },
+    }
+  },
+  {
+    sentence: 'A vaca come.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A vaca come.',     words: ['A', 'vaca', 'come.']     },
+      en: { sentence: 'The cow eats.',    words: ['The', 'cow', 'eats.']    },
+      it: { sentence: 'La vacca mangia.', words: ['La', 'vacca', 'mangia.'] },
+      es: { sentence: 'La vaca come.',    words: ['La', 'vaca', 'come.']    },
+    }
+  },
+  {
+    sentence: 'O bebê dorme.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O bebê dorme.',    words: ['O', 'bebê', 'dorme.']    },
+      en: { sentence: 'The baby sleeps.', words: ['The', 'baby', 'sleeps.'] },
+      it: { sentence: 'Il bimbo dorme.',  words: ['Il', 'bimbo', 'dorme.']  },
+      es: { sentence: 'El bebé duerme.',  words: ['El', 'bebé', 'duerme.']  },
+    }
+  },
+
+  // ─── DIFÍCIL (4+ palavras em PT) ──────────────────────────────────────────
+  {
+    sentence: 'A casa é bela.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A casa é bela.',         words: ['A', 'casa', 'é', 'bela.']           },
+      en: { sentence: 'The house is beautiful.', words: ['The', 'house', 'is', 'beautiful.']  },
+      it: { sentence: 'La casa è bella.',        words: ['La', 'casa', 'è', 'bella.']         },
+      es: { sentence: 'La casa es bella.',       words: ['La', 'casa', 'es', 'bella.']        },
+    }
+  },
+  {
+    sentence: 'A maçã é doce.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A maçã é doce.',          words: ['A', 'maçã', 'é', 'doce.']           },
+      en: { sentence: 'The apple is sweet.',     words: ['The', 'apple', 'is', 'sweet.']       },
+      it: { sentence: 'La mela è dolce.',        words: ['La', 'mela', 'è', 'dolce.']          },
+      es: { sentence: 'La manzana es dulce.',    words: ['La', 'manzana', 'es', 'dulce.']      },
     }
   },
   {
     sentence: 'O bolo é gostoso.',
     shuffledPt: [],
     langMap: {
-      pt: { sentence: 'O bolo é gostoso.', words: ['O', 'bolo', 'é', 'gostoso.'] },
-      en: { sentence: 'The cake is tasty.', words: ['The', 'cake', 'is', 'tasty.'] },
-      it: { sentence: 'La torta è buona.', words: ['La', 'torta', 'è', 'buona.'] },
-      es: { sentence: 'El pastel es rico.', words: ['El', 'pastel', 'es', 'rico.'] }
+      pt: { sentence: 'O bolo é gostoso.',       words: ['O', 'bolo', 'é', 'gostoso.']         },
+      en: { sentence: 'The cake is tasty.',      words: ['The', 'cake', 'is', 'tasty.']         },
+      it: { sentence: 'La torta è buona.',       words: ['La', 'torta', 'è', 'buona.']          },
+      es: { sentence: 'El pastel es rico.',      words: ['El', 'pastel', 'es', 'rico.']         },
+    }
+  },
+  {
+    sentence: 'O sol é bonito.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O sol é bonito.',         words: ['O', 'sol', 'é', 'bonito.']            },
+      en: { sentence: 'The sun is beautiful.',   words: ['The', 'sun', 'is', 'beautiful.']      },
+      it: { sentence: 'Il sole è bello.',        words: ['Il', 'sole', 'è', 'bello.']           },
+      es: { sentence: 'El sol es bonito.',       words: ['El', 'sol', 'es', 'bonito.']          },
+    }
+  },
+  {
+    sentence: 'A lua é linda.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A lua é linda.',          words: ['A', 'lua', 'é', 'linda.']             },
+      en: { sentence: 'The moon is lovely.',     words: ['The', 'moon', 'is', 'lovely.']        },
+      it: { sentence: 'La luna è bella.',        words: ['La', 'luna', 'è', 'bella.']           },
+      es: { sentence: 'La luna es linda.',       words: ['La', 'luna', 'es', 'linda.']          },
+    }
+  },
+  {
+    sentence: 'O leão é forte.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O leão é forte.',         words: ['O', 'leão', 'é', 'forte.']            },
+      en: { sentence: 'The lion is strong.',     words: ['The', 'lion', 'is', 'strong.']        },
+      it: { sentence: 'Il leone è forte.',       words: ['Il', 'leone', 'è', 'forte.']          },
+      es: { sentence: 'El león es fuerte.',      words: ['El', 'león', 'es', 'fuerte.']         },
+    }
+  },
+  {
+    sentence: 'O gato bebe leite.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O gato bebe leite.',      words: ['O', 'gato', 'bebe', 'leite.']         },
+      en: { sentence: 'The cat drinks milk.',    words: ['The', 'cat', 'drinks', 'milk.']        },
+      it: { sentence: 'Il gatto beve latte.',    words: ['Il', 'gatto', 'beve', 'latte.']       },
+      es: { sentence: 'El gato bebe leche.',     words: ['El', 'gato', 'bebe', 'leche.']        },
+    }
+  },
+  {
+    sentence: 'O urso come mel.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O urso come mel.',        words: ['O', 'urso', 'come', 'mel.']           },
+      en: { sentence: 'The bear eats honey.',    words: ['The', 'bear', 'eats', 'honey.']       },
+      it: { sentence: "L'orso mangia miele.",    words: ["L'orso", 'mangia', 'miele.']          },
+      es: { sentence: 'El oso come miel.',       words: ['El', 'oso', 'come', 'miel.']          },
+    }
+  },
+  {
+    sentence: 'A chuva cai forte.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A chuva cai forte.',      words: ['A', 'chuva', 'cai', 'forte.']         },
+      en: { sentence: 'The rain falls hard.',    words: ['The', 'rain', 'falls', 'hard.']        },
+      it: { sentence: 'La pioggia cade forte.',  words: ['La', 'pioggia', 'cade', 'forte.']     },
+      es: { sentence: 'La lluvia cae fuerte.',   words: ['La', 'lluvia', 'cae', 'fuerte.']      },
+    }
+  },
+  {
+    sentence: 'O livro é grande.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O livro é grande.',       words: ['O', 'livro', 'é', 'grande.']           },
+      en: { sentence: 'The book is big.',        words: ['The', 'book', 'is', 'big.']            },
+      it: { sentence: 'Il libro è grande.',      words: ['Il', 'libro', 'è', 'grande.']          },
+      es: { sentence: 'El libro es grande.',     words: ['El', 'libro', 'es', 'grande.']         },
+    }
+  },
+  {
+    sentence: 'O pato é amarelo.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O pato é amarelo.',       words: ['O', 'pato', 'é', 'amarelo.']           },
+      en: { sentence: 'The duck is yellow.',     words: ['The', 'duck', 'is', 'yellow.']         },
+      it: { sentence: "L'anatra è gialla.",      words: ["L'anatra", 'è', 'gialla.']             },
+      es: { sentence: 'El pato es amarillo.',    words: ['El', 'pato', 'es', 'amarillo.']        },
+    }
+  },
+  {
+    sentence: 'O cão é amigo.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O cão é amigo.',          words: ['O', 'cão', 'é', 'amigo.']              },
+      en: { sentence: 'The dog is a friend.',    words: ['The', 'dog', 'is', 'friendly.']        },
+      it: { sentence: 'Il cane è amico.',        words: ['Il', 'cane', 'è', 'amico.']            },
+      es: { sentence: 'El perro es amigo.',      words: ['El', 'perro', 'es', 'amigo.']          },
+    }
+  },
+  {
+    sentence: 'A menina lê bem.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A menina lê bem.',        words: ['A', 'menina', 'lê', 'bem.']            },
+      en: { sentence: 'The girl reads well.',    words: ['The', 'girl', 'reads', 'well.']        },
+      it: { sentence: 'La bambina legge bene.',  words: ['La', 'bambina', 'legge', 'bene.']      },
+      es: { sentence: 'La niña lee bien.',       words: ['La', 'niña', 'lee', 'bien.']           },
+    }
+  },
+  {
+    sentence: 'O menino corre rápido.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O menino corre rápido.',  words: ['O', 'menino', 'corre', 'rápido.']      },
+      en: { sentence: 'The boy runs fast.',      words: ['The', 'boy', 'runs', 'fast.']          },
+      it: { sentence: 'Il bambino corre veloce.',words: ['Il', 'bambino', 'corre', 'veloce.']   },
+      es: { sentence: 'El niño corre rápido.',   words: ['El', 'niño', 'corre', 'rápido.']       },
+    }
+  },
+  {
+    sentence: 'A rosa é vermelha.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A rosa é vermelha.',      words: ['A', 'rosa', 'é', 'vermelha.']          },
+      en: { sentence: 'The rose is red.',        words: ['The', 'rose', 'is', 'red.']            },
+      it: { sentence: 'La rosa è rossa.',        words: ['La', 'rosa', 'è', 'rossa.']            },
+      es: { sentence: 'La rosa es roja.',        words: ['La', 'rosa', 'es', 'roja.']            },
+    }
+  },
+  // ─── DIFÍCIL / AVANÇADO (5+ palavras) ──────────────────────────────────────
+  {
+    sentence: 'O jacaré bebe água na lagoa.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O jacaré bebe água na lagoa.', words: ['O', 'jacaré', 'bebe', 'água', 'na', 'lagoa.'] },
+      en: { sentence: 'The gator drinks water in the pond.', words: ['The', 'gator', 'drinks', 'water', 'in', 'the', 'pond.'] },
+      it: { sentence: 'Il coccodrillo beve acqua nel lago.', words: ['Il', 'coccodrillo', 'beve', 'acqua', 'nel', 'lago.'] },
+      es: { sentence: 'El caimán bebe agua en la laguna.', words: ['El', 'caimán', 'bebe', 'agua', 'en', 'la', 'laguna.'] }
+    }
+  },
+  {
+    sentence: 'A linda borboleta voa alto no céu.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'A linda borboleta voa alto no céu.', words: ['A', 'linda', 'borboleta', 'voa', 'alto', 'no', 'céu.'] },
+      en: { sentence: 'The beautiful butterfly flies high in the sky.', words: ['The', 'beautiful', 'butterfly', 'flies', 'high', 'in', 'the', 'sky.'] },
+      it: { sentence: 'La bella farfalla vola alto nel cielo.', words: ['La', 'bella', 'farfalla', 'vola', 'alto', 'nel', 'cielo.'] },
+      es: { sentence: 'La linda mariposa vuela alto en el cielo.', words: ['La', 'linda', 'mariposa', 'vuela', 'alto', 'en', 'el', 'cielo.'] }
+    }
+  },
+  {
+    sentence: 'O grande elefante cinza come muitas folhas.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O grande elefante cinza come muitas folhas.', words: ['O', 'grande', 'elefante', 'cinza', 'come', 'muitas', 'folhas.'] },
+      en: { sentence: 'The big grey elephant eats many leaves.', words: ['The', 'big', 'grey', 'elephant', 'eats', 'many', 'leaves.'] },
+      it: { sentence: 'Il grande elefante grigio mangia molte foglie.', words: ['Il', 'grande', 'elefante', 'grigio', 'mangia', 'molte', 'foglie.'] },
+      es: { sentence: 'El gran elefante gris come muchas hojas.', words: ['El', 'gran', 'elefante', 'gris', 'come', 'muchas', 'hojas.'] }
+    }
+  },
+  {
+    sentence: 'O cão brincalhão corre feliz no grande parque.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O cão brincalhão corre feliz no grande parque.', words: ['O', 'cão', 'brincalhão', 'corre', 'feliz', 'no', 'grande', 'parque.'] },
+      en: { sentence: 'The playful dog runs happily in the big park.', words: ['The', 'playful', 'dog', 'runs', 'happily', 'in', 'the', 'big', 'park.'] },
+      it: { sentence: 'Il cane giocherellone corre felice nel grande parco.', words: ['Il', 'cane', 'giocherellone', 'corre', 'felice', 'nel', 'grande', 'parco.'] },
+      es: { sentence: 'El perro juguetón corre feliz en el gran parque.', words: ['El', 'perro', 'juguetón', 'corre', 'feliz', 'en', 'el', 'gran', 'parque.'] }
+    }
+  },
+  {
+    sentence: 'O gato dorme na cadeira macia da sala.',
+    shuffledPt: [],
+    langMap: {
+      pt: { sentence: 'O gato dorme na cadeira macia da sala.', words: ['O', 'gato', 'dorme', 'na', 'cadeira', 'macia', 'da', 'sala.'] },
+      en: { sentence: 'The cat sleeps on the soft living room chair.', words: ['The', 'cat', 'sleeps', 'on', 'the', 'soft', 'living', 'room', 'chair.'] },
+      it: { sentence: 'Il gatto dorme sulla sedia morbida del soggiorno.', words: ['Il', 'gatto', 'dorme', 'sulla', 'sedia', 'morbida', 'del', 'soggiorno.'] },
+      es: { sentence: 'El gato duerme en la silla suave de la sala.', words: ['El', 'gato', 'duerme', 'en', 'la', 'silla', 'suave', 'de', 'la', 'sala.'] }
     }
   }
 ];
 
+
 export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
 
   const [queue, setQueue] = useState<PhraseOption[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -132,17 +407,25 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
       const wordCount = phraseData.words.length;
       if (difficulty === 0) {
         return wordCount <= 3;
+      } else if (difficulty === 1) {
+        return wordCount === 4;
       } else {
-        return wordCount >= 4;
+        return wordCount >= 5;
       }
     });
 
-    if (pool.length < 3) {
-      pool = [...PHRASES_POOL];
+    const readList = readWords || [];
+    let unreadPool = pool.filter(item => {
+      const phraseData = item.langMap[activeLang] || item.langMap['pt'];
+      return !readList.includes(phraseData.sentence.toUpperCase());
+    });
+
+    if (unreadPool.length < 3) {
+      unreadPool = pool;
     }
 
     const selectedTargets: PhraseOption[] = [];
-    const poolCopy = [...pool];
+    const poolCopy = [...unreadPool];
     while (selectedTargets.length < 3 && poolCopy.length > 0) {
       const idx = Math.floor(Math.random() * poolCopy.length);
       selectedTargets.push(poolCopy[idx]);
@@ -150,7 +433,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, language]);
+  }, [challengesCompleted, language, readWords]);
 
   // Iniciar rodada quando muda o índice na fila ou idioma
   useEffect(() => {
@@ -298,7 +581,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
           <View style={styles.starsBadge}>
             <Text style={styles.starsBadgeText}>⭐ {stars}</Text>
           </View>
-          <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+          <Text style={styles.roundText}>{t('roundLabel')} {currentIndex + 1}/{queue.length}</Text>
         </View>
       </View>
 

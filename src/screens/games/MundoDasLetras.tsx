@@ -48,7 +48,7 @@ const LETTER_HINTS: Record<string, Record<string, Hint>> = {
   },
   D: {
     pt: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
-    en: { emoji: '🐕', word: 'Dog', syllable: 'DO' },
+    en: { emoji: '🐬', word: 'Dolphin', syllable: 'DOL' },
     it: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
     es: { emoji: '🎲', word: 'Dado', syllable: 'DA' },
   },
@@ -62,7 +62,7 @@ const LETTER_HINTS: Record<string, Record<string, Hint>> = {
     pt: { emoji: '🔥', word: 'Fogo', syllable: 'FO' },
     en: { emoji: '🐟', word: 'Fish', syllable: 'FI' },
     it: { emoji: '🔥', word: 'Fuoco', syllable: 'FU' },
-    es: { emoji: '🔥', word: 'Fuego', syllable: 'FUE' },
+    es: { emoji: '🔥', word: 'Fuego', syllable: 'FU' },
   },
   G: {
     pt: { emoji: '🐱', word: 'Gato', syllable: 'GA' },
@@ -168,7 +168,7 @@ const LETTER_HINTS: Record<string, Record<string, Hint>> = {
   },
   X: {
     pt: { emoji: '🍵', word: 'Xícara', syllable: 'XI' },
-    en: { emoji: '🎻', word: 'Xylophone', syllable: 'XY' },
+    en: { emoji: '📦', word: 'Box', syllable: 'X' },
     it: { emoji: '🩻', word: 'Xilofono', syllable: 'XI' },
     es: { emoji: '🩻', word: 'Xilófono', syllable: 'XI' },
   },
@@ -199,7 +199,7 @@ interface ItemData {
 
 export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, learnedLetters } = useGame();
 
   const [queue, setQueue] = useState<GameTarget[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -237,18 +237,25 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     } else if (difficulty === 1) {
       pool = ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'];
     } else {
-      pool = ['K', 'W', 'X', 'Y'];
+      pool = ['K', 'W', 'X', 'Y', 'Z', 'J', 'Q', 'H', 'G', 'F'];
+    }
+
+    const learnedList = learnedLetters || [];
+    let unlearnedPool = pool.filter(l => !learnedList.includes(l.toUpperCase()));
+    if (unlearnedPool.length < 3) {
+      unlearnedPool = pool;
     }
 
     const selectedTargets: GameTarget[] = [];
     const activeLang = language || 'pt';
-    while (selectedTargets.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      const chosenLetter = pool[idx];
-      pool.splice(idx, 1);
+    const poolCopy = [...unlearnedPool];
+    while (selectedTargets.length < 3 && poolCopy.length > 0) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      const chosenLetter = poolCopy[idx];
+      poolCopy.splice(idx, 1);
 
-      // Decidir tipo: 50% letra, 50% sílaba
-      const type = Math.random() < 0.5 ? 'letter' : 'syllable';
+      // Decidir tipo: se difficulty for 2, sempre sílaba (100%), senão 50%
+      const type = difficulty === 2 ? 'syllable' : (Math.random() < 0.5 ? 'letter' : 'syllable');
       const hintMap = LETTER_HINTS[chosenLetter];
       const hint = hintMap 
         ? (hintMap[activeLang] || hintMap['pt']) 
@@ -262,7 +269,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, language]);
+  }, [challengesCompleted, language, learnedLetters]);
 
   // Iniciar nova rodada quando muda o índice ou idioma
   useEffect(() => {
@@ -289,18 +296,34 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
       Animated.timing(opacities[idx], { toValue: 1, duration: 200, useNativeDriver: true }).start();
     });
 
-    // Distribuir letras nos slots
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l => l !== selectedTarget.letter);
-    
+    // Distribuir letras nos slots.
+    // IMPORTANTE: os distratores devem vir do MESMO pool de dificuldade do alvo
+    // (fácil/médio/difícil), nunca do alfabeto inteiro. Misturar letras fáceis
+    // (ex: A, U) com letras difíceis (ex: W, X) na mesma rodada quebra a
+    // progressão de dificuldade e aumenta a carga cognitiva para a criança.
+    const difficultyForRound = Math.floor(challengesCompleted / 7) % 3;
+    const difficultyPools: Record<number, string[]> = {
+      0: ['A', 'B', 'C', 'D', 'E', 'I', 'L', 'M', 'N', 'O', 'P', 'T', 'U', 'V'],
+      1: ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'],
+      2: ['K', 'W', 'X', 'Y', 'Z', 'J', 'Q', 'H', 'G', 'F']
+    };
+    let candidatePool = difficultyPools[difficultyForRound].filter(l => l !== selectedTarget.letter);
+
+    // Fallback de segurança: se o pool da dificuldade atual não tiver letras
+    // suficientes (ex: pool difícil só tem 4 letras), completa com o alfabeto
+    // geral em vez de travar o jogo - mas só como última opção.
+    if (candidatePool.length < 3) {
+      const fullAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l => l !== selectedTarget.letter && !candidatePool.includes(l));
+      candidatePool = [...candidatePool, ...fullAlphabet];
+    }
+
     // O primeiro slot ganha a letra alvo, os outros ganham letras aleatórias não repetidas
     const selectedWrongLetters: string[] = [];
-    while (selectedWrongLetters.length < 3) {
-      const randomIdx = Math.floor(Math.random() * alphabet.length);
-      const chosenLetter = alphabet[randomIdx];
-      if (!selectedWrongLetters.includes(chosenLetter)) {
-        selectedWrongLetters.push(chosenLetter);
-        alphabet.splice(randomIdx, 1);
-      }
+    while (selectedWrongLetters.length < 3 && candidatePool.length > 0) {
+      const randomIdx = Math.floor(Math.random() * candidatePool.length);
+      const chosenLetter = candidatePool[randomIdx];
+      selectedWrongLetters.push(chosenLetter);
+      candidatePool.splice(randomIdx, 1);
     }
 
     const slots = [selectedTarget.letter, ...selectedWrongLetters];
@@ -372,7 +395,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           // Desafio finalizado com sucesso!
-          await completeChallenge('letter', targetLetter);
+          await completeChallenge(targetType, targetValue);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {
@@ -407,7 +430,7 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
           <View style={styles.starsBadge}>
             <Text style={styles.starsBadgeText}>⭐ {stars}</Text>
           </View>
-          <Text style={styles.roundText}>Rodada {currentIndex + 1}/{queue.length}</Text>
+          <Text style={styles.roundText}>{t('roundLabel')} {currentIndex + 1}/{queue.length}</Text>
         </View>
       </View>
 
@@ -442,12 +465,13 @@ export const MundoDasLetras: React.FC<MundoDasLetrasProps> = ({ onBack }) => {
                   <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={[
                       styles.letterText,
-                      item.letter === targetLetter ? styles.letterSuccess : styles.letterWrong
+                      item.letter === targetLetter ? styles.letterSuccess : styles.letterWrong,
+                      targetType === 'syllable' && item.syllable.length > 2 ? { fontSize: 24 } : null
                     ]}>
-                      {item.letter}
+                      {targetType === 'syllable' ? item.syllable : item.letter}
                     </Text>
                     <Text style={{ fontSize: 13, fontWeight: '900', color: '#78909C', marginTop: 1 }}>
-                      {item.syllable}
+                      {targetType === 'syllable' ? item.letter : item.syllable}
                     </Text>
                   </View>
                 )}
