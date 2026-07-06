@@ -122,6 +122,15 @@ export interface Translations {
   worldVale: string;
   worldCastle: string;
   worldLibrary: string;
+  paywallTitle: string;
+  paywallLumiMsg: string;
+  paywallPerksTitle: string;
+  paywallPerk1: string;
+  paywallPerk2: string;
+  paywallPerk3: string;
+  paywallPerk4: string;
+  paywallCta: string;
+  paywallBack: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -243,6 +252,15 @@ const translations: Record<LanguageType, Translations> = {
     worldVale: "Vale",
     worldCastle: "Castelo",
     worldLibrary: "Biblioteca",
+    paywallTitle: "Aventura Bloqueada!",
+    paywallLumiMsg: "Este mundo ainda está escondido. Peça ao seu responsável para desbloquear todas as aventuras!",
+    paywallPerksTitle: "Com o Super Passe você pode:",
+    paywallPerk1: "🗺️ Explorar todos os 7 mundos",
+    paywallPerk2: "⭐ Desafios extras e mais recompensas",
+    paywallPerk3: "🎨 50 figurinhas exclusivas",
+    paywallPerk4: "👨‍👩‍👧‍👦 Até 5 perfis de crianças",
+    paywallCta: "Pedir ao Responsável 🌟",
+    paywallBack: "← Voltar ao Mapa",
   },
   en: {
     appName: "Letter Adventure",
@@ -362,6 +380,15 @@ const translations: Record<LanguageType, Translations> = {
     worldVale: "Vale",
     worldCastle: "Castle",
     worldLibrary: "Library",
+    paywallTitle: "Adventure Locked!",
+    paywallLumiMsg: "This world is still hidden. Ask your parent to unlock all adventures!",
+    paywallPerksTitle: "With the Super Pass you can:",
+    paywallPerk1: "🗺️ Explore all 7 worlds",
+    paywallPerk2: "⭐ Extra challenges and more rewards",
+    paywallPerk3: "🎨 50 exclusive stickers",
+    paywallPerk4: "👨‍👩‍👧‍👦 Up to 5 child profiles",
+    paywallCta: "Ask a Parent 🌟",
+    paywallBack: "← Back to Map",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -481,6 +508,15 @@ const translations: Record<LanguageType, Translations> = {
     worldVale: "Valle",
     worldCastle: "Castello",
     worldLibrary: "Biblioteca",
+    paywallTitle: "Avventura Bloccata!",
+    paywallLumiMsg: "Questo mondo è ancora nascosto. Chiedi al tuo genitore di sbloccare tutte le avventure!",
+    paywallPerksTitle: "Con il Super Pass puoi:",
+    paywallPerk1: "🗺️ Esplorare tutti i 7 mondi",
+    paywallPerk2: "⭐ Sfide extra e più ricompense",
+    paywallPerk3: "🎨 50 adesivi esclusivi",
+    paywallPerk4: "👨‍👩‍👧‍👦 Fino a 5 profili bambini",
+    paywallCta: "Chiedi al Genitore 🌟",
+    paywallBack: "← Torna alla Mappa",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -600,6 +636,15 @@ const translations: Record<LanguageType, Translations> = {
     worldVale: "Valle",
     worldCastle: "Castillo",
     worldLibrary: "Biblioteca",
+    paywallTitle: "¡Aventura Bloqueada!",
+    paywallLumiMsg: "¡Este mundo todavía está oculto. Pide a tu responsable que desbloquee todas las aventuras!",
+    paywallPerksTitle: "Con el Super Pase puedes:",
+    paywallPerk1: "🗺️ Explorar los 7 mundos",
+    paywallPerk2: "⭐ Desafíos extra y más recompensas",
+    paywallPerk3: "🎨 50 pegatinas exclusivas",
+    paywallPerk4: "👨‍👩‍👧‍👦 Hasta 5 perfiles de niños",
+    paywallCta: "Pedir al Responsable 🌟",
+    paywallBack: "← Volver al Mapa",
   }
 };
 

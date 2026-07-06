@@ -54,11 +54,10 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
   const { t, language } = useLocalization();
   const { stars, coins, character, equippedClothing, childId, challengesCompleted, setShowChestModal, soundEnabled, isPremium } = useGame();
 
-  // Free: games 1-2 in PT-BR only. Premium: all games + all languages.
+  // Free: games 1-2 in any language, unlimited. Premium: games 3-7 + all extra content.
   const isFreemiumLocked = (gameIndex: number): boolean => {
     if (isPremium) return false;
-    if (language !== 'pt') return true; // non-PT requires premium
-    return gameIndex >= 2;             // games 3-7 require premium
+    return gameIndex >= 2;
   };
 
   const [claimedChests, setClaimedChests] = useState<string[]>([]);

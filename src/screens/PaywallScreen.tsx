@@ -2,30 +2,33 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
 import { MascotLumi } from '../components/MascotLumi';
 import { FONT_SIZES, FONT_WEIGHTS } from '../styles/theme';
-
-const PERKS = [
-  '🗺️ Explorar todos os 7 mundos',
-  '🌍 Jogar em Inglês, Espanhol e Italiano',
-  '⭐ Desafios extras e mais recompensas',
-  '👨‍👩‍👧‍👦 Até 5 perfis de crianças',
-];
+import { useLocalization } from '../context/LocalizationContext';
 
 interface Props {
   onNavigate: (screen: string) => void;
 }
 
 export const PaywallScreen: React.FC<Props> = ({ onNavigate }) => {
+  const { t } = useLocalization();
+
+  const PERKS = [
+    t('paywallPerk1'),
+    t('paywallPerk2'),
+    t('paywallPerk3'),
+    t('paywallPerk4'),
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.inner, Platform.OS === 'web' && styles.innerWeb]}>
 
         <Text style={styles.lockEmoji}>🔐</Text>
-        <Text style={styles.title}>Aventura Bloqueada!</Text>
+        <Text style={styles.title}>{t('paywallTitle')}</Text>
 
-        <MascotLumi text="Este mundo ainda está escondido. Peça ao seu responsável para desbloquear todas as aventuras!" />
+        <MascotLumi text={t('paywallLumiMsg')} />
 
         <View style={styles.perksCard}>
-          <Text style={styles.perksTitle}>Com o Super Passe você pode:</Text>
+          <Text style={styles.perksTitle}>{t('paywallPerksTitle')}</Text>
           {PERKS.map((perk) => (
             <View key={perk} style={styles.perkRow}>
               <Text style={styles.perkText}>{perk}</Text>
@@ -38,7 +41,7 @@ export const PaywallScreen: React.FC<Props> = ({ onNavigate }) => {
           activeOpacity={0.85}
           onPress={() => onNavigate('parents')}
         >
-          <Text style={styles.ctaBtnText}>Pedir ao Responsável 🌟</Text>
+          <Text style={styles.ctaBtnText}>{t('paywallCta')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -46,7 +49,7 @@ export const PaywallScreen: React.FC<Props> = ({ onNavigate }) => {
           activeOpacity={0.8}
           onPress={() => onNavigate('map')}
         >
-          <Text style={styles.backBtnText}>← Voltar ao Mapa</Text>
+          <Text style={styles.backBtnText}>{t('paywallBack')}</Text>
         </TouchableOpacity>
 
       </View>
