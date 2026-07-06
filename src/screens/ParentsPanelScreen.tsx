@@ -4,7 +4,7 @@ import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users } from 'lucide-react-native';
-import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash } from '../services/supabase';
+import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash, syncChildProfile } from '../services/supabase';
 
 interface ParentsPanelScreenProps {
   onNavigate: (screen: string) => void;
@@ -18,6 +18,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
 export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNavigate, onSwitchChild }) => {
   const { t, setLanguage, language } = useLocalization();
   const {
+    childId,
     parentId,
     learnedLetters,
     masteredSyllables,
@@ -121,21 +122,35 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     }
   }, [enteredPin, pinMode, setupFirstPin, storedPinHash, parentId, hashPin]);
 
-  const handleReset = () => {
+  const handleResetChild = (child: any) => {
     Alert.alert(
-      t('resetProgress'),
-      t('resetConfirm'),
+      'Zerar progresso',
+      `Zerar todo o progresso de "${child.name}"? Esta ação não pode ser desfeita.`,
       [
-        { text: t('back'), style: 'cancel' },
-        { 
-          text: 'Ok', 
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Zerar',
           style: 'destructive',
           onPress: async () => {
-            await resetGameProgress();
-            setLanguage('pt');
-            onNavigate('character_select');
-          }
-        }
+            if (!parentId) return;
+            if (child.id === childId) {
+              // Criança ativa: reseta estado local + Supabase
+              await resetGameProgress();
+            } else {
+              // Outra criança: só reseta no Supabase
+              await syncChildProfile(child.id, parentId, {
+                stars: 0, coins: 0, challengesCompleted: 0,
+                character: child.avatar ?? null,
+                avatarName: child.name,
+                equippedClothing: null,
+                unlockedStickers: [], unlockedClothing: [],
+                learnedLetters: [], masteredSyllables: [], readWords: [],
+                dailyUsageSeconds: {}, isPremium: false,
+              });
+            }
+            Alert.alert('Pronto!', `O progresso de "${child.name}" foi zerado.`);
+          },
+        },
       ]
     );
   };
@@ -361,7 +376,14 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                   <Text style={stylesPP.kidEmoji}>{AVATAR_EMOJIS[child.avatar] ?? '😊'}</Text>
                   <Text style={stylesPP.kidName}>{child.name}</Text>
                   <TouchableOpacity
-                    style={stylesPP.kidDeleteBtn}
+                    style={stylesPP.kidResetBtn}
+                    onPress={() => handleResetChild(child)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={stylesPP.kidResetText}>Zerar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[stylesPP.kidDeleteBtn, { marginLeft: 6 }]}
                     onPress={() => handleDeleteChild(child)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -447,15 +469,6 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
             </TouchableOpacity>
           </View>
 
-          {/* Reiniciar progresso */}
-          <View style={{ marginTop: 25 }}>
-            <CustomButton
-              title={`⚠️ ${t('resetProgress')}`}
-              color="#FF5252"
-              borderColor="#D32F2F"
-              onPress={handleReset}
-            />
-          </View>
         </View>
 
       </ScrollView>
@@ -832,6 +845,19 @@ const stylesPP = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: '#37474F',
+  },
+  kidResetBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+  },
+  kidResetText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#E65100',
   },
   kidDeleteBtn: {
     paddingVertical: 4,
