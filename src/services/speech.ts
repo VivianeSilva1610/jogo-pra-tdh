@@ -170,10 +170,20 @@ const playPregeneratedAudio = async (asset: any): Promise<void> => {
 
 const ELEVENLABS_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Soft American female, mas fala todos os idiomas)
 
+// ISO 639-1 codes aceitos pelo eleven_multilingual_v2
+const ELEVENLABS_LANG_CODE: Record<LanguageType, string> = {
+  pt: 'pt',
+  en: 'en',
+  it: 'it',
+  es: 'es',
+};
+
 /**
  * Chama a API do ElevenLabs e retorna o áudio em base64.
+ * language_code é obrigatório para evitar que sílabas curtas
+ * (MA, BLA, GLA...) sejam interpretadas como siglas e soletradas.
  */
-const elevenLabsTTS = async (text: string): Promise<string> => {
+const elevenLabsTTS = async (text: string, language: LanguageType = 'pt'): Promise<string> => {
   const response = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
     {
@@ -186,6 +196,7 @@ const elevenLabsTTS = async (text: string): Promise<string> => {
       body: JSON.stringify({
         text,
         model_id: 'eleven_multilingual_v2',
+        language_code: ELEVENLABS_LANG_CODE[language],
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
@@ -232,8 +243,8 @@ const elevenLabsTTS = async (text: string): Promise<string> => {
 /**
  * Reproduz áudio do ElevenLabs na web.
  */
-const playElevenLabsWeb = async (text: string) => {
-  const audioBase64 = await elevenLabsTTS(text);
+const playElevenLabsWeb = async (text: string, language: LanguageType) => {
+  const audioBase64 = await elevenLabsTTS(text, language);
   const audioUrl = `data:audio/mp3;base64,${audioBase64}`;
   const htmlAudio = new window.Audio(audioUrl);
   (window as any)._currentSpeechAudio = htmlAudio;
@@ -243,8 +254,8 @@ const playElevenLabsWeb = async (text: string) => {
 /**
  * Reproduz áudio do ElevenLabs no mobile.
  */
-const playElevenLabsMobile = async (text: string) => {
-  const audioBase64 = await elevenLabsTTS(text);
+const playElevenLabsMobile = async (text: string, language: LanguageType) => {
+  const audioBase64 = await elevenLabsTTS(text, language);
   const dataUri = `data:audio/mp3;base64,${audioBase64}`;
 
   const { sound } = await Audio.Sound.createAsync(
@@ -411,9 +422,9 @@ export const speak = async (text: string, language: LanguageType) => {
     if (ELEVENLABS_API_KEY) {
       try {
         if (Platform.OS === 'web') {
-          await playElevenLabsWeb(phoneticText);
+          await playElevenLabsWeb(phoneticText, language);
         } else {
-          await playElevenLabsMobile(phoneticText);
+          await playElevenLabsMobile(phoneticText, language);
         }
         return;
       } catch (error) {
