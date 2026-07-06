@@ -49,7 +49,7 @@ function GameAppContent({
   onSelectChild: (id: string) => void;
   isInitializingChild: boolean;
 }) {
-  const { character, soundEnabled, isLoadingProfile } = useGame();
+  const { character, soundEnabled, isLoadingProfile, isPremium } = useGame();
   const { t } = useLocalization();
 
   const [currentScreen, setCurrentScreen] = useState<string>('home');
@@ -189,7 +189,7 @@ function GameAppContent({
       return (
         <ChildSelectorScreen
           parentId={parentId ?? ''}
-          isPremium={false}
+          isPremium={isPremium}
           onSelectChild={onSelectChild}
         />
       );

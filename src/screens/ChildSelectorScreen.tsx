@@ -39,7 +39,7 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
   const [formError, setFormError] = useState('');
   const [consentGiven, setConsentGiven] = useState(false);
 
-  const MAX_CHILDREN = isPremium ? 5 : 1;
+  const MAX_CHILDREN = isPremium ? 5 : 2;
 
   const loadChildren = async () => {
     setLoading(true);

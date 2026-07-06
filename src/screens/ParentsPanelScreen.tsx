@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Platform, TextInput } from 'react-native';
 import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users } from 'lucide-react-native';
-import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession } from '../services/supabase';
+import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession } from '../services/supabase';
 import { Linking } from 'react-native';
 
 interface ParentsPanelScreenProps {
@@ -45,6 +45,14 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
 
   const [children, setChildren] = useState<any[]>([]);
   const [loadingKids, setLoadingKids] = useState(false);
+
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addAvatar, setAddAvatar] = useState('panda');
+  const [addingChild, setAddingChild] = useState(false);
+  const [addError, setAddError] = useState('');
+
+  const CHILD_LIMIT = isPremium ? 5 : 2;
 
   const [subPeriodEnd, setSubPeriodEnd] = useState<string | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
@@ -179,6 +187,25 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
         },
       ]
     );
+  };
+
+  const handleAddChild = async () => {
+    const trimmed = addName.trim();
+    if (!trimmed) { setAddError('Digite o nome da criança.'); return; }
+    if (!parentId) return;
+    setAddingChild(true);
+    setAddError('');
+    const child = await createChildWithProfile(parentId, trimmed, 6, addAvatar);
+    if (child) {
+      const kids = await fetchChildren();
+      setChildren(kids);
+      setShowAddForm(false);
+      setAddName('');
+      setAddAvatar('panda');
+    } else {
+      setAddError('Não foi possível criar o perfil. Tente novamente.');
+    }
+    setAddingChild(false);
   };
 
   const handleSubscribe = async () => {
@@ -434,21 +461,73 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                 </View>
               ))}
 
+              {/* Botão adicionar filho */}
+              {!showAddForm && children.length < CHILD_LIMIT && (
+                <TouchableOpacity
+                  style={stylesPP.addChildBtn}
+                  onPress={() => setShowAddForm(true)}
+                >
+                  <Text style={stylesPP.addChildBtnText}>+ Adicionar filho</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Banner de limite atingido */}
+              {!showAddForm && children.length >= CHILD_LIMIT && !isPremium && (
+                <View style={stylesPP.limitBanner}>
+                  <Text style={stylesPP.limitBannerText}>
+                    ⭐ Plano Premium permite até 5 perfis de crianças
+                  </Text>
+                </View>
+              )}
+
+              {/* Formulário inline de adicionar filho */}
+              {showAddForm && (
+                <View style={stylesPP.addForm}>
+                  <TextInput
+                    style={stylesPP.addInput}
+                    value={addName}
+                    onChangeText={setAddName}
+                    placeholder="Nome da criança"
+                    maxLength={30}
+                    autoFocus
+                    returnKeyType="done"
+                  />
+                  <View style={stylesPP.addAvatarRow}>
+                    {Object.entries(AVATAR_EMOJIS).map(([key, emoji]) => (
+                      <TouchableOpacity
+                        key={key}
+                        style={[stylesPP.addAvatarBtn, addAvatar === key && stylesPP.addAvatarBtnSelected]}
+                        onPress={() => setAddAvatar(key)}
+                      >
+                        <Text style={stylesPP.addAvatarEmoji}>{emoji}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {addError ? <Text style={stylesPP.addError}>{addError}</Text> : null}
+                  <View style={stylesPP.addFormBtns}>
+                    <TouchableOpacity
+                      style={stylesPP.addCancelBtn}
+                      onPress={() => { setShowAddForm(false); setAddName(''); setAddError(''); }}
+                    >
+                      <Text style={stylesPP.addCancelText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[stylesPP.addConfirmBtn, addingChild && { opacity: 0.6 }]}
+                      onPress={handleAddChild}
+                      disabled={addingChild}
+                    >
+                      {addingChild
+                        ? <ActivityIndicator size="small" color="#FFF" />
+                        : <Text style={stylesPP.addConfirmText}>Criar perfil</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
               {onSwitchChild && children.length > 1 && (
                 <View style={{ marginTop: 12 }}>
                   <CustomButton
                     title="Trocar criança ativa"
-                    color="#9C27B0"
-                    borderColor="#7B1FA2"
-                    onPress={onSwitchChild}
-                  />
-                </View>
-              )}
-
-              {onSwitchChild && children.length === 0 && (
-                <View style={{ marginTop: 4 }}>
-                  <CustomButton
-                    title="Criar perfil de criança"
                     color="#9C27B0"
                     borderColor="#7B1FA2"
                     onPress={onSwitchChild}
@@ -993,5 +1072,113 @@ const stylesPP = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#C62828',
+  },
+  addChildBtn: {
+    marginTop: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#CE93D8',
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: '#F3E5F5',
+  },
+  addChildBtnText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#7B1FA2',
+  },
+  limitBanner: {
+    marginTop: 12,
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#FFD54F',
+  },
+  limitBannerText: {
+    fontSize: 12,
+    color: '#E65100',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  addForm: {
+    marginTop: 12,
+    backgroundColor: '#F3E5F5',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#CE93D8',
+  },
+  addInput: {
+    height: 44,
+    borderWidth: 1.5,
+    borderColor: '#CE93D8',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: '#37474F',
+    backgroundColor: '#FFF',
+    marginBottom: 10,
+  },
+  addAvatarRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+  addAvatarBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addAvatarBtnSelected: {
+    borderColor: '#7B1FA2',
+    backgroundColor: '#EDE7F6',
+  },
+  addAvatarEmoji: {
+    fontSize: 22,
+  },
+  addError: {
+    fontSize: 12,
+    color: '#D32F2F',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  addFormBtns: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  addCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#B0BEC5',
+    backgroundColor: '#ECEFF1',
+  },
+  addCancelText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#546E7A',
+  },
+  addConfirmBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#7B1FA2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addConfirmText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
 });
