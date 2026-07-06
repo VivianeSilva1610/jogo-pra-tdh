@@ -190,7 +190,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
       return;
     }
     if (Platform.OS === 'web') {
-      window.open(url, '_blank');
+      window.location.href = url; // redireciona na mesma aba (evita bloqueio de popup)
     } else {
       await Linking.openURL(url);
     }
@@ -205,7 +205,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
       return;
     }
     if (Platform.OS === 'web') {
-      window.open(url, '_blank');
+      window.location.href = url;
     } else {
       await Linking.openURL(url);
     }
