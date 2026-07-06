@@ -81,25 +81,38 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
   };
 
   const handleDelete = (child: any) => {
-    Alert.alert(
-      'Remover criança',
-      `Tem certeza que deseja remover o perfil de "${child.name}"? Todo o progresso será perdido.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await deleteChild(child.id);
-            if (!result.success) {
-              Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
-            } else {
-              loadChildren();
-            }
+    if (Platform.OS === 'web') {
+      const confirmDelete = window.confirm(`Tem certeza que deseja remover o perfil de "${child.name}"? Todo o progresso será perdido.`);
+      if (confirmDelete) {
+        deleteChild(child.id).then(result => {
+          if (!result.success) {
+            window.alert(`Não foi possível remover a criança: ${result.error}`);
+          } else {
+            loadChildren();
+          }
+        });
+      }
+    } else {
+      Alert.alert(
+        'Remover criança',
+        `Tem certeza que deseja remover o perfil de "${child.name}"? Todo o progresso será perdido.`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Remover',
+            style: 'destructive',
+            onPress: async () => {
+              const result = await deleteChild(child.id);
+              if (!result.success) {
+                Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
+              } else {
+                loadChildren();
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const cancelForm = () => {
@@ -110,21 +123,28 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
     setConsentGiven(false);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja desconectar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await supabase.auth.signOut();
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      const confirmLogout = window.confirm('Tem certeza que deseja desconectar?');
+      if (confirmLogout) {
+        await supabase.auth.signOut();
+      }
+    } else {
+      Alert.alert(
+        'Sair da conta',
+        'Tem certeza que deseja desconectar?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair',
+            style: 'destructive',
+            onPress: async () => {
+              await supabase.auth.signOut();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   if (loading) {

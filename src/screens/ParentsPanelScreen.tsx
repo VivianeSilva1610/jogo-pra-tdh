@@ -138,59 +138,96 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
   }, [enteredPin, pinMode, setupFirstPin, storedPinHash, parentId, hashPin]);
 
   const handleResetChild = (child: any) => {
-    Alert.alert(
-      'Zerar progresso',
-      `Zerar todo o progresso de "${child.name}"? Esta ação não pode ser desfeita.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Zerar',
-          style: 'destructive',
-          onPress: async () => {
-            if (!parentId) return;
-            if (child.id === childId) {
-              // Criança ativa: reseta estado local + Supabase
-              await resetGameProgress();
-            } else {
-              // Outra criança: só reseta no Supabase
-              await syncChildProfile(child.id, parentId, {
-                stars: 0, coins: 0, challengesCompleted: 0,
-                character: child.avatar ?? null,
-                avatarName: child.name,
-                equippedClothing: null,
-                unlockedStickers: [], unlockedClothing: [],
-                learnedLetters: [], masteredSyllables: [], readWords: [],
-                dailyUsageSeconds: {}, isPremium: false,
-              });
-            }
-            Alert.alert('Pronto!', `O progresso de "${child.name}" foi zerado.`);
+    if (Platform.OS === 'web') {
+      const confirmReset = window.confirm(`Zerar todo o progresso de "${child.name}"? Esta ação não pode ser desfeita.`);
+      if (confirmReset) {
+        if (!parentId) return;
+        if (child.id === childId) {
+          resetGameProgress().then(() => {
+            window.alert(`O progresso de "${child.name}" foi zerado.`);
+          });
+        } else {
+          syncChildProfile(child.id, parentId, {
+            stars: 0, coins: 0, challengesCompleted: 0,
+            character: child.avatar ?? null,
+            avatarName: child.name,
+            equippedClothing: null,
+            unlockedStickers: [], unlockedClothing: [],
+            learnedLetters: [], masteredSyllables: [], readWords: [],
+            dailyUsageSeconds: {}, isPremium: false,
+          }).then(() => {
+            window.alert(`O progresso de "${child.name}" foi zerado.`);
+          });
+        }
+      }
+    } else {
+      Alert.alert(
+        'Zerar progresso',
+        `Zerar todo o progresso de "${child.name}"? Esta ação não pode ser desfeita.`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Zerar',
+            style: 'destructive',
+            onPress: async () => {
+              if (!parentId) return;
+              if (child.id === childId) {
+                // Criança ativa: reseta estado local + Supabase
+                await resetGameProgress();
+              } else {
+                // Outra criança: só reseta no Supabase
+                await syncChildProfile(child.id, parentId, {
+                  stars: 0, coins: 0, challengesCompleted: 0,
+                  character: child.avatar ?? null,
+                  avatarName: child.name,
+                  equippedClothing: null,
+                  unlockedStickers: [], unlockedClothing: [],
+                  learnedLetters: [], masteredSyllables: [], readWords: [],
+                  dailyUsageSeconds: {}, isPremium: false,
+                });
+              }
+              Alert.alert('Pronto!', `O progresso de "${child.name}" foi zerado.`);
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleDeleteChild = (child: any) => {
-    Alert.alert(
-      'Remover criança',
-      `Remover o perfil de "${child.name}"? Todo o progresso será perdido.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await deleteChild(child.id);
-            if (!result.success) {
-              Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
-            } else {
-              const kids = await fetchChildren();
-              setChildren(kids);
-            }
+    if (Platform.OS === 'web') {
+      const confirmDelete = window.confirm(`Remover o perfil de "${child.name}"? Todo o progresso será perdido.`);
+      if (confirmDelete) {
+        deleteChild(child.id).then(result => {
+          if (!result.success) {
+            window.alert(`Não foi possível remover a criança: ${result.error}`);
+          } else {
+            fetchChildren().then(kids => setChildren(kids));
+          }
+        });
+      }
+    } else {
+      Alert.alert(
+        'Remover criança',
+        `Remover o perfil de "${child.name}"? Todo o progresso será perdido.`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Remover',
+            style: 'destructive',
+            onPress: async () => {
+              const result = await deleteChild(child.id);
+              if (!result.success) {
+                Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
+              } else {
+                const kids = await fetchChildren();
+                setChildren(kids);
+              }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleAddChild = async () => {
