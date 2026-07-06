@@ -10,41 +10,9 @@ import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 
-interface LetrasCamufladasProps {
+interface SilabasCamufladasProps {
   onBack: () => void;
 }
-
-const TARGET_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-
-// Letras distratoras visualmente parecidas com cada letra alvo
-const SIMILAR_LETTERS: Record<string, string[]> = {
-  A: ['H', 'N', 'M', 'R', 'K'],
-  B: ['D', 'P', 'R', 'E', 'F'],
-  C: ['G', 'O', 'Q', 'D', 'U'],
-  D: ['B', 'O', 'P', 'Q', 'G'],
-  E: ['F', 'B', 'L', 'P', 'T'],
-  F: ['E', 'P', 'T', 'L', 'I'],
-  G: ['C', 'O', 'Q', 'D', 'U'],
-  H: ['N', 'M', 'K', 'A', 'R'],
-  I: ['L', 'T', 'F', 'J', 'Y'],
-  J: ['I', 'L', 'T', 'Y', 'F'],
-  K: ['H', 'N', 'R', 'X', 'Y'],
-  L: ['I', 'T', 'F', 'E', 'J'],
-  M: ['N', 'H', 'W', 'A', 'K'],
-  N: ['M', 'H', 'K', 'R', 'A'],
-  O: ['C', 'D', 'G', 'Q', 'U'],
-  P: ['B', 'D', 'F', 'R', 'E'],
-  Q: ['O', 'C', 'G', 'D', 'U'],
-  R: ['B', 'P', 'K', 'N', 'H'],
-  S: ['Z', 'C', 'G', 'O', 'U'],
-  T: ['I', 'F', 'L', 'Y', 'J'],
-  U: ['V', 'C', 'O', 'W', 'Y'],
-  V: ['U', 'W', 'Y', 'N', 'M'],
-  W: ['M', 'V', 'N', 'U', 'Y'],
-  X: ['K', 'Y', 'H', 'Z', 'N'],
-  Y: ['V', 'X', 'T', 'J', 'I'],
-  Z: ['S', 'E', 'F', 'T', 'L'],
-};
 
 const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; hard: string[] }> = {
   pt: {
@@ -69,9 +37,9 @@ const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; ha
   }
 };
 
-export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) => {
+export const SilabasCamufladas: React.FC<SilabasCamufladasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, learnedLetters, masteredSyllables } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -87,36 +55,19 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
   useEffect(() => {
     const activeLang = language || 'pt';
     const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
-    const activeHardSyllables = syllablesPool.hard;
-
     const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
-    let pool: string[] = [];
 
-    if (difficulty === 2) {
-      pool = [...activeHardSyllables];
-      const masteredList = masteredSyllables || [];
-      let unmasteredPool = pool.filter(s => !masteredList.includes(s.toUpperCase()));
-      if (unmasteredPool.length < 3) {
-        unmasteredPool = pool;
-      }
-      pool = unmasteredPool;
-    } else {
-      let letterPool = [...TARGET_LETTERS];
-      if (difficulty === 0) {
-        letterPool = ['A', 'B', 'C', 'D', 'E', 'I', 'L', 'M', 'N', 'O', 'P', 'T', 'U', 'V'];
-      } else {
-        letterPool = ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'];
-      }
-      const learnedList = learnedLetters || [];
-      let unlearnedPool = letterPool.filter(l => !learnedList.includes(l.toUpperCase()));
-      if (unlearnedPool.length < 3) {
-        unlearnedPool = letterPool;
-      }
-      pool = unlearnedPool;
-    }
+    let pool: string[];
+    if (difficulty === 0) pool = [...syllablesPool.easy];
+    else if (difficulty === 1) pool = [...syllablesPool.medium];
+    else pool = [...syllablesPool.hard];
+
+    const masteredList = masteredSyllables || [];
+    let unmasteredPool = pool.filter(s => !masteredList.includes(s.toUpperCase()));
+    if (unmasteredPool.length < 3) unmasteredPool = pool;
 
     const selectedTargets: string[] = [];
-    const poolCopy = [...pool];
+    const poolCopy = [...unmasteredPool];
     while (selectedTargets.length < 3 && poolCopy.length > 0) {
       const idx = Math.floor(Math.random() * poolCopy.length);
       selectedTargets.push(poolCopy[idx]);
@@ -124,7 +75,7 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, learnedLetters, masteredSyllables, language]);
+  }, [challengesCompleted, masteredSyllables, language]);
 
   // Iniciar nova rodada quando muda o índice
   useEffect(() => {
@@ -139,24 +90,17 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
     setSelectedIdx(null);
     hadErrorInRound.current = false;
 
-    let allChoices: string[] = [];
-    if (selectedTarget.length > 1) {
-      const activeLang = language || 'pt';
-      const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
-      const activeHardSyllables = syllablesPool.hard;
-      // Sílabas distratoras do pool correspondente
-      const distractors = activeHardSyllables.filter(s => s !== selectedTarget);
-      const shuffled = [...distractors].sort(() => Math.random() - 0.5).slice(0, 4);
-      allChoices = [...shuffled, selectedTarget].sort(() => Math.random() - 0.5);
-    } else {
-      // Pegar letras distratoras (parecidas com a alvo para dificultar visualmente)
-      const pool = SIMILAR_LETTERS[selectedTarget] ?? 
-        'ABCDEFGHIJKLMNOPRSTUVXY'.split('').filter(l => l !== selectedTarget);
-      // Embaralhar e pegar 4
-      const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
-      // Misturar com a letra alvo → 5 opções no total, todas letras
-      allChoices = [...shuffled, selectedTarget].sort(() => Math.random() - 0.5);
-    }
+    const activeLang = language || 'pt';
+    const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
+    const difficulty = Math.floor(challengesCompleted / 7) % 3;
+    let levelPool: string[];
+    if (difficulty === 0) levelPool = syllablesPool.easy;
+    else if (difficulty === 1) levelPool = syllablesPool.medium;
+    else levelPool = syllablesPool.hard;
+
+    const distractors = levelPool.filter(s => s !== selectedTarget);
+    const shuffled = [...distractors].sort(() => Math.random() - 0.5).slice(0, 4);
+    const allChoices = [...shuffled, selectedTarget].sort(() => Math.random() - 0.5);
     setChoices(allChoices);
 
     // Tocar o som alvo ao iniciar
@@ -184,7 +128,7 @@ export const LetrasCamufladas: React.FC<LetrasCamufladasProps> = ({ onBack }) =>
         if (nextIdx < updatedQueue.length) {
           setCurrentIndex(nextIdx);
         } else {
-          await completeChallenge(targetLetter.length > 1 ? 'syllable' : 'letter', targetLetter);
+          await completeChallenge('syllable', targetLetter);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {
@@ -387,3 +331,5 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
   },
 });
+
+export { SilabasCamufladas as LetrasCamufladas };

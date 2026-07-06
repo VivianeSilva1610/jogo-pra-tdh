@@ -11,7 +11,7 @@ import { speak } from '../../services/speech';
 import { ArrowLeft, Volume2 } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 
-interface SomELetraProps {
+interface SomESilabasProps {
   onBack: () => void;
 }
 
@@ -38,7 +38,7 @@ const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; ha
   }
 };
 
-export const SomELetra: React.FC<SomELetraProps> = ({ onBack }) => {
+export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
   const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
@@ -344,3 +344,5 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
   },
 });
+
+export { SomESilabas as SomELetra };

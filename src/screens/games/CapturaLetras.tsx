@@ -10,7 +10,7 @@ import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 
-interface CapturaLetrasProps {
+interface CapturaDeSilabasProps {
   onBack: () => void;
 }
 
@@ -52,9 +52,9 @@ const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; ha
   }
 };
 
-export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
+export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, learnedLetters, masteredSyllables } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -73,36 +73,19 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
   useEffect(() => {
     const activeLang = language || 'pt';
     const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
-    const activeHardSyllables = syllablesPool.hard;
-
     const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
-    let pool: string[] = [];
 
-    if (difficulty === 2) {
-      pool = [...activeHardSyllables];
-      const masteredList = masteredSyllables || [];
-      let unmasteredPool = pool.filter(s => !masteredList.includes(s.toUpperCase()));
-      if (unmasteredPool.length < 3) {
-        unmasteredPool = pool;
-      }
-      pool = unmasteredPool;
-    } else {
-      let letterPool = [...TARGET_LETTERS];
-      if (difficulty === 0) {
-        letterPool = ['A', 'B', 'C', 'D', 'E', 'I', 'L', 'M', 'N', 'O', 'P', 'T', 'U', 'V'];
-      } else {
-        letterPool = ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'];
-      }
-      const learnedList = learnedLetters || [];
-      let unlearnedPool = letterPool.filter(l => !learnedList.includes(l.toUpperCase()));
-      if (unlearnedPool.length < 3) {
-        unlearnedPool = letterPool;
-      }
-      pool = unlearnedPool;
-    }
+    let pool: string[];
+    if (difficulty === 0) pool = [...syllablesPool.easy];
+    else if (difficulty === 1) pool = [...syllablesPool.medium];
+    else pool = [...syllablesPool.hard];
+
+    const masteredList = masteredSyllables || [];
+    let unmasteredPool = pool.filter(s => !masteredList.includes(s.toUpperCase()));
+    if (unmasteredPool.length < 3) unmasteredPool = pool;
 
     const selectedTargets: string[] = [];
-    const poolCopy = [...pool];
+    const poolCopy = [...unmasteredPool];
     while (selectedTargets.length < 3 && poolCopy.length > 0) {
       const idx = Math.floor(Math.random() * poolCopy.length);
       selectedTargets.push(poolCopy[idx]);
@@ -110,7 +93,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, learnedLetters, masteredSyllables, language]);
+  }, [challengesCompleted, masteredSyllables, language]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {
@@ -162,7 +145,7 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
         if (nextIdx < updatedQueue.length) {
           setCurrentIndex(nextIdx);
         } else {
-          await completeChallenge(targetLetter.length > 1 ? 'syllable' : 'letter', targetLetter);
+          await completeChallenge('syllable', targetLetter);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {
@@ -183,23 +166,15 @@ export const CapturaLetras: React.FC<CapturaLetrasProps> = ({ onBack }) => {
     // Obter pool apropriado de distratores baseado na dificuldade
     const difficulty = Math.floor(challengesCompleted / 7) % 3;
     
-    let letter = '';
-    if (target.length > 1) {
-      const activeLang = language || 'pt';
-      const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
-      const activeHardSyllables = syllablesPool.hard;
-      const distractors = activeHardSyllables.filter(s => s !== target);
-      letter = isTarget ? target : distractors[Math.floor(Math.random() * distractors.length)];
-    } else {
-      let letterPool = ['A', 'B', 'C', 'D', 'E', 'I', 'L', 'M', 'N', 'O', 'P', 'T', 'U', 'V'];
-      if (difficulty === 1) {
-        letterPool = ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'Z'];
-      } else if (difficulty === 2) {
-        letterPool = TARGET_LETTERS;
-      }
-      const pool = letterPool.filter(l => l !== target);
-      letter = isTarget ? target : pool[Math.floor(Math.random() * pool.length)];
-    }
+    const activeLang = language || 'pt';
+    const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
+    let levelPool: string[];
+    if (difficulty === 0) levelPool = syllablesPool.easy;
+    else if (difficulty === 1) levelPool = syllablesPool.medium;
+    else levelPool = syllablesPool.hard;
+
+    const distractors = levelPool.filter(s => s !== target);
+    const letter = isTarget ? target : distractors[Math.floor(Math.random() * distractors.length)];
     
     // Calcular posição horizontal randômica segura baseada na largura medida da área do jogo
     const currentWidth = gameAreaWidthRef.current;
@@ -416,3 +391,5 @@ const styles = StyleSheet.create({
     color: '#0277BD',
   },
 });
+
+export { CapturaDeSilabas as CapturaLetras };

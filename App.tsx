@@ -3,7 +3,8 @@ import { View, StyleSheet, Modal, Text, SafeAreaView, TouchableOpacity, Activity
 import { StatusBar } from 'expo-status-bar';
 import { LocalizationProvider, useLocalization } from './src/context/LocalizationContext';
 import { GameProvider, useGame } from './src/context/GameContext';
-import { fetchChildren, createChildWithProfile } from './src/services/supabase';
+import { fetchChildren } from './src/services/supabase';
+import { ChildSelectorScreen } from './src/screens/ChildSelectorScreen';
 
 // Import Screens
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -13,12 +14,13 @@ import { ParentsPanelScreen } from './src/screens/ParentsPanelScreen';
 import { CollectionScreen } from './src/screens/CollectionScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
+import { PaywallScreen } from './src/screens/PaywallScreen';
 
 // Import Minigames
-import { MundoDasLetras } from './src/screens/games/MundoDasLetras';
-import { LetrasCamufladas } from './src/screens/games/LetrasCamufladas';
-import { CapturaLetras } from './src/screens/games/CapturaLetras';
-import { SomELetra } from './src/screens/games/SomELetra';
+import { MundoDasSilabas } from './src/screens/games/MundoDasLetras';
+import { SilabasCamufladas } from './src/screens/games/LetrasCamufladas';
+import { CapturaDeSilabas } from './src/screens/games/CapturaLetras';
+import { SomESilabas } from './src/screens/games/SomELetra';
 import { MonteAPalavra } from './src/screens/games/MonteAPalavra';
 import { FlorestaPalavras } from './src/screens/games/FlorestaPalavras';
 import { CasteloFrases } from './src/screens/games/CasteloFrases';
@@ -30,16 +32,22 @@ import { CustomButton } from './src/components/CustomButton';
 import { startBgMusic, stopBgMusic } from './src/services/audio';
 import { supabase } from './src/services/supabase';
 
-function GameAppContent({ 
-  childId, 
+function GameAppContent({
+  childId,
   parentId,
   initError,
-  onRetry
-}: { 
-  childId: string | null; 
+  onRetry,
+  onSwitchChild,
+  onSelectChild,
+  isInitializingChild,
+}: {
+  childId: string | null;
   parentId: string | null;
   initError: string | null;
   onRetry: () => void;
+  onSwitchChild: () => void;
+  onSelectChild: (id: string) => void;
+  isInitializingChild: boolean;
 }) {
   const { character, soundEnabled, isLoadingProfile } = useGame();
   const { t } = useLocalization();
@@ -122,7 +130,7 @@ function GameAppContent({
 
   // Roteador de Telas por Estado
   const renderScreen = () => {
-    if (checkingAuth || isLoadingProfile) {
+    if (checkingAuth || isLoadingProfile || isInitializingChild) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
@@ -164,13 +172,14 @@ function GameAppContent({
       );
     }
 
-    // Se não tem filho selecionado, não mostra o jogo
+    // Sem filho selecionado → seletor de perfis (primeiro acesso ou troca)
     if (!childId) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>A carregar perfil da criança...</Text>
-        </View>
+        <ChildSelectorScreen
+          parentId={parentId ?? ''}
+          isPremium={false}
+          onSelectChild={onSelectChild}
+        />
       );
     }
 
@@ -187,7 +196,9 @@ function GameAppContent({
           />
         );
       case 'parents':
-        return <ParentsPanelScreen onNavigate={setCurrentScreen} />;
+        return <ParentsPanelScreen onNavigate={setCurrentScreen} onSwitchChild={onSwitchChild} />;
+      case 'paywall':
+        return <PaywallScreen onNavigate={setCurrentScreen} />;
       case 'collection':
         return <CollectionScreen onNavigate={setCurrentScreen} />;
       case 'profile':
@@ -195,13 +206,13 @@ function GameAppContent({
       
       // Minijogos
       case 'game_1':
-        return <MundoDasLetras onBack={() => setCurrentScreen('map')} />;
+        return <MundoDasSilabas onBack={() => setCurrentScreen('map')} />;
       case 'game_2':
-        return <LetrasCamufladas onBack={() => setCurrentScreen('map')} />;
+        return <SilabasCamufladas onBack={() => setCurrentScreen('map')} />;
       case 'game_3':
-        return <CapturaLetras onBack={() => setCurrentScreen('map')} />;
+        return <CapturaDeSilabas onBack={() => setCurrentScreen('map')} />;
       case 'game_4':
-        return <SomELetra onBack={() => setCurrentScreen('map')} />;
+        return <SomESilabas onBack={() => setCurrentScreen('map')} />;
       case 'game_5':
         return <MonteAPalavra onBack={() => setCurrentScreen('map')} />;
       case 'game_6':
@@ -273,6 +284,7 @@ export default function App() {
   const [activeParentId, setActiveParentId] = useState<string | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState<number>(0);
+  const [isInitializingChild, setIsInitializingChild] = useState<boolean>(true);
   // Referência para evitar chamadas duplicadas ao initChild para a mesma sessão
   const lastInitedUserId = React.useRef<string | null>(null);
 
@@ -280,6 +292,7 @@ export default function App() {
     lastInitedUserId.current = null;
     setActiveChildId(null);
     setInitError(null);
+    setIsInitializingChild(true);
     setRetryTrigger(prev => prev + 1);
   };
 
@@ -289,9 +302,11 @@ export default function App() {
         setActiveChildId(null);
         setActiveParentId(null);
         setInitError(null);
+        setIsInitializingChild(false);
         lastInitedUserId.current = null;
         return;
       }
+      setIsInitializingChild(true);
 
       const parentId = session.user.id;
 
@@ -341,6 +356,7 @@ export default function App() {
       } catch (err: any) {
         console.error('Erro de permissão ou conexão na verificação do responsável:', err);
         setInitError(err.message || 'Erro ao conectar ao banco de dados do responsável.');
+        setIsInitializingChild(false);
         return;
       }
 
@@ -348,32 +364,18 @@ export default function App() {
       try {
         const kids = await fetchChildren();
 
-        if (kids.length > 0) {
-          // Já existe filho → usar o primeiro (e único)
+        if (kids.length === 1) {
+          // Família com uma criança → auto-selecionar (UX conveniente)
           setActiveChildId(kids[0].id);
         } else {
-          // Primeiro acesso → criar filho automaticamente com nome neutro.
-          //
-          // IMPORTANTE: NÃO usar session.user.user_metadata.full_name aqui.
-          // A conta logada via Google é a conta do RESPONSÁVEL, não da criança
-          // (ex: pode ser a conta do pai/mãe, ou até a própria criança logada
-          // sozinha com uma conta adulta de um tablet compartilhado). Usar o
-          // nome da conta como nome da criança causava casos como o perfil
-          // sendo criado com o nome do pai/mãe em vez de um placeholder.
-          // O nome real da criança deve ser definido manualmente depois,
-          // na tela de Perfil, como parte de um fluxo de configuração inicial.
-          const defaultName = 'Aventureiro';
-
-          const child = await createChildWithProfile(parentId, defaultName, 6, 'panda');
-          if (child) {
-            setActiveChildId(child.id);
-          } else {
-            setInitError('Não foi possível criar o perfil inicial da criança. Verifique sua conexão e tente novamente.');
-          }
+          // 0 filhos (primeiro acesso) ou 2+ filhos → mostrar ChildSelectorScreen
+          setActiveChildId(null);
         }
       } catch (err: any) {
-        console.error('Erro de permissão ou conexão na criação/busca da criança:', err);
-        setInitError(err.message || 'Erro ao criar ou buscar o perfil da criança.');
+        console.error('Erro de permissão ou conexão na busca da criança:', err);
+        setInitError(err.message || 'Erro ao buscar o perfil da criança.');
+      } finally {
+        setIsInitializingChild(false);
       }
     };
 
@@ -402,11 +404,14 @@ export default function App() {
   return (
     <LocalizationProvider>
       <GameProvider childId={activeChildId} parentId={activeParentId}>
-        <GameAppContent 
-          childId={activeChildId} 
-          parentId={activeParentId} 
+        <GameAppContent
+          childId={activeChildId}
+          parentId={activeParentId}
           initError={initError}
           onRetry={handleRetry}
+          onSwitchChild={() => setActiveChildId(null)}
+          onSelectChild={setActiveChildId}
+          isInitializingChild={isInitializingChild}
         />
       </GameProvider>
     </LocalizationProvider>

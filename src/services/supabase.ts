@@ -144,6 +144,92 @@ export const fetchChildren = async (): Promise<any[]> => {
 };
 
 /**
+ * Lê o pin_hash do responsável para o gate do Portal dos Pais.
+ */
+export const getParentPinHash = async (parentId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('parents')
+      .select('pin_hash')
+      .eq('id', parentId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.pin_hash ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Salva um novo pin_hash no Supabase para o responsável.
+ */
+export const setParentPinHash = async (parentId: string, pinHash: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('parents')
+      .update({ pin_hash: pinHash })
+      .eq('id', parentId);
+
+    return !error;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Remove um filho e seu perfil de progresso (CASCADE cuida do profiles).
+ */
+export const deleteChild = async (childId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('children')
+      .delete()
+      .eq('id', childId);
+
+    if (error) {
+      console.warn('Erro ao remover criança:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('Erro inesperado ao remover criança:', err);
+    return false;
+  }
+};
+
+/**
+ * Lê a assinatura do responsável e deriva isPremium.
+ * Fonte de verdade para o freemium; chamado no carregamento do GameContext.
+ */
+export const loadParentSubscription = async (
+  parentId: string
+): Promise<{ isPremium: boolean }> => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('plan, current_period_end, admin_granted_until')
+      .eq('parent_id', parentId)
+      .maybeSingle();
+
+    if (error || !data) return { isPremium: false };
+
+    const now = new Date();
+    const isPremium =
+      (data.plan === 'premium' &&
+        data.current_period_end != null &&
+        new Date(data.current_period_end) > now) ||
+      (data.admin_granted_until != null &&
+        new Date(data.admin_granted_until) > now);
+
+    return { isPremium: !!isPremium };
+  } catch (err) {
+    console.warn('Erro ao carregar assinatura:', err);
+    return { isPremium: false };
+  }
+};
+
+/**
  * Cria um perfil de filho no Supabase e inicializa o perfil de progresso.
  */
 export const createChildWithProfile = async (

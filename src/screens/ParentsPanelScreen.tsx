@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
-import { ArrowLeft, BarChart2, BookOpen, Clock, Settings, Volume2, Shield } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users } from 'lucide-react-native';
+import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash } from '../services/supabase';
 
 interface ParentsPanelScreenProps {
   onNavigate: (screen: string) => void;
+  onSwitchChild?: () => void;
 }
 
-export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNavigate }) => {
+const AVATAR_EMOJIS: Record<string, string> = {
+  panda: '🐼', fox: '🦊', kitten: '🐱', robot: '🤖', boy: '👦', girl: '👧',
+};
+
+export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNavigate, onSwitchChild }) => {
   const { t, setLanguage, language } = useLocalization();
   const {
+    parentId,
     learnedLetters,
     masteredSyllables,
     readWords,
@@ -24,30 +31,95 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
   } = useGame();
 
   const [unlocked, setUnlocked] = useState(false);
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
-  const [answer, setAnswer] = useState('');
-  const [gateError, setGateError] = useState('');
 
-  // Gerar novos números para o cálculo de segurança ao carregar
-  useEffect(() => {
-    setNum1(Math.floor(Math.random() * 8) + 2); // 2 a 9
-    setNum2(Math.floor(Math.random() * 8) + 2);
+  // PIN gate state
+  type PinMode = 'loading' | 'verify' | 'setup' | 'setup_confirm';
+  const [pinMode, setPinMode] = useState<PinMode>('loading');
+  const [storedPinHash, setStoredPinHash] = useState<string | null>(null);
+  const [enteredPin, setEnteredPin] = useState('');
+  const [setupFirstPin, setSetupFirstPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [savingPin, setSavingPin] = useState(false);
+
+  const [children, setChildren] = useState<any[]>([]);
+  const [loadingKids, setLoadingKids] = useState(false);
+
+  // FNV-1a hash (pure JS — deterministic, no deps)
+  const hashPin = useCallback((pin: string, salt: string): string => {
+    const str = pin + ':' + salt;
+    let hash = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i);
+      hash = (hash * 16777619) >>> 0;
+    }
+    return hash.toString(16).padStart(8, '0');
   }, []);
 
-  const handleVerifyGate = () => {
-    const expected = num1 + num2;
-    if (parseInt(answer.trim(), 10) === expected) {
-      setUnlocked(true);
-      setGateError('');
-    } else {
-      setGateError(t('parentsGateIncorrect'));
-      setAnswer('');
-      // Gerar nova pergunta
-      setNum1(Math.floor(Math.random() * 8) + 2);
-      setNum2(Math.floor(Math.random() * 8) + 2);
+  useEffect(() => {
+    if (!parentId) return;
+    getParentPinHash(parentId).then((hash) => {
+      setStoredPinHash(hash);
+      setPinMode(hash ? 'verify' : 'setup');
+    });
+  }, [parentId]);
+
+  useEffect(() => {
+    if (unlocked) {
+      setLoadingKids(true);
+      fetchChildren().then((kids) => {
+        setChildren(kids);
+        setLoadingKids(false);
+      });
     }
-  };
+  }, [unlocked]);
+
+  const handlePinDigit = useCallback(async (digit: string | 'del') => {
+    if (digit === 'del') {
+      setEnteredPin(p => p.slice(0, -1));
+      setPinError('');
+      return;
+    }
+    const next = enteredPin + digit;
+    setEnteredPin(next);
+
+    if (next.length < 4) return;
+
+    // Auto-submit when 4 digits are entered
+    const salt = parentId ?? '';
+
+    if (pinMode === 'verify') {
+      const entered = hashPin(next, salt);
+      if (entered === storedPinHash) {
+        setUnlocked(true);
+      } else {
+        setPinError('PIN incorreto. Tente novamente.');
+        setEnteredPin('');
+      }
+    } else if (pinMode === 'setup') {
+      setSetupFirstPin(next);
+      setEnteredPin('');
+      setPinMode('setup_confirm');
+    } else if (pinMode === 'setup_confirm') {
+      if (next === setupFirstPin) {
+        setSavingPin(true);
+        const hash = hashPin(next, salt);
+        const ok = await setParentPinHash(salt, hash);
+        setSavingPin(false);
+        if (ok) {
+          setStoredPinHash(hash);
+          setUnlocked(true);
+        } else {
+          setPinError('Erro ao salvar PIN. Verifique sua conexão.');
+          setEnteredPin('');
+        }
+      } else {
+        setPinError('Os PINs não combinam. Tente novamente.');
+        setEnteredPin('');
+        setPinMode('setup');
+        setSetupFirstPin('');
+      }
+    }
+  }, [enteredPin, pinMode, setupFirstPin, storedPinHash, parentId, hashPin]);
 
   const handleReset = () => {
     Alert.alert(
@@ -68,54 +140,92 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     );
   };
 
+  const handleDeleteChild = (child: any) => {
+    Alert.alert(
+      'Remover criança',
+      `Remover o perfil de "${child.name}"? Todo o progresso será perdido.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteChild(child.id);
+            const kids = await fetchChildren();
+            setChildren(kids);
+          },
+        },
+      ]
+    );
+  };
+
   // Calcular tempo total de uso em minutos
   const totalSeconds = Object.values(dailyUsageSeconds).reduce((a, b) => a + b, 0);
   const totalMinutes = Math.round(totalSeconds / 60);
 
-  // Tela de bloqueio (Segurança)
+  // Gate do PIN
   if (!unlocked) {
+    const pinTitle = pinMode === 'loading'
+      ? 'Carregando...'
+      : pinMode === 'setup'
+        ? 'Criar PIN de Acesso'
+        : pinMode === 'setup_confirm'
+          ? 'Confirme seu PIN'
+          : t('parentsGateTitle');
+
+    const pinSubtitle = pinMode === 'setup'
+      ? 'Escolha um PIN de 4 dígitos para proteger este painel'
+      : pinMode === 'setup_confirm'
+        ? 'Digite o PIN novamente para confirmar'
+        : t('parentsGateSubtitle');
+
     return (
       <SafeAreaView style={styles.gateContainer}>
         <View style={styles.gateCard}>
           <Shield size={48} color="#9C27B0" style={{ marginBottom: 10 }} />
-          <Text style={styles.gateTitle}>{t('parentsGateTitle')}</Text>
-          <Text style={styles.gateSubtitle}>{t('parentsGateSubtitle')}</Text>
-          
-          <Text style={styles.mathQuestion}>
-            {t('parentsGateQuestion', { num1, num2 })}
-          </Text>
+          <Text style={styles.gateTitle}>{pinTitle}</Text>
+          <Text style={styles.gateSubtitle}>{pinSubtitle}</Text>
 
-          <TextInput
-            style={styles.textInput}
-            keyboardType="number-pad"
-            value={answer}
-            onChangeText={setAnswer}
-            placeholder={t('parentsGatePlaceholder')}
-            maxLength={3}
-            autoFocus
-          />
-
-          {gateError ? <Text style={styles.errorText}>{gateError}</Text> : null}
-
-          <View style={styles.gateButtons}>
-            <View style={{ width: '48%' }}>
-              <CustomButton
-                title={t('back')}
-                color="#ECEFF1"
-                borderColor="#CFD8DC"
-                textColor="#37474F"
-                onPress={() => onNavigate('home')}
+          {/* 4 dots display */}
+          <View style={stylesPP.pinDots}>
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={[stylesPP.pinDot, i < enteredPin.length && stylesPP.pinDotFilled]}
               />
-            </View>
-            <View style={{ width: '48%' }}>
-              <CustomButton
-                title="Ok"
-                color="#9C27B0"
-                borderColor="#7B1FA2"
-                onPress={handleVerifyGate}
-              />
-            </View>
+            ))}
           </View>
+
+          {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
+
+          {/* NumPad */}
+          {pinMode !== 'loading' && !savingPin && (
+            <View style={stylesPP.numPad}>
+              {['1','2','3','4','5','6','7','8','9','','0','del'].map((key) => (
+                key === '' ? (
+                  <View key="empty" style={stylesPP.numPadEmpty} />
+                ) : (
+                  <TouchableOpacity
+                    key={key}
+                    style={stylesPP.numKey}
+                    activeOpacity={0.7}
+                    onPress={() => handlePinDigit(key as string | 'del')}
+                  >
+                    <Text style={stylesPP.numKeyText}>{key === 'del' ? '⌫' : key}</Text>
+                  </TouchableOpacity>
+                )
+              ))}
+            </View>
+          )}
+
+          {savingPin && <ActivityIndicator size="large" color="#9C27B0" style={{ marginVertical: 20 }} />}
+
+          <TouchableOpacity
+            style={{ marginTop: 16, padding: 10 }}
+            onPress={() => onNavigate('home')}
+          >
+            <Text style={{ color: '#78909C', fontWeight: 'bold', fontSize: 14 }}>{t('back')}</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -202,6 +312,56 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
               <Text style={styles.listLabel}>Palavras Lidas:</Text>
               <Text style={styles.listTags}>{readWords.join(', ')}</Text>
             </View>
+          )}
+        </View>
+
+        {/* CARD DE CRIANÇAS */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Users size={20} color="#7B1FA2" />
+            <Text style={[styles.cardTitle, { color: '#7B1FA2' }]}>Crianças</Text>
+          </View>
+
+          {loadingKids ? (
+            <ActivityIndicator size="small" color="#7B1FA2" />
+          ) : (
+            <>
+              {children.map((child) => (
+                <View key={child.id} style={stylesPP.kidRow}>
+                  <Text style={stylesPP.kidEmoji}>{AVATAR_EMOJIS[child.avatar] ?? '😊'}</Text>
+                  <Text style={stylesPP.kidName}>{child.name}</Text>
+                  <TouchableOpacity
+                    style={stylesPP.kidDeleteBtn}
+                    onPress={() => handleDeleteChild(child)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={stylesPP.kidDeleteText}>Remover</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {onSwitchChild && children.length > 1 && (
+                <View style={{ marginTop: 12 }}>
+                  <CustomButton
+                    title="Trocar criança ativa"
+                    color="#9C27B0"
+                    borderColor="#7B1FA2"
+                    onPress={onSwitchChild}
+                  />
+                </View>
+              )}
+
+              {onSwitchChild && children.length === 0 && (
+                <View style={{ marginTop: 4 }}>
+                  <CustomButton
+                    title="Criar perfil de criança"
+                    color="#9C27B0"
+                    borderColor="#7B1FA2"
+                    onPress={onSwitchChild}
+                  />
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -532,5 +692,87 @@ const styles = StyleSheet.create({
   },
   langTextSelected: {
     color: '#7B1FA2',
+  },
+});
+
+const stylesPP = StyleSheet.create({
+  pinDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 20,
+    gap: 16,
+  },
+  pinDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#9C27B0',
+    backgroundColor: 'transparent',
+  },
+  pinDotFilled: {
+    backgroundColor: '#9C27B0',
+  },
+  numPad: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: 240,
+    gap: 12,
+    marginTop: 4,
+  },
+  numKey: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3E5F5',
+    borderWidth: 2,
+    borderColor: '#CE93D8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#7B1FA2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  numPadEmpty: {
+    width: 64,
+    height: 64,
+  },
+  numKeyText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#4A148C',
+  },
+  kidRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  kidEmoji: {
+    fontSize: 28,
+    marginRight: 10,
+  },
+  kidName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#37474F',
+  },
+  kidDeleteBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#FFEBEE',
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  kidDeleteText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#C62828',
   },
 });

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { syncChildProfile, loadChildProfile, ChildProgressProfile } from '../services/supabase';
+import { syncChildProfile, loadChildProfile, loadParentSubscription, ChildProgressProfile } from '../services/supabase';
 
 export type CharacterType = 'boy' | 'girl' | 'fox' | 'panda' | 'kitten' | 'robot';
 
@@ -211,6 +211,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
               case 'game_avatar_name': setAvatarNameState(val); break;
             }
           });
+        }
+
+        // Assinatura (isPremium) — fonte de verdade é a tabela subscriptions
+        // Sobrescreve qualquer valor de AsyncStorage; graceful fallback se offline
+        if (parentId) {
+          const sub = await loadParentSubscription(parentId);
+          setIsPremiumState(sub.isPremium);
         }
 
         // Configurações globais (não isoladas por criança)

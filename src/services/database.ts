@@ -10,6 +10,7 @@ export interface ChildProfile {
   name: string;
   age: number;
   avatar: string; // ex: 'panda', 'fox', 'boy', 'girl', etc.
+  preferred_language?: string;
   created_at?: string;
 }
 
@@ -63,9 +64,23 @@ export interface WordChallenge {
 export interface Subscription {
   id?: string;
   parent_id: string;
-  plan: 'free' | 'monthly' | 'annual';
+  plan: 'free' | 'premium' | 'monthly' | 'annual';
   status: 'active' | 'canceled' | 'expired';
   expires_at?: string | null;
+  // Phase 1: payment provider + admin grant
+  provider?: string | null;
+  provider_subscription_id?: string | null;
+  provider_customer_id?: string | null;
+  current_period_end?: string | null;
+  admin_granted_until?: string | null;
+}
+
+export interface ParentalConsent {
+  id?: string;
+  parent_id: string;
+  child_id: string;
+  terms_version: string;
+  consented_at?: string;
 }
 
 // ========================================================
@@ -301,6 +316,31 @@ export async function getParentSubscription(parentId: string): Promise<Subscript
 
   if (error) {
     console.error('Erro ao buscar assinatura:', error.message);
+    throw error;
+  }
+  return data;
+}
+
+/**
+ * INSERIR CONSENTIMENTO PARENTAL LGPD/COPPA
+ * Usa upsert para garantir idempotência (mesmo child + versão não duplica).
+ */
+export async function insertParentalConsent(
+  parentId: string,
+  childId: string,
+  termsVersion: string
+): Promise<ParentalConsent> {
+  const { data, error } = await supabase
+    .from('parental_consents')
+    .upsert(
+      { parent_id: parentId, child_id: childId, terms_version: termsVersion },
+      { onConflict: 'child_id,terms_version' }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao registrar consentimento parental:', error.message);
     throw error;
   }
   return data;

@@ -52,7 +52,14 @@ const INTERMEDIATE_STONES = [
 
 export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onSelectGame: (gameId: string) => void }> = ({ onNavigate, onSelectGame }) => {
   const { t, language } = useLocalization();
-  const { stars, coins, character, equippedClothing, childId, challengesCompleted, setShowChestModal, soundEnabled } = useGame();
+  const { stars, coins, character, equippedClothing, childId, challengesCompleted, setShowChestModal, soundEnabled, isPremium } = useGame();
+
+  // Free: games 1-2 in PT-BR only. Premium: all games + all languages.
+  const isFreemiumLocked = (gameIndex: number): boolean => {
+    if (isPremium) return false;
+    if (language !== 'pt') return true; // non-PT requires premium
+    return gameIndex >= 2;             // games 3-7 require premium
+  };
 
   const [claimedChests, setClaimedChests] = useState<string[]>([]);
   const glowAnim = useRef(new Animated.Value(0.7)).current;
@@ -111,13 +118,17 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
     }
   };
 
-  const handleSelectNode = (gameId: string, nodeX: number, nodeY: number) => {
+  const handleSelectNode = (gameId: string, gameIndex: number, nodeX: number, nodeY: number) => {
     playSound('pop', soundEnabled);
+
+    if (isFreemiumLocked(gameIndex)) {
+      onNavigate('paywall');
+      return;
+    }
 
     // Animar personagem até o nó
     Animated.spring(avatarX, { toValue: nodeX, friction: 6, tension: 40, useNativeDriver: true }).start();
     Animated.spring(avatarY, { toValue: nodeY, friction: 6, tension: 40, useNativeDriver: true }).start(() => {
-      // Abre o minijogo após a animação
       setTimeout(() => {
         onSelectGame(gameId);
       }, 300);
@@ -307,34 +318,35 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
           {/* NÓS DOS MINIJOGOS */}
           {GAMES_LIST.map((game, index) => {
+            const isProgressionLocked = (challengesCompleted % 7) < index;
             const isCompleted = (challengesCompleted % 7) > index;
-            const isUnlocked = (challengesCompleted % 7) >= index;
+            const freemiumLocked = isFreemiumLocked(index);
+            const isDisabled = isProgressionLocked;
+
+            const bgColor = isProgressionLocked ? '#CFD8DC' : freemiumLocked ? '#E8D5F5' : game.color;
+            const borderColor = isProgressionLocked ? '#90A4AE' : freemiumLocked ? '#AB47BC' : game.borderColor;
 
             return (
               <TouchableOpacity
                 key={game.id}
-                activeOpacity={isUnlocked ? 0.7 : 1}
-                disabled={!isUnlocked}
-                onPress={() => handleSelectNode(game.id, game.x, game.y)}
+                activeOpacity={isDisabled ? 1 : 0.7}
+                disabled={isDisabled}
+                onPress={() => handleSelectNode(game.id, index, game.x, game.y)}
                 style={[
                   styles.nodeButton,
-                  {
-                    left: game.x - 30,
-                    top: game.y - 35,
-                    backgroundColor: isUnlocked ? game.color : '#CFD8DC',
-                    borderColor: isUnlocked ? game.borderColor : '#90A4AE',
-                  }
+                  { left: game.x - 30, top: game.y - 35, backgroundColor: bgColor, borderColor }
                 ]}
               >
-                {!isUnlocked ? (
+                {isProgressionLocked ? (
                   <Text style={styles.nodeLockText}>🔒</Text>
+                ) : freemiumLocked ? (
+                  <Text style={styles.nodeLockText}>⭐🔒</Text>
                 ) : (
                   <>
                     <Text style={styles.nodeEmoji}>{game.emoji}</Text>
                     {isCompleted && <Text style={styles.checkmarkBadge}>✓</Text>}
                   </>
                 )}
-                {/* Nome do Jogo flutuante lateral */}
                 <View style={[styles.titleBubble, game.x >= 200 ? styles.titleLeft : styles.titleRight]}>
                   <Text style={styles.titleBubbleText}>{t(game.titleKey)}</Text>
                 </View>
