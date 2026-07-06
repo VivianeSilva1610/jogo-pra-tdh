@@ -8,7 +8,8 @@ import { insertParentalConsent } from '../services/database';
 
 const TERMS_VERSION = 'v1.0';
 import { THEME_COLORS, FONT_SIZES, FONT_WEIGHTS } from '../styles/theme';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { Plus, Trash2, LogOut } from 'lucide-react-native';
+import { supabase } from '../services/supabase';
 
 const AVATAR_OPTIONS = [
   { key: 'panda',  emoji: '🐼', label: 'Panda' },
@@ -109,6 +110,23 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
     setConsentGiven(false);
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja desconectar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await supabase.auth.signOut();
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -126,6 +144,13 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
       <View style={[styles.inner, Platform.OS === 'web' && styles.innerWeb]}>
         {/* Header */}
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <LogOut size={24} color="#7E57C2" />
+          </TouchableOpacity>
           <Text style={styles.emoji}>🎮</Text>
           <Text style={styles.title}>
             {isFirstTime ? 'Vamos começar!' : 'Quem vai jogar?'}
@@ -285,6 +310,15 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    position: 'relative',
+  },
+  logoutBtn: {
+    position: 'absolute',
+    top: 32,
+    right: 20,
+    padding: 8,
+    backgroundColor: '#F3E5F5',
+    borderRadius: 20,
   },
   emoji: {
     fontSize: 48,

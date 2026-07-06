@@ -182,15 +182,22 @@ export const setParentPinHash = async (parentId: string, pinHash: string): Promi
  */
 export const deleteChild = async (childId: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('children')
       .delete()
-      .eq('id', childId);
+      .eq('id', childId)
+      .select();
 
     if (error) {
       console.warn('Erro ao remover criança:', error.message);
       return { success: false, error: error.message };
     }
+    
+    if (!data || data.length === 0) {
+      console.warn('Nenhuma linha foi removida. Talvez você não tenha permissão.');
+      return { success: false, error: 'Perfil não encontrado ou sem permissão para remover.' };
+    }
+
     return { success: true };
   } catch (err: any) {
     console.warn('Erro inesperado ao remover criança:', err);
