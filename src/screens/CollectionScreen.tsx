@@ -156,19 +156,24 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({ onNavigate }
             {STICKERS_LIST.map((sticker) => {
               const isUnlocked = unlockedStickers.includes(sticker.id);
               
-              // Figurinha Premium de simulação
-              const isPremiumSticker = sticker.id === 'sticker_unicorn' || sticker.id === 'sticker_dragon';
+              const isPremiumSticker = !!sticker.isPremium;
               const shouldBlock = isPremiumSticker && !isPremium;
 
               const categoryColors: Record<string, string> = {
                 animals: '#E8F5E9',
                 nature: '#E3F2FD',
                 fantasy: '#F3E5F5',
+                space:   '#E8EAF6',
+                food:    '#FFF8E1',
+                sports:  '#E0F2F1',
               };
               const categoryBorder: Record<string, string> = {
                 animals: '#A5D6A7',
-                nature: '#90CAF9',
+                nature:  '#90CAF9',
                 fantasy: '#CE93D8',
+                space:   '#9FA8DA',
+                food:    '#FFD54F',
+                sports:  '#80CBC4',
               };
               const bgColor = categoryColors[sticker.category] || '#F5F5F5';
               const borderColor = categoryBorder[sticker.category] || '#E0E0E0';

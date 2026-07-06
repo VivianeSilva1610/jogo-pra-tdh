@@ -8,6 +8,7 @@ export interface StickerItem {
   id: string;
   nameKey: string;
   emoji: string;
+  isPremium?: boolean;
   cost: number;
   category: 'animals' | 'nature' | 'fantasy';
   imageUrl: string;
@@ -21,16 +22,79 @@ export interface ClothingItem {
 }
 
 export const STICKERS_LIST: StickerItem[] = [
-  { id: 'sticker_lion', nameKey: 'stickerLion', emoji: '🦁', cost: 30, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=300&auto=format&fit=crop' },
-  { id: 'sticker_elephant', nameKey: 'stickerElephant', emoji: '🐘', cost: 35, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=300&auto=format&fit=crop' },
-  { id: 'sticker_bunny', nameKey: 'stickerBunny', emoji: '🐰', cost: 25, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&auto=format&fit=crop' },
-  { id: 'sticker_dino', nameKey: 'stickerDino', emoji: '🦖', cost: 40, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1606856527040-9f9e41d0224c?w=300&auto=format&fit=crop' },
-  { id: 'sticker_unicorn', nameKey: 'stickerUnicorn', emoji: '🦄', cost: 50, category: 'fantasy', imageUrl: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa52?w=300&auto=format&fit=crop' },
-  { id: 'sticker_dragon', nameKey: 'stickerDragon', emoji: '🐉', cost: 45, category: 'fantasy', imageUrl: 'https://images.unsplash.com/photo-1504450758481-7338eaa75e61?w=300&auto=format&fit=crop' },
-  { id: 'sticker_dolphin', nameKey: 'stickerDolphin', emoji: '🐬', cost: 30, category: 'animals', imageUrl: 'https://images.unsplash.com/photo-1570481662006-a3a13746fe4f?w=300&auto=format&fit=crop' },
-  { id: 'sticker_butterfly', nameKey: 'stickerButterfly', emoji: '🦋', cost: 20, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=300&auto=format&fit=crop' },
-  { id: 'sticker_flower', nameKey: 'stickerFlower', emoji: '🌸', cost: 15, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=300&auto=format&fit=crop' },
-  { id: 'sticker_rainbow', nameKey: 'stickerRainbow', emoji: '🌈', cost: 25, category: 'nature', imageUrl: 'https://images.unsplash.com/photo-1443694903671-41e90b9b3d93?w=300&auto=format&fit=crop' },
+  // ── FREE (10) ─────────────────────────────────────────────
+  { id: 'sticker_lion',       nameKey: 'stickerLion',       emoji: '🦁', cost: 30, category: 'animals' },
+  { id: 'sticker_elephant',   nameKey: 'stickerElephant',   emoji: '🐘', cost: 35, category: 'animals' },
+  { id: 'sticker_bunny',      nameKey: 'stickerBunny',      emoji: '🐰', cost: 25, category: 'animals' },
+  { id: 'sticker_dino',       nameKey: 'stickerDino',       emoji: '🦖', cost: 40, category: 'animals' },
+  { id: 'sticker_dolphin',    nameKey: 'stickerDolphin',    emoji: '🐬', cost: 30, category: 'animals' },
+  { id: 'sticker_butterfly',  nameKey: 'stickerButterfly',  emoji: '🦋', cost: 20, category: 'nature'  },
+  { id: 'sticker_flower',     nameKey: 'stickerFlower',     emoji: '🌸', cost: 15, category: 'nature'  },
+  { id: 'sticker_rainbow',    nameKey: 'stickerRainbow',    emoji: '🌈', cost: 25, category: 'nature'  },
+  { id: 'sticker_unicorn',    nameKey: 'stickerUnicorn',    emoji: '🦄', cost: 50, category: 'fantasy' },
+  { id: 'sticker_dragon',     nameKey: 'stickerDragon',     emoji: '🐉', cost: 45, category: 'fantasy' },
+
+  // ── PREMIUM — Animals (12) ────────────────────────────────
+  { id: 'sticker_giraffe',    nameKey: 'stickerGiraffe',    emoji: '🦒', cost: 30, category: 'animals', isPremium: true },
+  { id: 'sticker_tiger',      nameKey: 'stickerTiger',      emoji: '🐯', cost: 35, category: 'animals', isPremium: true },
+  { id: 'sticker_whale',      nameKey: 'stickerWhale',      emoji: '🐋', cost: 40, category: 'animals', isPremium: true },
+  { id: 'sticker_penguin',    nameKey: 'stickerPenguin',    emoji: '🐧', cost: 25, category: 'animals', isPremium: true },
+  { id: 'sticker_koala',      nameKey: 'stickerKoala',      emoji: '🐨', cost: 30, category: 'animals', isPremium: true },
+  { id: 'sticker_parrot',     nameKey: 'stickerParrot',     emoji: '🦜', cost: 35, category: 'animals', isPremium: true },
+  { id: 'sticker_peacock',    nameKey: 'stickerPeacock',    emoji: '🦚', cost: 45, category: 'animals', isPremium: true },
+  { id: 'sticker_octopus',    nameKey: 'stickerOctopus',    emoji: '🐙', cost: 35, category: 'animals', isPremium: true },
+  { id: 'sticker_deer',       nameKey: 'stickerDeer',       emoji: '🦌', cost: 30, category: 'animals', isPremium: true },
+  { id: 'sticker_frog',       nameKey: 'stickerFrog',       emoji: '🐸', cost: 20, category: 'animals', isPremium: true },
+  { id: 'sticker_owl',        nameKey: 'stickerOwl',        emoji: '🦉', cost: 30, category: 'animals', isPremium: true },
+  { id: 'sticker_gorilla',    nameKey: 'stickerGorilla',    emoji: '🦍', cost: 40, category: 'animals', isPremium: true },
+
+  // ── PREMIUM — Nature (8) ──────────────────────────────────
+  { id: 'sticker_sunflower',  nameKey: 'stickerSunflower',  emoji: '🌻', cost: 20, category: 'nature',  isPremium: true },
+  { id: 'sticker_cactus',     nameKey: 'stickerCactus',     emoji: '🌵', cost: 25, category: 'nature',  isPremium: true },
+  { id: 'sticker_mushroom',   nameKey: 'stickerMushroom',   emoji: '🍄', cost: 25, category: 'nature',  isPremium: true },
+  { id: 'sticker_tree',       nameKey: 'stickerTree',       emoji: '🌳', cost: 20, category: 'nature',  isPremium: true },
+  { id: 'sticker_lightning',  nameKey: 'stickerLightning',  emoji: '⚡', cost: 30, category: 'nature',  isPremium: true },
+  { id: 'sticker_volcano',    nameKey: 'stickerVolcano',    emoji: '🌋', cost: 45, category: 'nature',  isPremium: true },
+  { id: 'sticker_crystal',    nameKey: 'stickerCrystal',    emoji: '💎', cost: 50, category: 'nature',  isPremium: true },
+  { id: 'sticker_wave',       nameKey: 'stickerWave',       emoji: '🌊', cost: 25, category: 'nature',  isPremium: true },
+
+  // ── PREMIUM — Fantasy (10) ────────────────────────────────
+  { id: 'sticker_wizard',     nameKey: 'stickerWizard',     emoji: '🧙', cost: 50, category: 'fantasy', isPremium: true },
+  { id: 'sticker_fairy',      nameKey: 'stickerFairy',      emoji: '🧚', cost: 45, category: 'fantasy', isPremium: true },
+  { id: 'sticker_mermaid',    nameKey: 'stickerMermaid',    emoji: '🧜', cost: 55, category: 'fantasy', isPremium: true },
+  { id: 'sticker_phoenix',    nameKey: 'stickerPhoenix',    emoji: '🦅', cost: 60, category: 'fantasy', isPremium: true },
+  { id: 'sticker_witch',      nameKey: 'stickerWitch',      emoji: '🔮', cost: 45, category: 'fantasy', isPremium: true },
+  { id: 'sticker_knight',     nameKey: 'stickerKnight',     emoji: '⚔️', cost: 50, category: 'fantasy', isPremium: true },
+  { id: 'sticker_treasure',   nameKey: 'stickerTreasure',   emoji: '💰', cost: 40, category: 'fantasy', isPremium: true },
+  { id: 'sticker_castle',     nameKey: 'stickerCastle',     emoji: '🏰', cost: 55, category: 'fantasy', isPremium: true },
+  { id: 'sticker_ghost',      nameKey: 'stickerGhost',      emoji: '👻', cost: 35, category: 'fantasy', isPremium: true },
+  { id: 'sticker_magic_hat',  nameKey: 'stickerMagicHat',   emoji: '🎩', cost: 40, category: 'fantasy', isPremium: true },
+
+  // ── PREMIUM — Espaço (8) ──────────────────────────────────
+  { id: 'sticker_planet',     nameKey: 'stickerPlanet',     emoji: '🪐', cost: 45, category: 'space',   isPremium: true },
+  { id: 'sticker_alien',      nameKey: 'stickerAlien',      emoji: '👽', cost: 40, category: 'space',   isPremium: true },
+  { id: 'sticker_moon',       nameKey: 'stickerMoon',       emoji: '🌙', cost: 30, category: 'space',   isPremium: true },
+  { id: 'sticker_comet',      nameKey: 'stickerComet',      emoji: '☄️', cost: 50, category: 'space',   isPremium: true },
+  { id: 'sticker_astronaut',  nameKey: 'stickerAstronaut',  emoji: '👨‍🚀', cost: 55, category: 'space',   isPremium: true },
+  { id: 'sticker_ufo',        nameKey: 'stickerUfo',        emoji: '🛸', cost: 45, category: 'space',   isPremium: true },
+  { id: 'sticker_telescope',  nameKey: 'stickerTelescope',  emoji: '🔭', cost: 40, category: 'space',   isPremium: true },
+  { id: 'sticker_galaxy',     nameKey: 'stickerGalaxy',     emoji: '🌌', cost: 60, category: 'space',   isPremium: true },
+
+  // ── PREMIUM — Comida (7) ──────────────────────────────────
+  { id: 'sticker_pizza',      nameKey: 'stickerPizza',      emoji: '🍕', cost: 25, category: 'food',    isPremium: true },
+  { id: 'sticker_cake',       nameKey: 'stickerCake',       emoji: '🎂', cost: 30, category: 'food',    isPremium: true },
+  { id: 'sticker_icecream',   nameKey: 'stickerIcecream',   emoji: '🍦', cost: 20, category: 'food',    isPremium: true },
+  { id: 'sticker_watermelon', nameKey: 'stickerWatermelon', emoji: '🍉', cost: 20, category: 'food',    isPremium: true },
+  { id: 'sticker_sushi',      nameKey: 'stickerSushi',      emoji: '🍣', cost: 35, category: 'food',    isPremium: true },
+  { id: 'sticker_cookie',     nameKey: 'stickerCookie',     emoji: '🍪', cost: 20, category: 'food',    isPremium: true },
+  { id: 'sticker_strawberry', nameKey: 'stickerStrawberry', emoji: '🍓', cost: 15, category: 'food',    isPremium: true },
+
+  // ── PREMIUM — Esportes (5) ────────────────────────────────
+  { id: 'sticker_soccer',     nameKey: 'stickerSoccer',     emoji: '⚽', cost: 30, category: 'sports',  isPremium: true },
+  { id: 'sticker_basketball', nameKey: 'stickerBasketball', emoji: '🏀', cost: 30, category: 'sports',  isPremium: true },
+  { id: 'sticker_trophy',     nameKey: 'stickerTrophy',     emoji: '🏆', cost: 50, category: 'sports',  isPremium: true },
+  { id: 'sticker_medal',      nameKey: 'stickerMedal',      emoji: '🥇', cost: 45, category: 'sports',  isPremium: true },
+  { id: 'sticker_surfing',    nameKey: 'stickerSurfing',    emoji: '🏄', cost: 40, category: 'sports',  isPremium: true },
 ];
 
 export const CLOTHING_CATEGORIES: Record<string, 'head' | 'face' | 'body' | 'back' | 'hand'> = {
