@@ -54,6 +54,18 @@ function GameAppContent({
 
   const [currentScreen, setCurrentScreen] = useState<string>('home');
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  // Detecta retorno do Stripe Checkout (?payment=success) na web
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      window.history.replaceState({}, '', window.location.pathname);
+      setPaymentSuccess(true);
+      setTimeout(() => setPaymentSuccess(false), 4000);
+    }
+  }, []);
 
   // Estados para Controle de Sessão TDAH (Pausa recomendada a cada 5 min)
   const [secondsPlayed, setSecondsPlayed] = useState(0);
@@ -231,6 +243,13 @@ function GameAppContent({
     <View style={[styles.appContainer, isWeb && styles.appContainerWeb]}>
       <StatusBar style="auto" />
       {renderScreen()}
+
+      {/* Banner de pagamento confirmado */}
+      {paymentSuccess && (
+        <View style={stylesApp.paymentBanner}>
+          <Text style={stylesApp.paymentBannerText}>🎉 Assinatura Premium ativada!</Text>
+        </View>
+      )}
 
       {/* Baú de Recompensas Surpresa Global */}
       <RewardChest />
@@ -418,6 +437,30 @@ export default function App() {
   );
 }
 
+
+const stylesApp = StyleSheet.create({
+  paymentBanner: {
+    position:        'absolute',
+    bottom:          40,
+    left:            20,
+    right:           20,
+    backgroundColor: '#2E7D32',
+    borderRadius:    14,
+    paddingVertical: 14,
+    alignItems:      'center',
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 3 },
+    shadowOpacity:   0.2,
+    shadowRadius:    5,
+    elevation:       8,
+    zIndex:          999,
+  },
+  paymentBannerText: {
+    color:      '#FFF',
+    fontSize:   16,
+    fontWeight: 'bold',
+  },
+});
 
 const styles = StyleSheet.create({
   outerContainer: {

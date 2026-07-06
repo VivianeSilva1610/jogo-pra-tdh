@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users } from 'lucide-react-native';
-import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash, syncChildProfile } from '../services/supabase';
+import { fetchChildren, deleteChild, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession } from '../services/supabase';
+import { Linking } from 'react-native';
 
 interface ParentsPanelScreenProps {
   onNavigate: (screen: string) => void;
@@ -45,6 +46,9 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
   const [children, setChildren] = useState<any[]>([]);
   const [loadingKids, setLoadingKids] = useState(false);
 
+  const [subPeriodEnd, setSubPeriodEnd] = useState<string | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+
   // FNV-1a hash (pure JS — deterministic, no deps)
   const hashPin = useCallback((pin: string, salt: string): string => {
     const str = pin + ':' + salt;
@@ -65,14 +69,17 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
   }, [parentId]);
 
   useEffect(() => {
-    if (unlocked) {
+    if (unlocked && parentId) {
       setLoadingKids(true);
       fetchChildren().then((kids) => {
         setChildren(kids);
         setLoadingKids(false);
       });
+      loadParentSubscription(parentId).then((sub) => {
+        setSubPeriodEnd(sub.currentPeriodEnd);
+      });
     }
-  }, [unlocked]);
+  }, [unlocked, parentId]);
 
   const handlePinDigit = useCallback(async (digit: string | 'del') => {
     if (digit === 'del') {
@@ -172,6 +179,41 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
         },
       ]
     );
+  };
+
+  const handleSubscribe = async () => {
+    setStripeLoading(true);
+    const url = await createStripeSession('checkout');
+    setStripeLoading(false);
+    if (!url) {
+      Alert.alert('Erro', 'Não foi possível abrir o checkout. Tente novamente.');
+      return;
+    }
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      await Linking.openURL(url);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setStripeLoading(true);
+    const url = await createStripeSession('portal');
+    setStripeLoading(false);
+    if (!url) {
+      Alert.alert('Erro', 'Não foi possível abrir o portal. Tente novamente.');
+      return;
+    }
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      await Linking.openURL(url);
+    }
+  };
+
+  const formatDate = (iso: string | null): string => {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   // Calcular tempo total de uso em minutos
@@ -455,18 +497,46 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
             })}
           </View>
 
-          {/* Assinatura Premium Simulator */}
-          <View style={[styles.settingRow, { marginTop: 15 }]}>
-            <View>
-              <Text style={[styles.settingText, { color: '#E65100' }]}>{t('premiumClub')} ⭐</Text>
-              <Text style={styles.premiumDesc}>{t('premiumSubtitle')}</Text>
+          {/* Assinatura Premium */}
+          <View style={stylesPP.subCard}>
+            <View style={stylesPP.subHeader}>
+              <Text style={stylesPP.subTitle}>⭐ {t('premiumClub')}</Text>
+              <View style={[stylesPP.subBadge, isPremium ? stylesPP.subBadgePro : stylesPP.subBadgeFree]}>
+                <Text style={stylesPP.subBadgeText}>{isPremium ? 'PRO' : 'FREE'}</Text>
+              </View>
             </View>
-            <TouchableOpacity 
-              style={[styles.toggleBtn, isPremium ? styles.toggleOn : styles.premiumOff]}
-              onPress={() => setIsPremium(!isPremium)}
-            >
-              <Text style={styles.toggleText}>{isPremium ? 'PRO' : 'FREE'}</Text>
-            </TouchableOpacity>
+
+            {isPremium ? (
+              <>
+                {subPeriodEnd && (
+                  <Text style={stylesPP.subExpiry}>
+                    Ativo até {formatDate(subPeriodEnd)}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={[stylesPP.subBtn, { backgroundColor: '#546E7A' }]}
+                  onPress={handleManageSubscription}
+                  disabled={stripeLoading}
+                >
+                  {stripeLoading
+                    ? <ActivityIndicator size="small" color="#FFF" />
+                    : <Text style={stylesPP.subBtnText}>Gerenciar Assinatura</Text>}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={stylesPP.subDesc}>{t('premiumSubtitle')}</Text>
+                <TouchableOpacity
+                  style={[stylesPP.subBtn, { backgroundColor: '#FF9800' }]}
+                  onPress={handleSubscribe}
+                  disabled={stripeLoading}
+                >
+                  {stripeLoading
+                    ? <ActivityIndicator size="small" color="#FFF" />
+                    : <Text style={stylesPP.subBtnText}>Assinar Premium ⭐</Text>}
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
         </View>
@@ -845,6 +915,58 @@ const stylesPP = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: '#37474F',
+  },
+  subCard: {
+    marginTop: 16,
+    backgroundColor: '#FFF8E1',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#FFE082',
+  },
+  subHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  subTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#E65100',
+  },
+  subBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  subBadgePro: { backgroundColor: '#4CAF50' },
+  subBadgeFree: { backgroundColor: '#B0BEC5' },
+  subBadgeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  subExpiry: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  subDesc: {
+    fontSize: 12,
+    color: '#78909C',
+    marginBottom: 10,
+  },
+  subBtn: {
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  subBtnText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   kidResetBtn: {
     paddingVertical: 4,

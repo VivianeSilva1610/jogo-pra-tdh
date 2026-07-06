@@ -204,7 +204,7 @@ export const deleteChild = async (childId: string): Promise<boolean> => {
  */
 export const loadParentSubscription = async (
   parentId: string
-): Promise<{ isPremium: boolean }> => {
+): Promise<{ isPremium: boolean; currentPeriodEnd: string | null; plan: string }> => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
@@ -212,7 +212,7 @@ export const loadParentSubscription = async (
       .eq('parent_id', parentId)
       .maybeSingle();
 
-    if (error || !data) return { isPremium: false };
+    if (error || !data) return { isPremium: false, currentPeriodEnd: null, plan: 'free' };
 
     const now = new Date();
     const isPremium =
@@ -222,10 +222,33 @@ export const loadParentSubscription = async (
       (data.admin_granted_until != null &&
         new Date(data.admin_granted_until) > now);
 
-    return { isPremium: !!isPremium };
+    return {
+      isPremium: !!isPremium,
+      currentPeriodEnd: data.current_period_end ?? null,
+      plan: data.plan ?? 'free',
+    };
   } catch (err) {
     console.warn('Erro ao carregar assinatura:', err);
-    return { isPremium: false };
+    return { isPremium: false, currentPeriodEnd: null, plan: 'free' };
+  }
+};
+
+/**
+ * Chama a Edge Function stripe-checkout e retorna a URL de pagamento.
+ * type: 'checkout' → nova assinatura | 'portal' → gerenciar assinatura existente
+ */
+export const createStripeSession = async (
+  type: 'checkout' | 'portal' = 'checkout'
+): Promise<string | null> => {
+  try {
+    const { data, error } = await (supabase as any).functions.invoke('stripe-checkout', {
+      body: { type },
+    });
+    if (error) { console.warn('Stripe session error:', error); return null; }
+    return data?.url ?? null;
+  } catch (err) {
+    console.warn('Erro ao criar sessão Stripe:', err);
+    return null;
   }
 };
 
