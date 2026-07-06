@@ -271,46 +271,76 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           </View>
         </View>
 
-        {/* CARD DE PROGRESSO ACADÊMICO */}
+        {/* CARD DE PROGRESSO ACADÊMICO — premium only */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <BookOpen size={20} color="#2E7D32" />
             <Text style={[styles.cardTitle, { color: '#2E7D32' }]}>Relatório Escolar</Text>
-          </View>
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statCount}>{learnedLetters.length}</Text>
-              <Text style={styles.statLabel}>{t('lettersLearned')}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statCount}>{masteredSyllables.length}</Text>
-              <Text style={styles.statLabel}>{t('syllablesMastered')}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statCount}>{readWords.length}</Text>
-              <Text style={styles.statLabel}>{t('wordsRead')}</Text>
-            </View>
+            {isPremium && <Text style={stylesPP.premiumBadge}>⭐ Premium</Text>}
           </View>
 
-          {learnedLetters.length > 0 && (
-            <View style={styles.listSection}>
-              <Text style={styles.listLabel}>Letras Conhecidas:</Text>
-              <Text style={styles.listTags}>{learnedLetters.join(', ')}</Text>
-            </View>
-          )}
+          {isPremium ? (
+            <>
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>{learnedLetters.length}</Text>
+                  <Text style={styles.statLabel}>{t('lettersLearned')}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>{masteredSyllables.length}</Text>
+                  <Text style={styles.statLabel}>{t('syllablesMastered')}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>{readWords.length}</Text>
+                  <Text style={styles.statLabel}>{t('wordsRead')}</Text>
+                </View>
+              </View>
 
-          {masteredSyllables.length > 0 && (
-            <View style={styles.listSection}>
-              <Text style={styles.listLabel}>Sílabas Dominadas:</Text>
-              <Text style={styles.listTags}>{masteredSyllables.join(', ')}</Text>
-            </View>
-          )}
+              {learnedLetters.length > 0 && (
+                <View style={styles.listSection}>
+                  <Text style={styles.listLabel}>Letras Conhecidas:</Text>
+                  <Text style={styles.listTags}>{learnedLetters.join(', ')}</Text>
+                </View>
+              )}
 
-          {readWords.length > 0 && (
-            <View style={styles.listSection}>
-              <Text style={styles.listLabel}>Palavras Lidas:</Text>
-              <Text style={styles.listTags}>{readWords.join(', ')}</Text>
+              {masteredSyllables.length > 0 && (
+                <View style={styles.listSection}>
+                  <Text style={styles.listLabel}>Sílabas Dominadas:</Text>
+                  <Text style={styles.listTags}>{masteredSyllables.join(', ')}</Text>
+                </View>
+              )}
+
+              {readWords.length > 0 && (
+                <View style={styles.listSection}>
+                  <Text style={styles.listLabel}>Palavras Lidas:</Text>
+                  <Text style={styles.listTags}>{readWords.join(', ')}</Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={stylesPP.reportLocked}>
+              {/* Contadores desfocados como teaser */}
+              <View style={[styles.statsRow, { opacity: 0.25 }]}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>--</Text>
+                  <Text style={styles.statLabel}>{t('lettersLearned')}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>--</Text>
+                  <Text style={styles.statLabel}>{t('syllablesMastered')}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statCount}>--</Text>
+                  <Text style={styles.statLabel}>{t('wordsRead')}</Text>
+                </View>
+              </View>
+              <View style={stylesPP.reportLockOverlay}>
+                <Text style={stylesPP.reportLockEmoji}>🔒</Text>
+                <Text style={stylesPP.reportLockTitle}>Disponível no Premium</Text>
+                <Text style={stylesPP.reportLockDesc}>
+                  Acompanhe letras, sílabas e palavras que a criança dominou com o Plano Premium.
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -696,6 +726,47 @@ const styles = StyleSheet.create({
 });
 
 const stylesPP = StyleSheet.create({
+  premiumBadge: {
+    marginLeft: 'auto',
+    backgroundColor: '#FFF8E1',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: '#FFD54F',
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#E65100',
+  },
+  reportLocked: {
+    position: 'relative',
+  },
+  reportLockOverlay: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FBE7',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#F0F4C3',
+    marginTop: 8,
+  },
+  reportLockEmoji: {
+    fontSize: 28,
+    marginBottom: 6,
+  },
+  reportLockTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#558B2F',
+    marginBottom: 4,
+  },
+  reportLockDesc: {
+    fontSize: 12,
+    color: '#78909C',
+    textAlign: 'center',
+    lineHeight: 17,
+  },
   pinDots: {
     flexDirection: 'row',
     justifyContent: 'center',
