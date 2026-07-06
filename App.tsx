@@ -325,14 +325,16 @@ export default function App() {
         lastInitedUserId.current = null;
         return;
       }
-      setIsInitializingChild(true);
 
       const parentId = session.user.id;
 
-      // Evitar re-inicializar se já foi feito para este usuário neste ciclo
+      // Deduplica ANTES de setar loading — evita loading eterno quando
+      // onAuthStateChange dispara após getSession já ter terminado
       if (lastInitedUserId.current === parentId) {
         return;
       }
+
+      setIsInitializingChild(true);
       lastInitedUserId.current = parentId;
 
       setActiveParentId(parentId);
@@ -398,6 +400,11 @@ export default function App() {
       }
     };
 
+    // Timeout de segurança: se após 12s ainda estiver carregando, libera a tela
+    const safetyTimer = setTimeout(() => {
+      setIsInitializingChild(false);
+    }, 12000);
+
     // Verificar sessão atual primeiro
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       initChild(session);
@@ -417,7 +424,10 @@ export default function App() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, [retryTrigger]);
 
   return (
