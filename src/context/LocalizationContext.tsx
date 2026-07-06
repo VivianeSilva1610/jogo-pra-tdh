@@ -111,6 +111,17 @@ export interface Translations {
   onlyOwnedCanTry: string;
   game1PromptSyllable: string;
   roundLabel: string;
+  loginWelcomeTitle: string;
+  loginWelcomeText: string;
+  loginHelpText: string;
+  loginGoogleBtn: string;
+  loginFooter: string;
+  loginPreviewTitle: string;
+  worldGarden: string;
+  worldForest: string;
+  worldVale: string;
+  worldCastle: string;
+  worldLibrary: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -220,8 +231,18 @@ const translations: Record<LanguageType, Translations> = {
     detective_lens: "Lupa de Detetive",
     onlyOwnedCanTry: "Apenas itens adquiridos podem ser provados!",
     game1PromptSyllable: "Ouça e encontre a sílaba correspondente!",
-
     roundLabel: "Rodada",
+    loginWelcomeTitle: "Olá, aventureiro! ✨",
+    loginWelcomeText: "Eu sou a Lumi! Vamos explorar o mundo mágico das letras juntos.",
+    loginHelpText: "Peça ajuda ao papai ou à mamãe para entrar.",
+    loginGoogleBtn: "ENTRAR COM GOOGLE",
+    loginFooter: "Ao fazer login, você concorda em salvar com segurança o progresso e as métricas do jogo.",
+    loginPreviewTitle: "🌍 JORNADA DAS LETRAS",
+    worldGarden: "Jardim",
+    worldForest: "Floresta",
+    worldVale: "Vale",
+    worldCastle: "Castelo",
+    worldLibrary: "Biblioteca",
   },
   en: {
     appName: "Letter Adventure",
@@ -330,6 +351,17 @@ const translations: Record<LanguageType, Translations> = {
     onlyOwnedCanTry: "Only owned items can be tried on!",
     game1PromptSyllable: "Listen and find the corresponding syllable!",
     roundLabel: "Round",
+    loginWelcomeTitle: "Hello, adventurer! ✨",
+    loginWelcomeText: "I'm Lumi! Let's explore the magical world of letters together.",
+    loginHelpText: "Ask mom or dad to help you sign in.",
+    loginGoogleBtn: "SIGN IN WITH GOOGLE",
+    loginFooter: "By signing in, you agree to securely save game progress and metrics.",
+    loginPreviewTitle: "🌍 LETTER JOURNEY",
+    worldGarden: "Garden",
+    worldForest: "Forest",
+    worldVale: "Vale",
+    worldCastle: "Castle",
+    worldLibrary: "Library",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -438,6 +470,17 @@ const translations: Record<LanguageType, Translations> = {
     onlyOwnedCanTry: "Solo gli articoli acquistati possono essere provati!",
     game1PromptSyllable: "Ascolta e trova la sillaba corrispondente!",
     roundLabel: "Turno",
+    loginWelcomeTitle: "Ciao, avventuriero! ✨",
+    loginWelcomeText: "Sono Lumi! Esploriamo insieme il magico mondo delle lettere.",
+    loginHelpText: "Chiedi aiuto a mamma o papà per entrare.",
+    loginGoogleBtn: "ACCEDI CON GOOGLE",
+    loginFooter: "Accedendo, acconsenti al salvataggio sicuro dei progressi e delle metriche di gioco.",
+    loginPreviewTitle: "🌍 VIAGGIO DELLE LETTERE",
+    worldGarden: "Giardino",
+    worldForest: "Foresta",
+    worldVale: "Valle",
+    worldCastle: "Castello",
+    worldLibrary: "Biblioteca",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -546,6 +589,17 @@ const translations: Record<LanguageType, Translations> = {
     onlyOwnedCanTry: "¡Solo se pueden probar los artículos adquiridos!",
     game1PromptSyllable: "¡Escucha y encuentra la sílaba correspondiente!",
     roundLabel: "Ronda",
+    loginWelcomeTitle: "¡Hola, aventurero! ✨",
+    loginWelcomeText: "¡Soy Lumi! Vamos a explorar juntos el mundo mágico de las letras.",
+    loginHelpText: "Pide ayuda a papá o mamá para entrar.",
+    loginGoogleBtn: "ENTRAR CON GOOGLE",
+    loginFooter: "Al iniciar sesión, aceptas guardar de forma segura el progreso y las métricas del juego.",
+    loginPreviewTitle: "🌍 VIAJE DE LAS LETRAS",
+    worldGarden: "Jardín",
+    worldForest: "Bosque",
+    worldVale: "Valle",
+    worldCastle: "Castillo",
+    worldLibrary: "Biblioteca",
   }
 };
 
@@ -577,7 +631,7 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return 'pt'; // Fallback padrão caso não encontre
   };
 
-  const [language, setLanguageState] = useState<LanguageType>('pt');
+  const [language, setLanguageState] = useState<LanguageType>(getSystemLanguage);
 
   useEffect(() => {
     // Carregar idioma salvo pelo usuário

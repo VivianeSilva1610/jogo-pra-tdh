@@ -61,9 +61,8 @@ export const LoginScreen: React.FC = () => {
       ])
     ).start();
 
-    // 3. Falar a instrução de boas-vindas ao carregar
-    const welcomeMsg = "Olá, aventureiro! Eu sou a Lumi! Vamos explorar o mundo mágico das letras juntos. Peça ajuda ao papai ou à mamãe para entrar.";
-    speak(welcomeMsg, language);
+    // 3. Falar a instrução de boas-vindas ao carregar (usa idioma detectado do sistema)
+    speak(`${t('loginWelcomeTitle')} ${t('loginWelcomeText')} ${t('loginHelpText')}`, language);
   }, []);
 
   const handlePressIn = () => {
@@ -141,7 +140,7 @@ export const LoginScreen: React.FC = () => {
             <Text style={[styles.logoLetter, { color: THEME_COLORS.goldenYellow }]}>B</Text>
             <Text style={[styles.logoLetter, { color: THEME_COLORS.magicPurple }]}>C</Text>
           </View>
-          <Text style={styles.logoTitle}>Aventura das Letras</Text>
+          <Text style={styles.logoTitle}>{t('appName')}</Text>
         </View>
 
         {/* MASCOTE LUMI GIGANTE FLUTUANTE */}
@@ -156,9 +155,9 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.speechBubble}>
             <View style={styles.speechArrow} />
             <View style={styles.bubbleInner}>
-              <Text style={styles.welcomeTitle}>Olá, aventureiro! ✨</Text>
-              <Text style={styles.welcomeText}>Eu sou a Lumi! Vamos explorar o mundo mágico das letras juntos.</Text>
-              <Text style={styles.helpText}>Peça ajuda ao papai ou à mamãe para entrar.</Text>
+              <Text style={styles.welcomeTitle}>{t('loginWelcomeTitle')}</Text>
+              <Text style={styles.welcomeText}>{t('loginWelcomeText')}</Text>
+              <Text style={styles.helpText}>{t('loginHelpText')}</Text>
             </View>
           </View>
         </View>
@@ -197,43 +196,41 @@ export const LoginScreen: React.FC = () => {
                       />
                     </G>
                   </Svg>
-                  <Text style={styles.googleButtonText}>ENTRAR COM GOOGLE</Text>
+                  <Text style={styles.googleButtonText}>{t('loginGoogleBtn')}</Text>
                 </>
               )}
             </Animated.View>
           </TouchableWithoutFeedback>
-          <Text style={styles.footerText}>
-            Ao fazer login, você concorda em salvar com segurança o progresso e as métricas do jogo.
-          </Text>
+          <Text style={styles.footerText}>{t('loginFooter')}</Text>
         </View>
 
         {/* PRÉ-VISUALIZAÇÃO DO MAPA */}
         <View style={styles.previewContainer}>
-          <Text style={styles.previewTitle}>🌍 JORNADA DAS LETRAS</Text>
+          <Text style={styles.previewTitle}>{t('loginPreviewTitle')}</Text>
           <View style={styles.worldsRow}>
             <View style={styles.worldCol}>
               <Text style={styles.worldEmoji}>🌳</Text>
-              <Text style={styles.worldName}>Jardim</Text>
+              <Text style={styles.worldName}>{t('worldGarden')}</Text>
             </View>
             <View style={[styles.worldCol, styles.worldLocked]}>
               <View style={styles.lockBadge}><Text style={styles.lockText}>🔒</Text></View>
               <Text style={styles.worldEmoji}>🌲</Text>
-              <Text style={styles.worldName}>Floresta</Text>
+              <Text style={styles.worldName}>{t('worldForest')}</Text>
             </View>
             <View style={[styles.worldCol, styles.worldLocked]}>
               <View style={styles.lockBadge}><Text style={styles.lockText}>🔒</Text></View>
               <Text style={styles.worldEmoji}>🏡</Text>
-              <Text style={styles.worldName}>Vale</Text>
+              <Text style={styles.worldName}>{t('worldVale')}</Text>
             </View>
             <View style={[styles.worldCol, styles.worldLocked]}>
               <View style={styles.lockBadge}><Text style={styles.lockText}>🔒</Text></View>
               <Text style={styles.worldEmoji}>🏰</Text>
-              <Text style={styles.worldName}>Castelo</Text>
+              <Text style={styles.worldName}>{t('worldCastle')}</Text>
             </View>
             <View style={[styles.worldCol, styles.worldLocked]}>
               <View style={styles.lockBadge}><Text style={styles.lockText}>🔒</Text></View>
               <Text style={styles.worldEmoji}>📚</Text>
-              <Text style={styles.worldName}>Biblioteca</Text>
+              <Text style={styles.worldName}>{t('worldLibrary')}</Text>
             </View>
           </View>
         </View>
