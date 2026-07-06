@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaVi
 import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
-import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users } from 'lucide-react-native';
-import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession } from '../services/supabase';
+import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users, LogOut } from 'lucide-react-native';
+import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession, supabase } from '../services/supabase';
 import { Linking } from 'react-native';
 
 interface ParentsPanelScreenProps {
@@ -284,6 +284,30 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      const confirmLogout = window.confirm('Tem certeza que deseja desconectar?');
+      if (confirmLogout) {
+        await supabase.auth.signOut();
+      }
+    } else {
+      Alert.alert(
+        'Sair da conta',
+        'Tem certeza que deseja desconectar?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair',
+            style: 'destructive',
+            onPress: async () => {
+              await supabase.auth.signOut();
+            },
+          },
+        ]
+      );
+    }
+  };
+
   // Calcular tempo total de uso em minutos
   const totalSeconds = Object.values(dailyUsageSeconds).reduce((a, b) => a + b, 0);
   const totalMinutes = Math.round(totalSeconds / 60);
@@ -368,7 +392,13 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           <ArrowLeft size={24} color="#37474F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('parentsTitle')}</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleLogout}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        >
+          <LogOut size={24} color="#D32F2F" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
