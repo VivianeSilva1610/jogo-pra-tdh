@@ -168,7 +168,14 @@ const playPregeneratedAudio = async (asset: any): Promise<void> => {
 // Vozes de altíssima qualidade (multilingual)
 // ========================================================
 
-const ELEVENLABS_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Soft American female, mas fala todos os idiomas)
+// Voz por idioma — usar vozes otimizadas para cada língua
+// IDs disponíveis em: https://elevenlabs.io/voice-library
+const ELEVENLABS_VOICE_MAP: Record<LanguageType, string> = {
+  pt: 'EXAVITQu4vr4xnSDxMaL', // Bella — feminina, boa em PT-BR
+  en: 'EXAVITQu4vr4xnSDxMaL', // Bella — feminina, nativa em EN
+  it: 'XB0fDUnXU5powFXDhCwa', // Charlotte — multilingual, excelente em IT
+  es: 'EXAVITQu4vr4xnSDxMaL', // Bella — funciona bem em ES
+};
 
 // ISO 639-1 codes aceitos pelo eleven_multilingual_v2
 const ELEVENLABS_LANG_CODE: Record<LanguageType, string> = {
@@ -184,8 +191,9 @@ const ELEVENLABS_LANG_CODE: Record<LanguageType, string> = {
  * (MA, BLA, GLA...) sejam interpretadas como siglas e soletradas.
  */
 const elevenLabsTTS = async (text: string, language: LanguageType = 'pt'): Promise<string> => {
+  const voiceId = ELEVENLABS_VOICE_MAP[language];
   const response = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
     {
       method: 'POST',
       headers: {
