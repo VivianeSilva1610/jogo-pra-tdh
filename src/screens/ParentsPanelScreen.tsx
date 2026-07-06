@@ -180,9 +180,13 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           text: 'Remover',
           style: 'destructive',
           onPress: async () => {
-            await deleteChild(child.id);
-            const kids = await fetchChildren();
-            setChildren(kids);
+            const result = await deleteChild(child.id);
+            if (!result.success) {
+              Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
+            } else {
+              const kids = await fetchChildren();
+              setChildren(kids);
+            }
           },
         },
       ]
@@ -359,7 +363,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <BookOpen size={20} color="#2E7D32" />
-            <Text style={[styles.cardTitle, { color: '#2E7D32' }]}>Relatório Escolar</Text>
+            <Text style={[styles.cardTitle, { color: '#2E7D32' }]}>{t('schoolReport')}</Text>
             {isPremium && <Text style={stylesPP.premiumBadge}>⭐ Premium</Text>}
           </View>
 
@@ -382,21 +386,21 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
 
               {learnedLetters.length > 0 && (
                 <View style={styles.listSection}>
-                  <Text style={styles.listLabel}>Letras Conhecidas:</Text>
+                  <Text style={styles.listLabel}>{t('knownLetters')}</Text>
                   <Text style={styles.listTags}>{learnedLetters.join(', ')}</Text>
                 </View>
               )}
 
               {masteredSyllables.length > 0 && (
                 <View style={styles.listSection}>
-                  <Text style={styles.listLabel}>Sílabas Dominadas:</Text>
+                  <Text style={styles.listLabel}>{t('masteredSyllablesParents')}</Text>
                   <Text style={styles.listTags}>{masteredSyllables.join(', ')}</Text>
                 </View>
               )}
 
               {readWords.length > 0 && (
                 <View style={styles.listSection}>
-                  <Text style={styles.listLabel}>Palavras Lidas:</Text>
+                  <Text style={styles.listLabel}>{t('readWordsParents')}</Text>
                   <Text style={styles.listTags}>{readWords.join(', ')}</Text>
                 </View>
               )}
@@ -420,9 +424,9 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
               </View>
               <View style={stylesPP.reportLockOverlay}>
                 <Text style={stylesPP.reportLockEmoji}>🔒</Text>
-                <Text style={stylesPP.reportLockTitle}>Disponível no Premium</Text>
+                <Text style={stylesPP.reportLockTitle}>{t('premiumAvailable')}</Text>
                 <Text style={stylesPP.reportLockDesc}>
-                  Acompanhe letras, sílabas e palavras que a criança dominou com o Plano Premium.
+                  {t('premiumAvailableDesc')}
                 </Text>
               </View>
             </View>
@@ -433,7 +437,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Users size={20} color="#7B1FA2" />
-            <Text style={[styles.cardTitle, { color: '#7B1FA2' }]}>Crianças</Text>
+            <Text style={[styles.cardTitle, { color: '#7B1FA2' }]}>{t('childrenTitle')}</Text>
           </View>
 
           {loadingKids ? (
@@ -449,14 +453,14 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                     onPress={() => handleResetChild(child)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Text style={stylesPP.kidResetText}>Zerar</Text>
+                    <Text style={stylesPP.kidResetText}>{t('reset')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[stylesPP.kidDeleteBtn, { marginLeft: 6 }]}
                     onPress={() => handleDeleteChild(child)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Text style={stylesPP.kidDeleteText}>Remover</Text>
+                    <Text style={stylesPP.kidDeleteText}>{t('remove')}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -467,7 +471,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                   style={stylesPP.addChildBtn}
                   onPress={() => setShowAddForm(true)}
                 >
-                  <Text style={stylesPP.addChildBtnText}>+ Adicionar filho</Text>
+                  <Text style={stylesPP.addChildBtnText}>{t('addChild')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -475,7 +479,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
               {!showAddForm && children.length >= CHILD_LIMIT && !isPremium && (
                 <View style={stylesPP.limitBanner}>
                   <Text style={stylesPP.limitBannerText}>
-                    ⭐ Plano Premium permite até 5 perfis de crianças
+                    {t('premiumLimit')}
                   </Text>
                 </View>
               )}
@@ -487,7 +491,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                     style={stylesPP.addInput}
                     value={addName}
                     onChangeText={setAddName}
-                    placeholder="Nome da criança"
+                    placeholder={t('childNamePlaceholder')}
                     maxLength={30}
                     autoFocus
                     returnKeyType="done"
@@ -509,7 +513,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                       style={stylesPP.addCancelBtn}
                       onPress={() => { setShowAddForm(false); setAddName(''); setAddError(''); }}
                     >
-                      <Text style={stylesPP.addCancelText}>Cancelar</Text>
+                      <Text style={stylesPP.addCancelText}>{t('cancel')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[stylesPP.addConfirmBtn, addingChild && { opacity: 0.6 }]}
@@ -518,7 +522,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                     >
                       {addingChild
                         ? <ActivityIndicator size="small" color="#FFF" />
-                        : <Text style={stylesPP.addConfirmText}>Criar perfil</Text>}
+                        : <Text style={stylesPP.addConfirmText}>{t('createProfile')}</Text>}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -527,7 +531,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
               {onSwitchChild && children.length > 1 && (
                 <View style={{ marginTop: 12 }}>
                   <CustomButton
-                    title="Trocar criança ativa"
+                    title={t('switchChild')}
                     color="#9C27B0"
                     borderColor="#7B1FA2"
                     onPress={onSwitchChild}
@@ -589,7 +593,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
               <>
                 {subPeriodEnd && (
                   <Text style={stylesPP.subExpiry}>
-                    Ativo até {formatDate(subPeriodEnd)}
+                    {t('activeUntil')} {formatDate(subPeriodEnd)}
                   </Text>
                 )}
                 <TouchableOpacity
@@ -599,7 +603,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                 >
                   {stripeLoading
                     ? <ActivityIndicator size="small" color="#FFF" />
-                    : <Text style={stylesPP.subBtnText}>Gerenciar Assinatura</Text>}
+                    : <Text style={stylesPP.subBtnText}>{t('manageSubscription')}</Text>}
                 </TouchableOpacity>
               </>
             ) : (
@@ -612,7 +616,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
                 >
                   {stripeLoading
                     ? <ActivityIndicator size="small" color="#FFF" />
-                    : <Text style={stylesPP.subBtnText}>Assinar Premium ⭐</Text>}
+                    : <Text style={stylesPP.subBtnText}>{t('subscribePremium')}</Text>}
                 </TouchableOpacity>
               </>
             )}

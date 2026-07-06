@@ -89,8 +89,12 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
           text: 'Remover',
           style: 'destructive',
           onPress: async () => {
-            const ok = await deleteChild(child.id);
-            if (ok) loadChildren();
+            const result = await deleteChild(child.id);
+            if (!result.success) {
+              Alert.alert('Erro', `Não foi possível remover a criança: ${result.error}`);
+            } else {
+              loadChildren();
+            }
           },
         },
       ]

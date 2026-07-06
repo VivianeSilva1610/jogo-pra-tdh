@@ -46,10 +46,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
 
   const MOTIVATIONAL_PHRASES = [
     t('wellDone') + ' ' + t('youCanDoIt') + ' 🚀',
-    t('fantastic') + ' Você está indo muito bem! 🌟',
-    t('amazing') + ' Que orgulho de ver você aprender! ❤️',
-    'Você é um aventureiro incrível das letras! 🗺️',
-    'Uau, quantas estrelas brilhantes você tem! ✨',
+    t('profilePhrase1'),
+    t('profilePhrase2'),
+    t('profilePhrase3'),
+    t('profilePhrase4'),
   ];
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
 
         {/* Estatísticas do Jogador */}
         <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Minhas Conquistas</Text>
+          <Text style={styles.statsTitle}>{t('myAchievements')}</Text>
           
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
@@ -124,7 +124,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
             <View style={styles.statItem}>
               <Text style={styles.statIcon}>🎯</Text>
               <Text style={styles.statValue}>{challengesCompleted}</Text>
-              <Text style={styles.statLabel}>Desafios</Text>
+              <Text style={styles.statLabel}>{t('challenges')}</Text>
             </View>
 
             <View style={styles.statItem}>
@@ -132,7 +132,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
               <Text style={styles.statValue}>
                 {unlockedStickers.length}/{STICKERS_LIST.length}
               </Text>
-              <Text style={styles.statLabel}>Adesivos</Text>
+              <Text style={styles.statLabel}>{t('stickers')}</Text>
             </View>
           </View>
         </View>

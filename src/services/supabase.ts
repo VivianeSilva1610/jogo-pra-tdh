@@ -180,7 +180,7 @@ export const setParentPinHash = async (parentId: string, pinHash: string): Promi
 /**
  * Remove um filho e seu perfil de progresso (CASCADE cuida do profiles).
  */
-export const deleteChild = async (childId: string): Promise<boolean> => {
+export const deleteChild = async (childId: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const { error } = await supabase
       .from('children')
@@ -189,12 +189,12 @@ export const deleteChild = async (childId: string): Promise<boolean> => {
 
     if (error) {
       console.warn('Erro ao remover criança:', error.message);
-      return false;
+      return { success: false, error: error.message };
     }
-    return true;
-  } catch (err) {
+    return { success: true };
+  } catch (err: any) {
     console.warn('Erro inesperado ao remover criança:', err);
-    return false;
+    return { success: false, error: err.message || String(err) };
   }
 };
 

@@ -131,6 +131,30 @@ export interface Translations {
   paywallPerk4: string;
   paywallCta: string;
   paywallBack: string;
+  profilePhrase1: string;
+  profilePhrase2: string;
+  profilePhrase3: string;
+  profilePhrase4: string;
+  myAchievements: string;
+  challenges: string;
+  stickers: string;
+  reset: string;
+  remove: string;
+  premiumLimit: string;
+  switchChild: string;
+  subscribePremium: string;
+  premiumAvailable: string;
+  premiumAvailableDesc: string;
+  schoolReport: string;
+  knownLetters: string;
+  masteredSyllablesParents: string;
+  readWordsParents: string;
+  childrenTitle: string;
+  addChild: string;
+  childNamePlaceholder: string;
+  createProfile: string;
+  manageSubscription: string;
+  activeUntil: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -261,6 +285,30 @@ const translations: Record<LanguageType, Translations> = {
     paywallPerk4: "👨‍👩‍👧‍👦 Até 5 perfis de crianças",
     paywallCta: "Pedir ao Responsável 🌟",
     paywallBack: "← Voltar ao Mapa",
+    profilePhrase1: "Você está indo muito bem! 🌟",
+    profilePhrase2: "Que orgulho de ver você aprender! ❤️",
+    profilePhrase3: "Você é um aventureiro incrível das letras! 🗺️",
+    profilePhrase4: "Uau, quantas estrelas brilhantes você tem! ✨",
+    myAchievements: "Minhas Conquistas",
+    challenges: "Desafios",
+    stickers: "Adesivos",
+    reset: "Zerar",
+    remove: "Remover",
+    premiumLimit: "⭐ Plano Premium permite até 5 perfis de crianças",
+    switchChild: "Trocar criança ativa",
+    subscribePremium: "Assinar Premium ⭐",
+    premiumAvailable: "Disponível no Premium",
+    premiumAvailableDesc: "Acompanhe letras, sílabas e palavras que a criança dominou com o Plano Premium.",
+    schoolReport: "Relatório Escolar",
+    knownLetters: "Letras Conhecidas:",
+    masteredSyllablesParents: "Sílabas Dominadas:",
+    readWordsParents: "Palavras Lidas:",
+    childrenTitle: "Crianças",
+    addChild: "+ Adicionar filho",
+    childNamePlaceholder: "Nome da criança",
+    createProfile: "Criar perfil",
+    manageSubscription: "Gerenciar Assinatura",
+    activeUntil: "Ativo até",
   },
   en: {
     appName: "Letter Adventure",
@@ -389,6 +437,30 @@ const translations: Record<LanguageType, Translations> = {
     paywallPerk4: "👨‍👩‍👧‍👦 Up to 5 child profiles",
     paywallCta: "Ask a Parent 🌟",
     paywallBack: "← Back to Map",
+    profilePhrase1: "You are doing great! 🌟",
+    profilePhrase2: "So proud to see you learn! ❤️",
+    profilePhrase3: "You are an amazing letter adventurer! 🗺️",
+    profilePhrase4: "Wow, look at all your bright stars! ✨",
+    myAchievements: "My Achievements",
+    challenges: "Challenges",
+    stickers: "Stickers",
+    reset: "Reset",
+    remove: "Remove",
+    premiumLimit: "⭐ Premium Plan allows up to 5 child profiles",
+    switchChild: "Switch active child",
+    subscribePremium: "Subscribe Premium ⭐",
+    premiumAvailable: "Available in Premium",
+    premiumAvailableDesc: "Track letters, syllables, and words mastered with the Premium Plan.",
+    schoolReport: "School Report",
+    knownLetters: "Known Letters:",
+    masteredSyllablesParents: "Mastered Syllables:",
+    readWordsParents: "Read Words:",
+    childrenTitle: "Children",
+    addChild: "+ Add child",
+    childNamePlaceholder: "Child's name",
+    createProfile: "Create profile",
+    manageSubscription: "Manage Subscription",
+    activeUntil: "Active until",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -517,6 +589,30 @@ const translations: Record<LanguageType, Translations> = {
     paywallPerk4: "👨‍👩‍👧‍👦 Fino a 5 profili bambini",
     paywallCta: "Chiedi al Genitore 🌟",
     paywallBack: "← Torna alla Mappa",
+    profilePhrase1: "Stai andando alla grande! 🌟",
+    profilePhrase2: "Che orgoglio vederti imparare! ❤️",
+    profilePhrase3: "Sei un fantastico avventuriero delle lettere! 🗺️",
+    profilePhrase4: "Wow, quante stelle brillanti hai! ✨",
+    myAchievements: "I Miei Traguardi",
+    challenges: "Sfide",
+    stickers: "Adesivi",
+    reset: "Azzera",
+    remove: "Rimuovi",
+    premiumLimit: "⭐ Il Piano Premium consente fino a 5 profili",
+    switchChild: "Cambia bambino attivo",
+    subscribePremium: "Abbonati a Premium ⭐",
+    premiumAvailable: "Disponibile con Premium",
+    premiumAvailableDesc: "Tieni traccia di lettere, sillabe e parole con il Piano Premium.",
+    schoolReport: "Pagella",
+    knownLetters: "Lettere Conosciute:",
+    masteredSyllablesParents: "Sillabe Padroneggiate:",
+    readWordsParents: "Parole Lette:",
+    childrenTitle: "Bambini",
+    addChild: "+ Aggiungi bambino",
+    childNamePlaceholder: "Nome del bambino",
+    createProfile: "Crea profilo",
+    manageSubscription: "Gestisci Abbonamento",
+    activeUntil: "Attivo fino al",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -645,6 +741,30 @@ const translations: Record<LanguageType, Translations> = {
     paywallPerk4: "👨‍👩‍👧‍👦 Hasta 5 perfiles de niños",
     paywallCta: "Pedir al Responsable 🌟",
     paywallBack: "← Volver al Mapa",
+    profilePhrase1: "¡Lo estás haciendo muy bien! 🌟",
+    profilePhrase2: "¡Qué orgullo verte aprender! ❤️",
+    profilePhrase3: "¡Eres un increíble aventurero de las letras! 🗺️",
+    profilePhrase4: "¡Guau, cuántas estrellas brillantes tienes! ✨",
+    myAchievements: "Mis Logros",
+    challenges: "Desafíos",
+    stickers: "Pegatinas",
+    reset: "Reiniciar",
+    remove: "Eliminar",
+    premiumLimit: "⭐ El Plan Premium permite hasta 5 perfiles",
+    switchChild: "Cambiar niño activo",
+    subscribePremium: "Suscribirse a Premium ⭐",
+    premiumAvailable: "Disponible en Premium",
+    premiumAvailableDesc: "Haz seguimiento de letras, sílabas y palabras con el Plan Premium.",
+    schoolReport: "Reporte Escolar",
+    knownLetters: "Letras Conocidas:",
+    masteredSyllablesParents: "Sílabas Dominadas:",
+    readWordsParents: "Palabras Leídas:",
+    childrenTitle: "Niños",
+    addChild: "+ Añadir niño",
+    childNamePlaceholder: "Nombre del niño",
+    createProfile: "Crear perfil",
+    manageSubscription: "Gestionar Suscripción",
+    activeUntil: "Activo hasta",
   }
 };
 
