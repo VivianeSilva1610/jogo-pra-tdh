@@ -391,6 +391,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
 
   // Animação para abrir o portão do castelo (desliza para cima ou baixo)
@@ -398,6 +399,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
+    if (exerciseFinished.current) return;
     const activeLang = language || 'pt';
     const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
     
@@ -513,6 +515,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
           if (nextIdx < updatedQueue.length) {
             setCurrentIndex(nextIdx);
           } else {
+            exerciseFinished.current = true;
             await completeChallenge('word', phraseData.sentence);
             if (!hadErrorEver.current) {
               setShowPerfect(true);

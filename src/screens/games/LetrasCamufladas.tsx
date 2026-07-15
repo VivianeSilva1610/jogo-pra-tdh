@@ -49,10 +49,12 @@ export const SilabasCamufladas: React.FC<SilabasCamufladasProps> = ({ onBack }) 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
+    if (exerciseFinished.current) return;
     const activeLang = language || 'pt';
     const syllablesPool = LOCALIZED_SYLLABLES[activeLang] || LOCALIZED_SYLLABLES['pt'];
     const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
@@ -128,6 +130,7 @@ export const SilabasCamufladas: React.FC<SilabasCamufladasProps> = ({ onBack }) 
         if (nextIdx < updatedQueue.length) {
           setCurrentIndex(nextIdx);
         } else {
+          exerciseFinished.current = true;
           await completeChallenge('syllable', targetLetter);
           if (!hadErrorEver.current) {
             setShowPerfect(true);

@@ -50,6 +50,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
+  const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
 
   const getActivePool = () => {
@@ -67,6 +68,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
 
   // Inicializar fila com 3 sílabas distintas com base na dificuldade
   useEffect(() => {
+    if (exerciseFinished.current) return;
     const pool = getActivePool();
     const masteredList = masteredSyllables || [];
     
@@ -144,6 +146,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
         if (nextIdx < updatedQueue.length) {
           setCurrentIndex(nextIdx);
         } else {
+          exerciseFinished.current = true;
           await completeChallenge('syllable', targetSyllable);
           if (!hadErrorEver.current) {
             setShowPerfect(true);

@@ -312,12 +312,14 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false);
+  const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
 
   const buildScale = useRef(new Animated.Value(0)).current;
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
+    if (exerciseFinished.current) return;
     const activeLang = language || 'pt';
     const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
     
@@ -446,6 +448,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           if (nextIdx < updatedQueue.length) {
             setCurrentIndex(nextIdx);
           } else {
+            exerciseFinished.current = true;
             await completeChallenge('word', currentWord);
             if (!hadErrorEver.current) {
               setShowPerfect(true);

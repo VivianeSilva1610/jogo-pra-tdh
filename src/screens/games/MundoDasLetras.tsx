@@ -85,6 +85,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
   const [roundCompleted, setRoundCompleted] = useState(false);
   const hadErrorInRound = useRef(false);
   const hadErrorEver = useRef(false);
+  const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
 
   const anims = {
@@ -109,6 +110,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
   };
 
   useEffect(() => {
+    if (exerciseFinished.current) return;
     const difficulty = Math.floor(challengesCompleted / 7) % 3;
     const activeLang = language || 'pt';
     const pool = getPool(activeLang, difficulty);
@@ -198,6 +200,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
         if (nextIdx < updatedQueue.length) {
           setCurrentIndex(nextIdx);
         } else {
+          exerciseFinished.current = true;
           await completeChallenge('syllable', targetSyllable);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
