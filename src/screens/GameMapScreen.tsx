@@ -4,11 +4,29 @@ import { useLocalization } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { StarIcon, CoinIcon, getAvatarComponent } from '../components/VectorIcons';
 import { ArrowLeft } from 'lucide-react-native';
-import Svg, { Path, Circle, Rect, G, Polygon, Text as SvgText } from 'react-native-svg';
-import { THEME_COLORS } from '../styles/theme';
+import Svg, { Path, Circle, Ellipse, Rect, G, Polygon, Text as SvgText, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { THEME_COLORS, FONT_SIZES } from '../styles/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { playSound } from '../services/audio';
 import { speak } from '../services/speech';
+import { DropShadow } from '../components/DropShadow';
+import { TrailPath } from '../components/TrailPath';
+import { LevelNode, LevelNodeState } from '../components/LevelNode';
+import { HUDBadge } from '../components/HUDBadge';
+
+const TRAIL_D = 'M 260 1040 Q 140 980 130 920 T 80 810 T 190 690 T 280 570 T 160 450 T 90 320 T 200 170';
+
+// Terreno de fundo: duas colinas orgânicas sobrepostas com gradiente vertical
+// sutil (mais claro em cima, mais escuro embaixo) para sugerir volume.
+const HILL_BACK_D = 'M -20 1220 C 60 1000 -40 700 40 480 C 110 280 -20 120 60 -20 L 400 -20 L 400 1220 Z';
+const HILL_FRONT_D = 'M -20 1220 C 100 1050 20 780 90 560 C 150 340 40 160 130 -20 L 400 -20 L 400 1220 Z';
+
+// Tufos de grama espalhados pelo mapa (textura leve, sem custo de imagens)
+const GRASS_TUFTS = [
+  { x: 30, y: 1150 }, { x: 300, y: 1120 }, { x: 340, y: 960 }, { x: 20, y: 880 },
+  { x: 250, y: 780 }, { x: 40, y: 660 }, { x: 320, y: 500 }, { x: 60, y: 260 },
+  { x: 240, y: 200 }, { x: 300, y: 1000 }, { x: 15, y: 500 }, { x: 260, y: 900 },
+];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -159,14 +177,8 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
         <Text style={styles.headerTitle}>{t('gameListTitle')}</Text>
 
         <View style={styles.scores}>
-          <View style={styles.scoreBadge}>
-            <StarIcon size={18} />
-            <Text style={styles.scoreText}>{stars}</Text>
-          </View>
-          <View style={styles.scoreBadge}>
-            <CoinIcon size={18} />
-            <Text style={styles.scoreText}>{coins}</Text>
-          </View>
+          <HUDBadge icon={<StarIcon size={18} />} value={stars} />
+          <HUDBadge icon={<CoinIcon size={18} />} value={coins} />
         </View>
       </View>
 
@@ -190,28 +202,51 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
             </Text>
           </View>
           
-          {/* SVG DO CAMINHO E DOS MUNDOS */}
+          {/* SVG DO TERRENO, CAMINHO E DOS MUNDOS */}
           <Svg style={StyleSheet.absoluteFill} width="100%" height="1200">
-            {/* Linha sinuosa de fundo */}
-            <Path 
-              d="M 260 1040 Q 140 980 130 920 T 80 810 T 190 690 T 280 570 T 160 450 T 90 320 T 200 170" 
-              fill="none" 
-              stroke="#FFE082" 
-              strokeWidth="10" 
-              strokeLinecap="round"
-            />
-            <Path 
-              d="M 260 1040 Q 140 980 130 920 T 80 810 T 190 690 T 280 570 T 160 450 T 90 320 T 200 170" 
-              fill="none" 
-              stroke="#FFF" 
-              strokeWidth="4" 
-              strokeLinecap="round"
-              strokeDasharray="6, 8"
-            />
+            <Defs>
+              <LinearGradient id="hillBackGrad" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0%" stopColor="#CFEFC9" />
+                <Stop offset="100%" stopColor="#9FDB9A" />
+              </LinearGradient>
+              <LinearGradient id="hillFrontGrad" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0%" stopColor="#B7E8B0" />
+                <Stop offset="100%" stopColor="#7FCB78" />
+              </LinearGradient>
+              <LinearGradient id="purpleTowerGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#c9b6f5" />
+                <Stop offset="55%" stopColor="#9a7de0" />
+                <Stop offset="100%" stopColor="#6647ad" />
+              </LinearGradient>
+              <LinearGradient id="pinkCastleGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#eccdf2" />
+                <Stop offset="55%" stopColor="#cf9de3" />
+                <Stop offset="100%" stopColor="#9d5cb8" />
+              </LinearGradient>
+              <LinearGradient id="greenBushGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#C5F0C0" />
+                <Stop offset="100%" stopColor="#5FAE58" />
+              </LinearGradient>
+              <LinearGradient id="houseGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#FFF0B8" />
+                <Stop offset="100%" stopColor="#E8B84B" />
+              </LinearGradient>
+            </Defs>
+
+            {/* Colinas de fundo com volume (gradiente vertical) */}
+            <Path d={HILL_BACK_D} fill="url(#hillBackGrad)" />
+            <Path d={HILL_FRONT_D} fill="url(#hillFrontGrad)" />
+            {GRASS_TUFTS.map((tuft, idx) => (
+              <Ellipse key={idx} cx={tuft.x} cy={tuft.y} rx="6" ry="2.5" fill="#4E9548" opacity="0.25" />
+            ))}
+
+            {/* Trilha sinuosa entre os níveis */}
+            <TrailPath d={TRAIL_D} />
 
             {/* MUNDO 1: Jardim das Letras */}
             <G transform="translate(45, 1020)">
-              <Circle cx="0" cy="0" r="30" fill="#A8E6A3" opacity="0.9" />
+              <Ellipse cx="0" cy="34" rx="26" ry="7" fill="#0c1e02" opacity="0.18" />
+              <Circle cx="0" cy="0" r="30" fill="url(#greenBushGrad)" opacity="0.95" />
               <Circle cx="-10" cy="-12" r="20" fill="#81C784" />
               <Circle cx="12" cy="-8" r="16" fill="#66BB6A" />
               <SvgText x="-18" y="20" fill="#5D4037" fontSize="11" fontWeight="bold">Jardim</SvgText>
@@ -221,8 +256,9 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
             {/* MUNDO 2: Floresta das Sílabas */}
             <G transform="translate(330, 715)">
+              <Ellipse cx="0" cy="16" rx="28" ry="7" fill="#0c1e02" opacity="0.18" />
               <Rect x="-25" y="-10" width="50" height="20" rx="10" fill="#8D6E63" />
-              <Circle cx="-15" cy="-20" r="25" fill="#81C784" />
+              <Circle cx="-15" cy="-20" r="25" fill="url(#greenBushGrad)" />
               <Circle cx="15" cy="-20" r="20" fill="#AED581" />
               {/* Cogumelo gigante */}
               <Path d="M-5 -2 L5 -2 L5 12 L-5 12 Z" fill="#FFF" />
@@ -234,8 +270,9 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
             {/* MUNDO 3: Vale das Palavras */}
             <G transform="translate(50, 520)">
+              <Ellipse cx="0" cy="27" rx="26" ry="6" fill="#0c1e02" opacity="0.18" />
               {/* Casinha */}
-              <Rect x="-20" y="-5" width="40" height="30" fill="#FFE082" stroke="#5D4037" strokeWidth="2" />
+              <Rect x="-20" y="-5" width="40" height="30" fill="url(#houseGrad)" stroke="#5D4037" strokeWidth="2" />
               <Polygon points="-25,-5 0,-25 25,-5" fill="#FF8A80" stroke="#5D4037" strokeWidth="2" />
               <Rect x="-6" y="8" width="12" height="17" fill="#8D6E63" />
               <Circle cx="10" cy="5" r="4" fill="#FFF9C4" />
@@ -244,25 +281,31 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
             {/* MUNDO 4: Castelo das Frases */}
             <G transform="translate(320, 310)">
+              <Ellipse cx="0" cy="27" rx="30" ry="7" fill="#0c1e02" opacity="0.18" />
               {/* Castelo */}
-              <Rect x="-25" y="-10" width="50" height="35" fill="#E1BEE7" stroke="#5D4037" strokeWidth="2" />
+              <Rect x="-25" y="-10" width="50" height="35" fill="url(#pinkCastleGrad)" stroke="#5D4037" strokeWidth="2" />
               <Rect x="-22" y="-25" width="10" height="15" fill="#CE93D8" stroke="#5D4037" strokeWidth="2" />
               <Rect x="12" y="-25" width="10" height="15" fill="#CE93D8" stroke="#5D4037" strokeWidth="2" />
               <Polygon points="-25,-25 -17,-40 -9,-25" fill="#BA68C8" />
               <Polygon points="9,-25 17,-40 25,-25" fill="#BA68C8" />
               <Rect x="-6" y="8" width="12" height="17" rx="3" fill="#5D4037" />
+              {/* Reflexo de luz (superior-esquerda) */}
+              <Path d="M-24 -9 L-24 22" stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="3" strokeLinecap="round" />
               <SvgText x="-22" y="38" fill="#5D4037" fontSize="11" fontWeight="bold">Castelo</SvgText>
             </G>
 
             {/* MUNDO 5: Biblioteca Mágica */}
             <G transform="translate(200, 100)">
+              <Ellipse cx="0" cy="41" rx="22" ry="6" fill="#0c1e02" opacity="0.18" />
               {/* Torre alta com chapéu estrelado */}
-              <Rect x="-15" y="-15" width="30" height="55" fill="#D1C4E9" stroke="#5D4037" strokeWidth="2" />
+              <Rect x="-15" y="-15" width="30" height="55" fill="url(#purpleTowerGrad)" stroke="#5D4037" strokeWidth="2" />
               <Polygon points="-22,-15 0,-45 22,-15" fill="#8E7CFF" stroke="#5D4037" strokeWidth="2" />
               <Circle cx="0" cy="-30" r="2.5" fill="#FFF9C4" />
               <Circle cx="-8" cy="-22" r="1.5" fill="#FFF9C4" />
               <Circle cx="8" cy="-22" r="1.5" fill="#FFF9C4" />
               <Rect x="-5" y="20" width="10" height="20" fill="#5D4037" />
+              {/* Reflexo de luz (superior-esquerda) */}
+              <Path d="M-14 -13 L-14 33" stroke="#FFFFFF" strokeOpacity="0.3" strokeWidth="2.5" strokeLinecap="round" />
               {/* Livro flutuante */}
               <Path d="M-25 -50 Q-15 -47 0 -52 Q15 -47 25 -50 L25 -42 Q15 -39 0 -44 Q-15 -39 -25 -42 Z" fill="#FFD166" />
               <SvgText x="-30" y="-58" fill="#8E7CFF" fontSize="10" fontWeight="extrabold">BIBLIOTECA</SvgText>
@@ -286,8 +329,9 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
 
           {/* RENDERIZAR BAÚS DE RECOMPENSA */}
           {/* Baú 1 (10 estrelas) */}
-          <TouchableOpacity 
-            style={[styles.chestPoint, { left: 45, top: 870 }]} 
+          <DropShadow width={40} height={12} style={{ position: 'absolute', left: 50, top: 895 }} />
+          <TouchableOpacity
+            style={[styles.chestPoint, { left: 45, top: 870 }]}
             onPress={() => handleChestPress('chest_10_stars', 10)}
             activeOpacity={0.8}
           >
@@ -296,8 +340,9 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
           </TouchableOpacity>
 
           {/* Baú 2 (25 estrelas) */}
-          <TouchableOpacity 
-            style={[styles.chestPoint, { left: 285, top: 630 }]} 
+          <DropShadow width={40} height={12} style={{ position: 'absolute', left: 290, top: 655 }} />
+          <TouchableOpacity
+            style={[styles.chestPoint, { left: 285, top: 630 }]}
             onPress={() => handleChestPress('chest_25_stars', 25)}
             activeOpacity={0.8}
           >
@@ -306,8 +351,9 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
           </TouchableOpacity>
 
           {/* Baú 3 (50 estrelas) */}
-          <TouchableOpacity 
-            style={[styles.chestPoint, { left: 45, top: 390 }]} 
+          <DropShadow width={40} height={12} style={{ position: 'absolute', left: 50, top: 415 }} />
+          <TouchableOpacity
+            style={[styles.chestPoint, { left: 45, top: 390 }]}
             onPress={() => handleChestPress('chest_50_stars', 50)}
             activeOpacity={0.8}
           >
@@ -322,49 +368,39 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
             const freemiumLocked = isFreemiumLocked(index);
             const isDisabled = isProgressionLocked;
 
-            const bgColor = isProgressionLocked ? '#CFD8DC' : freemiumLocked ? '#E8D5F5' : game.color;
-            const borderColor = isProgressionLocked ? '#90A4AE' : freemiumLocked ? '#AB47BC' : game.borderColor;
+            const state: LevelNodeState = isProgressionLocked
+              ? 'locked'
+              : freemiumLocked
+              ? 'freemiumLocked'
+              : isCompleted
+              ? 'completed'
+              : 'current';
 
             return (
-              <TouchableOpacity
+              <LevelNode
                 key={game.id}
-                activeOpacity={isDisabled ? 1 : 0.7}
+                state={state}
+                color={game.color}
+                emoji={game.emoji}
+                title={t(game.titleKey)}
+                titleSide={game.x >= 200 ? 'left' : 'right'}
                 disabled={isDisabled}
                 onPress={() => handleSelectNode(game.id, index, game.x, game.y)}
-                style={[
-                  styles.nodeButton,
-                  { left: game.x - 30, top: game.y - 35, backgroundColor: bgColor, borderColor }
-                ]}
-              >
-                {isProgressionLocked ? (
-                  <Text style={styles.nodeLockText}>🔒</Text>
-                ) : freemiumLocked ? (
-                  <Text style={styles.nodeLockText}>⭐🔒</Text>
-                ) : (
-                  <>
-                    <Text style={styles.nodeEmoji}>{game.emoji}</Text>
-                    {isCompleted && <Text style={styles.checkmarkBadge}>✓</Text>}
-                  </>
-                )}
-                <View style={[styles.titleBubble, game.x >= 200 ? styles.titleLeft : styles.titleRight]}>
-                  <Text style={styles.titleBubbleText}>{t(game.titleKey)}</Text>
-                </View>
-              </TouchableOpacity>
+                style={{ left: game.x - 32, top: game.y - 35 }}
+              />
             );
           })}
 
           {/* NÓ DA BIBLIOTECA MÁGICA */}
-          <TouchableOpacity
-            activeOpacity={0.7}
+          <LevelNode
+            state="available"
+            color="#E1BEE7"
+            emoji="📚"
+            title={t('worldLibrary')}
+            titleSide="right"
             onPress={handleSelectLibrary}
-            style={[
-              styles.nodeButton,
-              styles.libraryNodeButton,
-              { left: 170, top: 135 }
-            ]}
-          >
-            <Text style={styles.nodeEmoji}>📚</Text>
-          </TouchableOpacity>
+            style={{ left: 138, top: 100 }}
+          />
 
           {/* PERSONAGEM ANIMADO FLUTUANDO NO MAPA */}
           {character && (
@@ -426,28 +462,6 @@ const styles = StyleSheet.create({
   scores: {
     flexDirection: 'row',
   },
-  scoreBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    marginLeft: 6,
-    borderWidth: 2,
-    borderColor: THEME_COLORS.goldenYellow,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  scoreText: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: THEME_COLORS.brownDark,
-    marginLeft: 3,
-  },
   scrollContainer: {
     paddingVertical: 20,
   },
@@ -469,76 +483,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 3,
     elevation: 3,
-  },
-  nodeButton: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    borderBottomWidth: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: THEME_COLORS.brownDark,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
-    zIndex: 5,
-  },
-  libraryNodeButton: {
-    backgroundColor: '#E1BEE7',
-    borderColor: '#8E7CFF',
-    borderBottomColor: '#7E57C2',
-  },
-  nodeLockText: {
-    fontSize: 22,
-  },
-  nodeEmoji: {
-    fontSize: 28,
-  },
-  checkmarkBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#4CAF50',
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: '900',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    textAlign: 'center',
-    lineHeight: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFF',
-  },
-  titleBubble: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1.5,
-    borderColor: '#D7CCC8',
-    borderRadius: 10,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    width: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  titleRight: {
-    left: 70,
-  },
-  titleLeft: {
-    right: 70,
-  },
-  titleBubbleText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: THEME_COLORS.brownDark,
-    textAlign: 'center',
   },
   chestPoint: {
     position: 'absolute',
@@ -565,7 +509,7 @@ const styles = StyleSheet.create({
     borderColor: '#F4BD3F',
   },
   chestStarsBadgeText: {
-    fontSize: 9,
+    fontSize: FONT_SIZES.micro,
     fontWeight: '900',
     color: THEME_COLORS.brownDark,
   },
