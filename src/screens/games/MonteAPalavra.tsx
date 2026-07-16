@@ -9,6 +9,7 @@ import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
+import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
 
 interface MonteAPalavraProps {
   onBack: () => void;
@@ -297,7 +298,7 @@ const DECOY_SYLLABLES = ['LA', 'BO', 'MA', 'PA', 'CA', 'TA', 'DE', 'ME', 'PO', '
 
 export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
+  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
 
   const [queue, setQueue] = useState<WordOption[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -314,8 +315,20 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
   const hadErrorEver = useRef(false);
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const roundStartTimeRef = useRef<number>(0);
 
   const buildScale = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (childId) {
+      startGameSession(childId, 'aventura_das_letras')
+        .then(id => { if (isMounted) sessionIdRef.current = id; })
+        .catch(err => console.warn('Erro iniciar sessao MonteAPalavra:', err));
+    }
+    return () => { isMounted = false; };
+  }, [childId]);
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
@@ -369,6 +382,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
       setTypedSyllables([]);
       setRoundCompleted(false);
       hadErrorInRound.current = false;
+      roundStartTimeRef.current = Date.now();
       buildScale.setValue(0);
 
       // Separar em sílabas
@@ -409,7 +423,26 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
     const nextIndex = typedSyllables.length;
     const expectedPart = targetSyllables[nextIndex];
 
-    if (item.part === expectedPart) {
+    const isCorrect = item.part === expectedPart;
+    const responseTime = Date.now() - roundStartTimeRef.current;
+    roundStartTimeRef.current = Date.now(); // reset para próxima sílaba
+
+    if (childId && sessionIdRef.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'answer',
+        target: expectedPart,
+        target_type: 'syllable', // aqui a criança seleciona sílabas para montar a palavra
+        response_value: item.part,
+        correct: isCorrect,
+        response_time_ms: responseTime,
+        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+      }).catch(err => console.warn('Erro logGameEvent answer Monte:', err));
+    }
+
+    if (isCorrect) {
       playSound('pop', soundEnabled);
       
       // Marcar sílaba como usada no grid inferior
@@ -449,11 +482,20 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             exerciseFinished.current = true;
+            if (childId && sessionIdRef.current) {
+              logGameEvent({
+                profile_id: childId,
+                session_id: sessionIdRef.current,
+                game_key: 'aventura_das_letras',
+                event_type: 'activity_complete',
+              }).catch(console.warn);
+              endGameSession(sessionIdRef.current).catch(console.warn);
+            }
             await completeChallenge('word', currentWord);
             if (!hadErrorEver.current) {
               setShowPerfect(true);
             } else {
-              onBack();
+              handleBack();
             }
           }
         }, 3500);
@@ -466,10 +508,23 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
     }
   };
 
+  const handleBack = () => {
+    if (childId && sessionIdRef.current && !exerciseFinished.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'abandon',
+      }).catch(console.warn);
+      endGameSession(sessionIdRef.current).catch(console.warn);
+    }
+    onBack();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game5Title')}</Text>
@@ -539,7 +594,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
           </View>
         )}
       </View>
-      <PerfectRun visible={showPerfect} onClose={onBack} />
+      <PerfectRun visible={showPerfect} onClose={handleBack} />
     </SafeAreaView>
   );
 };

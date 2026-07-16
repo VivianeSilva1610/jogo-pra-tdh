@@ -10,6 +10,7 @@ import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 import Svg, { Rect, Path, Polygon, G, Circle } from 'react-native-svg';
+import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
 
 interface CasteloFrasesProps {
   onBack: () => void;
@@ -381,7 +382,7 @@ const PHRASES_POOL: PhraseOption[] = [
 
 export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
+  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
 
   const [queue, setQueue] = useState<PhraseOption[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -393,9 +394,21 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const roundStartTimeRef = useRef<number>(0);
 
   // Animação para abrir o portão do castelo (desliza para cima ou baixo)
   const gateTranslateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (childId) {
+      startGameSession(childId, 'aventura_das_letras')
+        .then(id => { if (isMounted) sessionIdRef.current = id; })
+        .catch(err => console.warn('Erro iniciar sessao CasteloFrases:', err));
+    }
+    return () => { isMounted = false; };
+  }, [childId]);
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
@@ -445,6 +458,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
       setTypedWords([]);
       setRoundCompleted(false);
       hadErrorInRound.current = false;
+      roundStartTimeRef.current = Date.now();
       gateTranslateY.setValue(0);
 
       const lang = language as string;
@@ -476,7 +490,28 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
     const nextIndex = typedWords.length;
     const expectedWord = phraseData.words[nextIndex];
 
-    if (wordItem.word === expectedWord) {
+    const isCorrect = wordItem.word === expectedWord;
+    const responseTime = Date.now() - roundStartTimeRef.current;
+    
+    // Atualiza o tempo para a próxima palavra
+    roundStartTimeRef.current = Date.now();
+
+    if (childId && sessionIdRef.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'answer',
+        target: expectedWord,
+        target_type: 'word',
+        response_value: wordItem.word,
+        correct: isCorrect,
+        response_time_ms: responseTime,
+        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+      }).catch(err => console.warn('Erro logGameEvent answer Castelo:', err));
+    }
+
+    if (isCorrect) {
       playSound('pop', soundEnabled);
 
       // Marcar palavra usada
@@ -516,11 +551,20 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             exerciseFinished.current = true;
+            if (childId && sessionIdRef.current) {
+              logGameEvent({
+                profile_id: childId,
+                session_id: sessionIdRef.current,
+                game_key: 'aventura_das_letras',
+                event_type: 'activity_complete',
+              }).catch(console.warn);
+              endGameSession(sessionIdRef.current).catch(console.warn);
+            }
             await completeChallenge('word', phraseData.sentence);
             if (!hadErrorEver.current) {
               setShowPerfect(true);
             } else {
-              onBack();
+              handleBack();
             }
           }
         }, 3500);
@@ -531,6 +575,19 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
       playSound('pop', soundEnabled);
       speak(t('tryAgain'), language);
     }
+  };
+
+  const handleBack = () => {
+    if (childId && sessionIdRef.current && !exerciseFinished.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'abandon',
+      }).catch(console.warn);
+      endGameSession(sessionIdRef.current).catch(console.warn);
+    }
+    onBack();
   };
 
   const renderCastle = () => {
@@ -576,7 +633,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game7Title')}</Text>
@@ -642,7 +699,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
         )}
 
       </View>
-      <PerfectRun visible={showPerfect} onClose={onBack} />
+      <PerfectRun visible={showPerfect} onClose={handleBack} />
     </SafeAreaView>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing, TextInput, TouchableOpacity } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../services/supabase';
 import { useLocalization } from '../context/LocalizationContext';
@@ -23,6 +23,14 @@ export const LoginScreen: React.FC = () => {
   const auraScale = useRef(new Animated.Value(0.95)).current;
   // Animação do botão Google ao pressionar
   const buttonScale = useRef(new Animated.Value(1)).current;
+  // Animação do botão Email
+  const emailButtonScale = useRef(new Animated.Value(1)).current;
+
+  // Estados para email e senha
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('O app foi atualizado! Se você já tinha conta, talvez precise redefinir sua senha.');
 
   useEffect(() => {
     // 1. Loop de flutuação de Lumi
@@ -79,6 +87,87 @@ export const LoginScreen: React.FC = () => {
       tension: 40,
       useNativeDriver: true,
     }).start();
+  };
+
+  const handleEmailPressIn = () => {
+    Animated.spring(emailButtonScale, {
+      toValue: 0.92,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleEmailPressOut = () => {
+    Animated.spring(emailButtonScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const migratedEmails = [
+    'vivianemiriane.dasilva.14791@studenti.iuline.it',
+    'claramirianecaca@gmail.com',
+    'nicolajmellace5@gmail.com',
+    'casaalmelhordobrasil@gmail.com'
+  ];
+
+  const handleEmailAuth = async (isSignUp: boolean) => {
+    if (!email) {
+      Alert.alert('Atenção', 'Preencha o email');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      if (isResetMode) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+          redirectTo: Platform.OS === 'web' ? window.location.origin + '/' : 'aventuradasletras://',
+        });
+        if (error) throw error;
+        Alert.alert('Sucesso!', 'Verifique seu email para redefinir a senha.');
+        setIsResetMode(false);
+        return;
+      }
+
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (error) throw error;
+        // The family and child_profiles creation will happen via createChildWithProfile called elsewhere
+        // But for "Caso A", the family must be created. We do this automatically in createChildWithProfile now.
+        Alert.alert('Conta criada', 'Sua conta foi criada! Faça login agora.');
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+             if (migratedEmails.includes(email.trim().toLowerCase())) {
+                setIsResetMode(true);
+                Alert.alert('Atualização de Segurança', 'Sua conta foi migrada para o novo sistema Interativo. Por favor, redefina sua senha enviando um link para o seu email.');
+             } else {
+                Alert.alert('Erro', 'Senha ou email incorretos.');
+             }
+          } else {
+            throw error;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Erro de autenticação:', err.message);
+      if (Platform.OS === 'web') {
+        alert('Erro ao autenticar: ' + err.message);
+      } else {
+        Alert.alert('Erro', err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -157,10 +246,76 @@ export const LoginScreen: React.FC = () => {
             <View style={styles.bubbleInner}>
               <Text style={styles.welcomeTitle}>{t('loginWelcomeTitle')}</Text>
               <Text style={styles.welcomeText}>{t('loginWelcomeText')}</Text>
-              <Text style={styles.helpText}>{t('loginHelpText')}</Text>
+              <Text style={[styles.helpText, { color: THEME_COLORS.orangeDark, marginBottom: 5 }]}>{updateMessage}</Text>
             </View>
           </View>
         </View>
+
+        {/* FORMULÁRIO DE EMAIL/SENHA */}
+        <View style={styles.formSection}>
+          <TextInput
+            style={styles.input}
+            placeholder="Seu Email"
+            placeholderTextColor="#999"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {!isResetMode && (
+            <TextInput
+              style={styles.input}
+              placeholder="Sua Senha"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          )}
+
+          <View style={styles.emailButtonsRow}>
+            <TouchableWithoutFeedback
+              onPressIn={handleEmailPressIn}
+              onPressOut={handleEmailPressOut}
+              onPress={() => handleEmailAuth(false)}
+              disabled={loading}
+            >
+              <Animated.View style={[styles.emailButton, { transform: [{ scale: emailButtonScale }] }]}>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.emailButtonText}>{isResetMode ? 'Enviar Email de Redefinição' : 'Entrar'}</Text>
+                )}
+              </Animated.View>
+            </TouchableWithoutFeedback>
+
+            {!isResetMode && (
+              <TouchableWithoutFeedback
+                onPressIn={handleEmailPressIn}
+                onPressOut={handleEmailPressOut}
+                onPress={() => handleEmailAuth(true)}
+                disabled={loading}
+              >
+                <Animated.View style={[styles.emailButton, styles.signupButton, { transform: [{ scale: emailButtonScale }] }]}>
+                  <Text style={styles.emailButtonText}>Criar Conta</Text>
+                </Animated.View>
+              </TouchableWithoutFeedback>
+            )}
+          </View>
+
+          {!isResetMode && (
+            <TouchableOpacity onPress={() => setIsResetMode(true)} style={styles.forgotBtn}>
+              <Text style={styles.forgotText}>Esqueci minha senha</Text>
+            </TouchableOpacity>
+          )}
+          {isResetMode && (
+            <TouchableOpacity onPress={() => setIsResetMode(false)} style={styles.forgotBtn}>
+              <Text style={styles.forgotText}>Voltar ao Login</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <Text style={styles.orText}>ou</Text>
 
         {/* BOTÃO DE LOGIN GOOGLE */}
         <View style={styles.actionSection}>
@@ -375,6 +530,66 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
     width: '100%',
+  },
+  formSection: {
+    width: '85%',
+    maxWidth: 360,
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    fontSize: FONT_SIZES.body,
+    color: THEME_COLORS.brownDark,
+    marginBottom: 10,
+    fontFamily: Platform.OS === 'ios' ? 'AvenirNext-Medium' : 'sans-serif',
+  },
+  emailButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  emailButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: THEME_COLORS.magicPurple,
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: '#7E57C2',
+    borderBottomWidth: 6,
+    paddingVertical: 12,
+    marginHorizontal: 5,
+  },
+  signupButton: {
+    backgroundColor: THEME_COLORS.natureGreen,
+    borderColor: '#388E3C',
+  },
+  emailButtonText: {
+    fontSize: FONT_SIZES.body,
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  forgotBtn: {
+    marginTop: 10,
+  },
+  forgotText: {
+    color: THEME_COLORS.brownDark,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  orText: {
+    fontSize: FONT_SIZES.body,
+    fontWeight: 'bold',
+    color: '#78909C',
+    marginVertical: 10,
   },
   googleIcon: {
     marginRight: 10,

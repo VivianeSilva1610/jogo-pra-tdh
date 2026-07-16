@@ -9,6 +9,7 @@ import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
+import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
 
 interface MundoDasSilabasProps {
   onBack: () => void;
@@ -76,7 +77,7 @@ interface ItemData {
 
 export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
+  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -87,6 +88,8 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
   const hadErrorEver = useRef(false);
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const roundStartTimeRef = useRef<number>(0);
 
   const anims = {
     0: useRef(new Animated.Value(0)).current,
@@ -101,6 +104,16 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
     2: useRef(new Animated.Value(1)).current,
     3: useRef(new Animated.Value(1)).current,
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    if (childId) {
+      startGameSession(childId, 'aventura_das_letras')
+        .then(id => { if (isMounted) sessionIdRef.current = id; })
+        .catch(err => console.warn('Erro iniciar sessao MundoDasLetras:', err));
+    }
+    return () => { isMounted = false; };
+  }, [childId]);
 
   const getPool = (lang: string, difficulty: number): string[] => {
     const poolMap = LOCALIZED_SYLLABLES[lang] || LOCALIZED_SYLLABLES['pt'];
@@ -140,6 +153,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
     setTargetSyllable(syllable);
     setRoundCompleted(false);
     hadErrorInRound.current = false;
+    roundStartTimeRef.current = Date.now();
 
     speak(syllable, language);
 
@@ -185,7 +199,25 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
       Animated.timing(opacityRef, { toValue: 0, duration: 350, useNativeDriver: true }),
     ]).start();
 
-    if (itemSyllable === targetSyllable) {
+    const isCorrect = itemSyllable === targetSyllable;
+    const responseTime = Date.now() - roundStartTimeRef.current;
+
+    if (childId && sessionIdRef.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'answer',
+        target: targetSyllable,
+        target_type: 'syllable',
+        response_value: itemSyllable,
+        correct: isCorrect,
+        response_time_ms: responseTime,
+        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+      }).catch(err => console.warn('Erro logGameEvent answer:', err));
+    }
+
+    if (isCorrect) {
       playSound('success', soundEnabled);
       setRoundCompleted(true);
 
@@ -201,11 +233,20 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
+          if (childId && sessionIdRef.current) {
+            logGameEvent({
+              profile_id: childId,
+              session_id: sessionIdRef.current,
+              game_key: 'aventura_das_letras',
+              event_type: 'activity_complete',
+            }).catch(console.warn);
+            endGameSession(sessionIdRef.current).catch(console.warn);
+          }
           await completeChallenge('syllable', targetSyllable);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {
-            onBack();
+            handleBack();
           }
         }
       }, 2500);
@@ -223,10 +264,23 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
     }
   };
 
+  const handleBack = () => {
+    if (childId && sessionIdRef.current && !exerciseFinished.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'abandon',
+      }).catch(console.warn);
+      endGameSession(sessionIdRef.current).catch(console.warn);
+    }
+    onBack();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game1Title')}</Text>
@@ -287,7 +341,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
           );
         })}
       </View>
-      <PerfectRun visible={showPerfect} onClose={onBack} />
+      <PerfectRun visible={showPerfect} onClose={handleBack} />
     </SafeAreaView>
   );
 };

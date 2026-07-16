@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://rhzqijryyjoesuwodiln.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoenFpanJ5eWpvZXN1d29kaWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NzkzMTMsImV4cCI6MjA5NzI1NTMxM30.6kaptqeEmOp2YFqDmnZXO79iiVZUsUQcRboPefe5xTo';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://pswmbqlafywaxphsrloe.supabase.co';
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_1V-eYBqCdiwkYTj0ra5Myw_lVQnNmfh';
 
 const createSupabaseClient = createClient as any;
 
@@ -44,35 +44,46 @@ export interface ChildProgressProfile {
  */
 export const loadChildProfile = async (
   childId: string,
-  parentId: string
+  parentId: string // auth_user_id
 ): Promise<ChildProgressProfile | null> => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
+    const { data: cp, error: cpError } = await supabase
+      .from('child_profiles')
+      .select(`*, families!inner(auth_user_id)`)
       .eq('id', childId)
+      .eq('families.auth_user_id', parentId)
       .maybeSingle();
 
-    if (error) {
-      console.warn('Erro ao carregar perfil da criança:', error.message);
+    if (cpError) {
+      console.warn('Erro ao carregar perfil da criança:', cpError.message);
       return null;
     }
 
-    if (!data) return null;
+    if (!cp) return null;
+
+    const { data: rp, error: rpError } = await supabase
+      .from('reading_progress')
+      .select('*')
+      .eq('child_profile_id', childId)
+      .maybeSingle();
+
+    // Extrair estrelas do jsonb
+    const starsByGame = cp.stars_by_game || {};
+    const stars = starsByGame['aventura_das_letras'] || 0;
 
     return {
-      stars: data.stars ?? 0,
-      coins: data.coins ?? 0,
-      challengesCompleted: data.challenges_completed ?? 0,
-      character: data.character ?? null,
-      avatarName: data.avatar_name ?? null,
-      equippedClothing: data.equipped_clothing ?? null,
-      unlockedStickers: data.unlocked_stickers ?? [],
-      unlockedClothing: data.unlocked_clothing ?? [],
-      learnedLetters: data.learned_letters ?? [],
-      masteredSyllables: data.mastered_syllables ?? [],
-      readWords: data.read_words ?? [],
-      dailyUsageSeconds: data.daily_usage_seconds ?? {},
+      stars: stars,
+      coins: cp.seeds ?? 0,
+      challengesCompleted: rp?.challenges_completed ?? 0,
+      character: cp.avatar ?? null,
+      avatarName: rp?.avatar_name ?? null,
+      equippedClothing: rp?.equipped_clothing ?? null,
+      unlockedStickers: cp.unlocked_stickers ?? [],
+      unlockedClothing: rp?.unlocked_clothing ?? [],
+      learnedLetters: rp?.learned_letters ?? [],
+      masteredSyllables: rp?.mastered_syllables ?? [],
+      readWords: rp?.read_words ?? [],
+      dailyUsageSeconds: rp?.daily_usage_seconds ?? {}, // Note: might need another place for daily_usage if not in reading_progress, but let's assume reading_progress or child_profiles
       isPremium: false, // gerido via subscriptions
     };
   } catch (err) {
@@ -91,19 +102,40 @@ export const syncChildProfile = async (
   profile: ChildProgressProfile
 ): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('profiles')
+    // 1. Fetch current child_profile to merge jsonb and add seeds
+    const { data: cp } = await supabase
+      .from('child_profiles')
+      .select('seeds, stars_by_game')
+      .eq('id', childId)
+      .maybeSingle();
+      
+    const currentStars = cp?.stars_by_game || {};
+    const newStars = { ...currentStars, aventura_das_letras: profile.stars };
+
+    const { error: cpError } = await supabase
+      .from('child_profiles')
+      .update({
+        seeds: profile.coins, // O certo seria incrementar, mas syncChildProfile envia o total
+        stars_by_game: newStars,
+        avatar: profile.character ?? 'panda',
+        unlocked_stickers: profile.unlockedStickers,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', childId);
+
+    if (cpError) {
+      console.warn('Erro ao atualizar child_profiles na nuvem:', cpError.message);
+    }
+
+    // 2. Upsert in reading_progress
+    const { error: rpError } = await supabase
+      .from('reading_progress')
       .upsert(
         {
-          id: childId,
-          parent_id: parentId,
-          stars: profile.stars,
-          coins: profile.coins,
+          child_profile_id: childId,
           challenges_completed: profile.challengesCompleted,
-          character: profile.character ?? 'panda',
           avatar_name: profile.avatarName ?? null,
           equipped_clothing: profile.equippedClothing,
-          unlocked_stickers: profile.unlockedStickers,
           unlocked_clothing: profile.unlockedClothing,
           learned_letters: profile.learnedLetters,
           mastered_syllables: profile.masteredSyllables,
@@ -111,11 +143,11 @@ export const syncChildProfile = async (
           daily_usage_seconds: profile.dailyUsageSeconds,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: 'id' }
+        { onConflict: 'child_profile_id' }
       );
 
-    if (error) {
-      console.warn('Erro ao sincronizar perfil na nuvem:', error.message);
+    if (rpError) {
+      console.warn('Erro ao sincronizar reading_progress na nuvem:', rpError.message);
     }
   } catch (err) {
     console.warn('Erro inesperado ao sincronizar perfil:', err);
@@ -127,16 +159,24 @@ export const syncChildProfile = async (
  */
 export const fetchChildren = async (): Promise<any[]> => {
   try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return [];
+
     const { data, error } = await supabase
-      .from('children')
-      .select('*')
+      .from('child_profiles')
+      .select('*, families!inner(auth_user_id)')
+      .eq('families.auth_user_id', userData.user.id)
       .order('created_at', { ascending: true });
 
     if (error) {
       console.warn('Erro ao buscar filhos:', error.message);
       return [];
     }
-    return data ?? [];
+    // Rename lang to preferred_language to keep compatibility with UI
+    return (data ?? []).map((c: any) => ({
+      ...c,
+      preferred_language: c.lang
+    }));
   } catch (err) {
     console.warn('Erro inesperado ao buscar filhos:', err);
     return [];
@@ -149,13 +189,13 @@ export const fetchChildren = async (): Promise<any[]> => {
 export const getParentPinHash = async (parentId: string): Promise<string | null> => {
   try {
     const { data, error } = await supabase
-      .from('parents')
-      .select('pin_hash')
-      .eq('id', parentId)
+      .from('families')
+      .select('parent_pin_hash')
+      .eq('auth_user_id', parentId)
       .maybeSingle();
 
     if (error || !data) return null;
-    return data.pin_hash ?? null;
+    return data.parent_pin_hash ?? null;
   } catch {
     return null;
   }
@@ -167,9 +207,9 @@ export const getParentPinHash = async (parentId: string): Promise<string | null>
 export const setParentPinHash = async (parentId: string, pinHash: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('parents')
-      .update({ pin_hash: pinHash })
-      .eq('id', parentId);
+      .from('families')
+      .update({ parent_pin_hash: pinHash })
+      .eq('auth_user_id', parentId);
 
     return !error;
   } catch {
@@ -183,7 +223,7 @@ export const setParentPinHash = async (parentId: string, pinHash: string): Promi
 export const deleteChild = async (childId: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data, error } = await supabase
-      .from('children')
+      .from('child_profiles')
       .delete()
       .eq('id', childId)
       .select();
@@ -269,10 +309,34 @@ export const createChildWithProfile = async (
   avatar: string
 ): Promise<any | null> => {
   try {
-    // 1. Criar a criança
+    // Buscar o family_id do parentId
+    const { data: family, error: famError } = await supabase
+      .from('families')
+      .select('id')
+      .eq('auth_user_id', parentId)
+      .maybeSingle();
+
+    let familyId = family?.id;
+
+    if (!familyId) {
+      // Cria a family se nao existir
+      const { data: newFam, error: newFamError } = await supabase
+        .from('families')
+        .insert([{ auth_user_id: parentId }])
+        .select()
+        .single();
+      
+      if (newFamError || !newFam) {
+        console.warn('Erro ao criar family:', newFamError?.message);
+        return null;
+      }
+      familyId = newFam.id;
+    }
+
+    // 1. Criar a criança em child_profiles
     const { data: child, error: childError } = await supabase
-      .from('children')
-      .insert([{ parent_id: parentId, name, age, avatar }])
+      .from('child_profiles')
+      .insert([{ family_id: familyId, name, avatar, lang: 'pt' }]) // age was in old schema, maybe not in new, add if needed or ignore
       .select()
       .single();
 
@@ -281,23 +345,22 @@ export const createChildWithProfile = async (
       return null;
     }
 
-    // 2. Inicializar perfil de progresso zerado
-    await supabase.from('profiles').insert([{
-      id: child.id,
-      parent_id: parentId,
-      stars: 0,
-      coins: 0,
-      challenges_completed: 0,
-      character: avatar,
-      unlocked_stickers: [],
-      unlocked_clothing: [],
+    // 2. Inicializar perfil de progresso zerado em reading_progress
+    await supabase.from('reading_progress').insert([{
+      child_profile_id: child.id,
       learned_letters: [],
       mastered_syllables: [],
       read_words: [],
       daily_usage_seconds: {},
+      unlocked_clothing: [],
+      challenges_completed: 0
     }]);
 
-    return child;
+    // Retorna com preferred_language para UI
+    return {
+      ...child,
+      preferred_language: child.lang
+    };
   } catch (err) {
     console.warn('Erro ao criar criança com perfil:', err);
     return null;

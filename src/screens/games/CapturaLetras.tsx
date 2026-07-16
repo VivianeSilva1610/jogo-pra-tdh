@@ -9,6 +9,7 @@ import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
+import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
 
 interface CapturaDeSilabasProps {
   onBack: () => void;
@@ -54,7 +55,7 @@ const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; ha
 
 export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
+  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -69,6 +70,18 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
   const gameAreaWidthRef = useRef(SCREEN_WIDTH > 600 ? 500 : SCREEN_WIDTH);
+  const sessionIdRef = useRef<string | null>(null);
+  const roundStartTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (childId) {
+      startGameSession(childId, 'aventura_das_letras')
+        .then(id => { if (isMounted) sessionIdRef.current = id; })
+        .catch(err => console.warn('Erro iniciar sessao CapturaLetras:', err));
+    }
+    return () => { isMounted = false; };
+  }, [childId]);
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
@@ -110,6 +123,7 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
     setIsDone(false);
     setBubbles([]);
     hadErrorInRound.current = false;
+    roundStartTimeRef.current = Date.now();
 
     if (gameIntervalRef.current) clearInterval(gameIntervalRef.current);
     
@@ -148,11 +162,20 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
+          if (childId && sessionIdRef.current) {
+            logGameEvent({
+              profile_id: childId,
+              session_id: sessionIdRef.current,
+              game_key: 'aventura_das_letras',
+              event_type: 'activity_complete',
+            }).catch(console.warn);
+            endGameSession(sessionIdRef.current).catch(console.warn);
+          }
           await completeChallenge('syllable', targetLetter);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {
-            onBack();
+            handleBack();
           }
         }
       }, 2000);
@@ -217,7 +240,25 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
     // Parar animação de subida e descarregar
     bubble.anim.stopAnimation();
 
-    if (bubble.letter === targetLetter) {
+    const isCorrect = bubble.letter === targetLetter;
+    const responseTime = Date.now() - roundStartTimeRef.current;
+
+    if (childId && sessionIdRef.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'answer',
+        target: targetLetter,
+        target_type: targetLetter.length > 1 ? 'syllable' : 'letter',
+        response_value: bubble.letter,
+        correct: isCorrect,
+        response_time_ms: responseTime,
+        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+      }).catch(err => console.warn('Erro logGameEvent answer Captura:', err));
+    }
+
+    if (isCorrect) {
       playSound('pop', soundEnabled);
       setCaughtCount(prev => prev + 1);
     } else {
@@ -229,10 +270,23 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
     }
   };
 
+  const handleBack = () => {
+    if (childId && sessionIdRef.current && !exerciseFinished.current) {
+      logGameEvent({
+        profile_id: childId,
+        session_id: sessionIdRef.current,
+        game_key: 'aventura_das_letras',
+        event_type: 'abandon',
+      }).catch(console.warn);
+      endGameSession(sessionIdRef.current).catch(console.warn);
+    }
+    onBack();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('game3Title')}</Text>
@@ -290,7 +344,7 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
           );
         })}
       </View>
-      <PerfectRun visible={showPerfect} onClose={onBack} />
+      <PerfectRun visible={showPerfect} onClose={handleBack} />
     </SafeAreaView>
   );
 };

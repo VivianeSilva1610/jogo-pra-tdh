@@ -83,6 +83,24 @@ export interface ParentalConsent {
   consented_at?: string;
 }
 
+export interface GameEvent {
+  id?: string;
+  session_id?: string;
+  profile_id: string;
+  game_key: string;
+  event_type: string;
+  target?: string;
+  target_type?: 'letter' | 'syllable' | 'word' | 'instruction' | 'sequence' | 'image' | 'rule';
+  response_value?: string;
+  correct?: boolean;
+  response_time_ms?: number;
+  error_type?: 'omissao' | 'substituicao' | 'inversao' | 'acrescimo' | 'impulsiva';
+  emotion?: 'tranquilo' | 'neutro' | 'irritado' | 'chorou';
+  context?: 'after_error' | 'after_wait' | 'after_loss' | 'general';
+  occurred_at?: string;
+}
+
+
 // ========================================================
 // Funções de Integração com o Supabase
 // ========================================================
@@ -92,9 +110,13 @@ export interface ParentalConsent {
  * Insere um novo registro com o nome, idade e avatar escolhido.
  */
 export async function createChild(child: Omit<ChildProfile, 'id' | 'created_at'>): Promise<ChildProfile> {
+  // Mock para adaptar o schema antigo. O ideal é usar createChildWithProfile do supabase.ts
+  const { data: family } = await supabase.from('families').select('id').eq('auth_user_id', child.parent_id).single();
+  const famId = family?.id;
+  
   const { data, error } = await supabase
-    .from('children')
-    .insert([child])
+    .from('child_profiles')
+    .insert([{ family_id: famId, name: child.name, avatar: child.avatar, lang: child.preferred_language || 'pt' }])
     .select()
     .single();
 
@@ -102,7 +124,7 @@ export async function createChild(child: Omit<ChildProfile, 'id' | 'created_at'>
     console.error('Erro ao criar perfil de criança:', error.message);
     throw error;
   }
-  return data;
+  return { ...data, preferred_language: data.lang, parent_id: child.parent_id };
 }
 
 /**
@@ -110,16 +132,23 @@ export async function createChild(child: Omit<ChildProfile, 'id' | 'created_at'>
  * Retorna a lista de crianças vinculadas ao responsável (id do pai vem do auth.users).
  */
 export async function getChildren(): Promise<ChildProfile[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+
   const { data, error } = await supabase
-    .from('children')
-    .select('*')
+    .from('child_profiles')
+    .select('*, families!inner(auth_user_id)')
+    .eq('families.auth_user_id', userData.user.id)
     .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Erro ao buscar perfis de crianças:', error.message);
     throw error;
   }
-  return data || [];
+  return (data || []).map((c: any) => ({
+    ...c,
+    preferred_language: c.lang
+  }));
 }
 
 /**
@@ -208,6 +237,72 @@ export async function getChildSessions(childId: string): Promise<GameSession[]> 
     throw error;
   }
   return data || [];
+}
+
+/**
+ * 3.4. INICIAR SESSÃO DE MINIJOGO (game_sessions)
+ * Cria a sessão no início do jogo para possibilitar o registro de eventos amarrados a ela.
+ */
+export async function startGameSession(childId: string, gameKey: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .insert([{
+      profile_id: childId,
+      game_key: gameKey,
+      start_time: new Date().toISOString(),
+      status: 'in_progress', // Ou similar, dependendo do esquema exato
+    }])
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Erro ao criar game_session:', error.message);
+    throw error;
+  }
+  return data.id;
+}
+
+/**
+ * 3.4. FINALIZAR SESSÃO DE MINIJOGO (game_sessions)
+ * Atualiza a sessão indicando conclusão e salvando dados sumarizados (opcional).
+ */
+export async function endGameSession(sessionId: string, updates: any = {}): Promise<void> {
+  const { error } = await supabase
+    .from('game_sessions')
+    .update({
+      end_time: new Date().toISOString(),
+      status: 'completed',
+      ...updates
+    })
+    .eq('id', sessionId);
+
+  if (error) {
+    console.error('Erro ao finalizar game_session:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * 3.5. REGISTRAR EVENTO DE JOGO (game_events)
+ * Salva um evento analítico de gameplay (ex: resposta correta, tempo de resposta).
+ */
+export async function logGameEvent(event: Omit<GameEvent, 'id' | 'occurred_at'>): Promise<GameEvent> {
+  const { data, error } = await supabase
+    .from('game_events')
+    .insert([
+      {
+        ...event,
+        occurred_at: new Date().toISOString(),
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao registrar evento de jogo:', error.message);
+    throw error;
+  }
+  return data;
 }
 
 /**
