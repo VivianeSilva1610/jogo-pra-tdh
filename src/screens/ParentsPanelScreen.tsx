@@ -89,53 +89,82 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     }
   }, [unlocked, parentId]);
 
-  const handlePinDigit = useCallback(async (digit: string | 'del') => {
-    if (digit === 'del') {
-      setEnteredPin(p => p.slice(0, -1));
-      setPinError('');
-      return;
-    }
-    const next = enteredPin + digit;
-    setEnteredPin(next);
-
-    if (next.length < 4) return;
-
-    // Auto-submit when 4 digits are entered
-    const salt = parentId ?? '';
-
-    if (pinMode === 'verify') {
-      const entered = hashPin(next, salt);
-      if (entered === storedPinHash) {
-        setUnlocked(true);
-      } else {
-        setPinError('PIN incorreto. Tente novamente.');
-        setEnteredPin('');
-      }
-    } else if (pinMode === 'setup') {
-      setSetupFirstPin(next);
-      setEnteredPin('');
-      setPinMode('setup_confirm');
-    } else if (pinMode === 'setup_confirm') {
-      if (next === setupFirstPin) {
-        setSavingPin(true);
-        const hash = hashPin(next, salt);
-        const ok = await setParentPinHash(salt, hash);
-        setSavingPin(false);
-        if (ok) {
-          setStoredPinHash(hash);
+  useEffect(() => {
+    if (enteredPin.length === 4) {
+      const salt = parentId ?? '';
+      if (pinMode === 'verify') {
+        const entered = hashPin(enteredPin, salt);
+        if (entered === storedPinHash) {
           setUnlocked(true);
         } else {
-          setPinError('Erro ao salvar PIN. Verifique sua conexão.');
+          setPinError(t('parentsGateIncorrect') || 'PIN incorreto. Tente novamente.');
           setEnteredPin('');
         }
-      } else {
-        setPinError('Os PINs não combinam. Tente novamente.');
+      } else if (pinMode === 'setup') {
+        setSetupFirstPin(enteredPin);
         setEnteredPin('');
-        setPinMode('setup');
-        setSetupFirstPin('');
+        setPinMode('setup_confirm');
+      } else if (pinMode === 'setup_confirm') {
+        if (enteredPin === setupFirstPin) {
+          setSavingPin(true);
+          const hash = hashPin(enteredPin, salt);
+          setParentPinHash(salt, hash).then((ok) => {
+            setSavingPin(false);
+            if (ok) {
+              setStoredPinHash(hash);
+              setUnlocked(true);
+            } else {
+              setPinError('Erro ao salvar PIN. Verifique sua conexão.');
+              setEnteredPin('');
+            }
+          });
+        } else {
+          setPinError('Os PINs não combinam. Tente novamente.');
+          setEnteredPin('');
+          setPinMode('setup');
+          setSetupFirstPin('');
+        }
       }
     }
-  }, [enteredPin, pinMode, setupFirstPin, storedPinHash, parentId, hashPin]);
+  }, [enteredPin, pinMode, parentId, storedPinHash, setupFirstPin, hashPin, t]);
+
+  const handlePinDigit = useCallback((digit: string | 'del') => {
+    setPinError('');
+    setEnteredPin(prev => {
+      if (digit === 'del') return prev.slice(0, -1);
+      if (prev.length >= 4) return prev;
+      return prev + digit;
+    });
+  }, []);
+
+  const handleForgotPin = () => {
+    if (Platform.OS === 'web') {
+      const confirmReset = window.confirm('Deseja redefinir o PIN? Você precisará entrar novamente na sua conta.');
+      if (confirmReset) {
+        if (parentId) {
+          setParentPinHash(parentId, '').then(() => supabase.auth.signOut());
+        }
+      }
+    } else {
+      Alert.alert(
+        'Redefinir PIN',
+        'Deseja redefinir o PIN? Você precisará entrar novamente na sua conta.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair e Redefinir',
+            style: 'destructive',
+            onPress: async () => {
+              if (parentId) {
+                await setParentPinHash(parentId, '');
+                await supabase.auth.signOut();
+              }
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const handleResetChild = (child: any) => {
     if (Platform.OS === 'web') {
@@ -368,6 +397,12 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           )}
 
           {savingPin && <ActivityIndicator size="large" color="#9C27B0" style={{ marginVertical: 20 }} />}
+
+          {pinMode === 'verify' && (
+            <TouchableOpacity style={{ marginTop: 20 }} onPress={handleForgotPin}>
+              <Text style={{ color: '#9C27B0', textDecorationLine: 'underline', fontSize: 14 }}>Esqueci o PIN</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={{ marginTop: 16, padding: 10 }}
