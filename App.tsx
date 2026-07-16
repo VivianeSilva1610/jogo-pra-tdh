@@ -340,12 +340,12 @@ export default function App() {
       setActiveParentId(parentId);
       setInitError(null);
 
-      // Garantir que a linha do pai exista na tabela public.parents para evitar erro de chave estrangeira
+      // Garantir que a linha do pai exista na tabela public.families para evitar erro de chave estrangeira
       try {
         const { data: parentData, error: fetchParentError } = await supabase
-          .from('parents')
+          .from('families')
           .select('id')
-          .eq('id', parentId)
+          .eq('auth_user_id', parentId)
           .maybeSingle();
 
         if (fetchParentError) {
@@ -353,12 +353,11 @@ export default function App() {
         }
 
         if (!parentData) {
-          console.log('Pai não encontrado na tabela public.parents. Criando...');
+          console.log('Pai não encontrado na tabela public.families. Criando...');
           
-          const parentEmail = session.user.email || 'sem-email@oauth.com';
           const { error: insertParentError } = await supabase
-            .from('parents')
-            .insert([{ id: parentId, email: parentEmail }]);
+            .from('families')
+            .insert([{ auth_user_id: parentId }]);
 
           if (insertParentError) {
             throw new Error('Erro ao cadastrar perfil do responsável: ' + insertParentError.message);
