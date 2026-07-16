@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../services/supabase';
 import { useLocalization } from '../context/LocalizationContext';
@@ -221,7 +221,10 @@ export const LoginScreen: React.FC = () => {
   return (
     <EnchantedBackground>
       <SafeAreaView style={styles.safeArea}>
-        
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         {/* LOGO BUBBLY INFANTIL */}
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
@@ -389,7 +392,7 @@ export const LoginScreen: React.FC = () => {
             </View>
           </View>
         </View>
-
+        </ScrollView>
       </SafeAreaView>
     </EnchantedBackground>
   );
@@ -398,6 +401,9 @@ export const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 15,
