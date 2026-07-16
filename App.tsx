@@ -355,23 +355,28 @@ export default function App() {
         if (!parentData) {
           console.log('Pai não encontrado na tabela public.families. Criando...');
           
-          const { error: insertParentError } = await supabase
+          const { data: newFam, error: insertParentError } = await supabase
             .from('families')
-            .insert([{ auth_user_id: parentId }]);
+            .insert([{ auth_user_id: parentId }])
+            .select('id')
+            .single();
 
           if (insertParentError) {
             throw new Error('Erro ao cadastrar perfil do responsável: ' + insertParentError.message);
           } else {
             console.log('Cadastro do pai inserido manualmente com sucesso.');
+            const familyId = newFam.id;
             // Se o trigger da DB falhou ou não existe, criar também a assinatura padrão inicial
             const { error: insertSubError } = await supabase
               .from('subscriptions')
-              .insert([{ parent_id: parentId, plan: 'free', status: 'active' }]);
+              .insert([{ family_id: familyId, plan: 'free', status: 'active' }]);
             
             if (insertSubError) {
               console.warn('Aviso ao cadastrar assinatura padrão:', insertSubError.message);
             }
           }
+        } else {
+          // Já existe a família. Verificar se tem subscription? (Opcional, mas não foi pedido, a inserção padrão é feita na criação do pai)
         }
       } catch (err: any) {
         console.error('Erro de permissão ou conexão na verificação do responsável:', err);

@@ -63,7 +63,7 @@ export interface WordChallenge {
 
 export interface Subscription {
   id?: string;
-  parent_id: string;
+  family_id: string;
   plan: 'free' | 'premium' | 'monthly' | 'annual';
   status: 'active' | 'canceled' | 'expired';
   expires_at?: string | null;
@@ -403,10 +403,18 @@ export async function getChildUnlockedAchievements(childId: string): Promise<any
  * BUSCAR ASSINATURA ATIVA DO PAI (subscriptions)
  */
 export async function getParentSubscription(parentId: string): Promise<Subscription | null> {
+  const { data: family } = await supabase
+    .from('families')
+    .select('id')
+    .eq('auth_user_id', parentId)
+    .maybeSingle();
+
+  if (!family) return null;
+
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
-    .eq('parent_id', parentId)
+    .eq('family_id', family.id)
     .maybeSingle();
 
   if (error) {

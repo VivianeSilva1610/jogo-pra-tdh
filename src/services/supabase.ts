@@ -253,10 +253,18 @@ export const loadParentSubscription = async (
   parentId: string
 ): Promise<{ isPremium: boolean; currentPeriodEnd: string | null; plan: string }> => {
   try {
+    const { data: family } = await supabase
+      .from('families')
+      .select('id')
+      .eq('auth_user_id', parentId)
+      .maybeSingle();
+
+    if (!family) return { isPremium: false, currentPeriodEnd: null, plan: 'free' };
+
     const { data, error } = await supabase
       .from('subscriptions')
       .select('plan, current_period_end, admin_granted_until')
-      .eq('parent_id', parentId)
+      .eq('family_id', family.id)
       .maybeSingle();
 
     if (error || !data) return { isPremium: false, currentPeriodEnd: null, plan: 'free' };
