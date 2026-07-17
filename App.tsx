@@ -24,6 +24,7 @@ import { SomESilabas } from './src/screens/games/SomELetra';
 import { MonteAPalavra } from './src/screens/games/MonteAPalavra';
 import { FlorestaPalavras } from './src/screens/games/FlorestaPalavras';
 import { CasteloFrases } from './src/screens/games/CasteloFrases';
+import { DelecaoFonemica } from './src/screens/games/DelecaoFonemica';
 
 // Import Components & Services
 import { RewardChest } from './src/components/RewardChest';
@@ -231,7 +232,9 @@ function GameAppContent({
         return <FlorestaPalavras onBack={() => setCurrentScreen('map')} />;
       case 'game_7':
         return <CasteloFrases onBack={() => setCurrentScreen('map')} />;
-        
+      case 'game_deletion':
+        return <DelecaoFonemica onBack={() => setCurrentScreen('map')} />;
+
       default:
         return <HomeScreen onNavigate={setCurrentScreen} />;
     }

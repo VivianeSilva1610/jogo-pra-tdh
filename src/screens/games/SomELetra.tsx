@@ -10,7 +10,7 @@ import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft, Volume2 } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
-import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
+import { useGameSession } from '../../hooks/useGameSession';
 
 interface SomESilabasProps {
   onBack: () => void;
@@ -41,7 +41,7 @@ const LOCALIZED_SYLLABLES: Record<string, { easy: string[]; medium: string[]; ha
 
 export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, masteredSyllables } = useGame();
 
   const [queue, setQueue] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,23 +53,12 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
-  const sessionIdRef = useRef<string | null>(null);
   const roundStartTimeRef = useRef<number>(0);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (childId) {
-      startGameSession(childId, 'aventura_das_letras')
-        .then(id => { if (isMounted) sessionIdRef.current = id; })
-        .catch(err => console.warn('Erro iniciar sessao SomELetra:', err));
-    }
-    return () => { isMounted = false; };
-  }, [childId]);
+  const { difficulty, logEvent, finishSession, abandonSession } = useGameSession('aventura_das_letras');
 
   const getActivePool = () => {
     const lang = (language || 'pt') as string;
     const poolMap = LOCALIZED_SYLLABLES[lang] || LOCALIZED_SYLLABLES['pt'];
-    const difficulty = Math.floor(challengesCompleted / 7) % 3;
     if (difficulty === 0) {
       return poolMap.easy;
     } else if (difficulty === 1) {
@@ -81,7 +70,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
 
   // Inicializar fila com 3 sílabas distintas com base na dificuldade
   useEffect(() => {
-    if (exerciseFinished.current) return;
+    if (exerciseFinished.current || difficulty === null) return;
     const pool = getActivePool();
     const masteredList = masteredSyllables || [];
     
@@ -100,7 +89,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, masteredSyllables, language]);
+  }, [challengesCompleted, masteredSyllables, language, difficulty]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {
@@ -148,20 +137,15 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
     const isCorrect = choice === targetSyllable;
     const responseTime = Date.now() - roundStartTimeRef.current;
 
-    if (childId && sessionIdRef.current) {
-      logGameEvent({
-        profile_id: childId,
-        session_id: sessionIdRef.current,
-        game_key: 'aventura_das_letras',
-        event_type: 'answer',
-        target: targetSyllable,
-        target_type: 'syllable', // o jogo foca em silabas
-        response_value: choice,
-        correct: isCorrect,
-        response_time_ms: responseTime,
-        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
-      }).catch(err => console.warn('Erro logGameEvent answer SomELetra:', err));
-    }
+    logEvent({
+      event_type: 'answer',
+      target: targetSyllable,
+      target_type: 'syllable', // o jogo foca em silabas
+      response_value: choice,
+      correct: isCorrect,
+      response_time_ms: responseTime,
+      error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+    });
 
     if (isCorrect) {
       playSound('success', soundEnabled);
@@ -179,15 +163,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          if (childId && sessionIdRef.current) {
-            logGameEvent({
-              profile_id: childId,
-              session_id: sessionIdRef.current,
-              game_key: 'aventura_das_letras',
-              event_type: 'activity_complete',
-            }).catch(console.warn);
-            endGameSession(sessionIdRef.current).catch(console.warn);
-          }
+          finishSession();
           await completeChallenge('syllable', targetSyllable);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
@@ -208,15 +184,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
   };
 
   const handleBack = () => {
-    if (childId && sessionIdRef.current && !exerciseFinished.current) {
-      logGameEvent({
-        profile_id: childId,
-        session_id: sessionIdRef.current,
-        game_key: 'aventura_das_letras',
-        event_type: 'abandon',
-      }).catch(console.warn);
-      endGameSession(sessionIdRef.current).catch(console.warn);
-    }
+    abandonSession();
     onBack();
   };
 

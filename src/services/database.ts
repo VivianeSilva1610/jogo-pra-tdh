@@ -90,7 +90,7 @@ export interface GameEvent {
   game_key: string;
   event_type: string;
   target?: string;
-  target_type?: 'letter' | 'syllable' | 'word' | 'instruction' | 'sequence' | 'image' | 'rule';
+  target_type?: 'letter' | 'syllable' | 'word' | 'instruction' | 'sequence' | 'image' | 'rule' | 'grid' | 'light' | 'deletion';
   response_value?: string;
   correct?: boolean;
   response_time_ms?: number;
@@ -243,7 +243,7 @@ export async function getChildSessions(childId: string): Promise<GameSession[]> 
  * 3.4. INICIAR SESSÃO DE MINIJOGO (game_sessions)
  * Cria a sessão no início do jogo para possibilitar o registro de eventos amarrados a ela.
  */
-export async function startGameSession(childId: string, gameKey: string): Promise<string> {
+export async function startGameSession(childId: string, gameKey: string, difficulty?: string | null): Promise<string> {
   const { data, error } = await supabase
     .from('game_sessions')
     .insert([{
@@ -251,6 +251,7 @@ export async function startGameSession(childId: string, gameKey: string): Promis
       game_key: gameKey,
       start_time: new Date().toISOString(),
       status: 'in_progress', // Ou similar, dependendo do esquema exato
+      ...(difficulty ? { difficulty } : {}),
     }])
     .select('id')
     .single();
@@ -279,6 +280,54 @@ export async function endGameSession(sessionId: string, updates: any = {}): Prom
   if (error) {
     console.error('Erro ao finalizar game_session:', error.message);
     throw error;
+  }
+}
+
+/**
+ * 3.4.1. RECOMENDAÇÃO DE DIFICULDADE ADAPTATIVA (v_recommended_difficulty)
+ * Calcula, com base nas últimas 15 respostas, se o nível deve subir, descer
+ * ou se manter. 'dados_insuficientes' cobre tanto criança nova quanto erro.
+ */
+export type DifficultyRecommendation = 'subir' | 'descer' | 'manter' | 'dados_insuficientes';
+
+export async function getRecommendedDifficulty(profileId: string, gameKey: string): Promise<DifficultyRecommendation> {
+  try {
+    const { data, error } = await supabase
+      .from('v_recommended_difficulty')
+      .select('recomendacao')
+      .eq('profile_id', profileId)
+      .eq('game_key', gameKey)
+      .maybeSingle();
+
+    if (error || !data) return 'dados_insuficientes';
+    return data.recomendacao as DifficultyRecommendation;
+  } catch (err) {
+    console.warn('Erro ao buscar recomendação de dificuldade:', err);
+    return 'dados_insuficientes';
+  }
+}
+
+/**
+ * 3.4.2. ÚLTIMO NÍVEL DE DIFICULDADE USADO (game_sessions.difficulty)
+ * Serve de ponto de partida para aplicar a recomendação (subir/descer um degrau).
+ */
+export async function getLastGameDifficulty(profileId: string, gameKey: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('game_sessions')
+      .select('difficulty')
+      .eq('profile_id', profileId)
+      .eq('game_key', gameKey)
+      .not('difficulty', 'is', null)
+      .order('start_time', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.difficulty ?? null;
+  } catch (err) {
+    console.warn('Erro ao buscar último nível de dificuldade:', err);
+    return null;
   }
 }
 

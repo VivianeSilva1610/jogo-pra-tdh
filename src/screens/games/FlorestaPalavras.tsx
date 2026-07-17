@@ -9,7 +9,7 @@ import { playSound } from '../../services/audio';
 import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
-import { startGameSession, endGameSession, logGameEvent } from '../../services/database';
+import { useGameSession } from '../../hooks/useGameSession';
 
 interface FlorestaPalavrasProps {
   onBack: () => void;
@@ -82,7 +82,7 @@ const ITEMS_POOL: ForestItem[] = [
 
 export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) => {
   const { t, language } = useLocalization();
-  const { childId, soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
+  const { soundEnabled, completeChallenge, challengesCompleted, stars, readWords } = useGame();
 
   const [queue, setQueue] = useState<ForestItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -94,25 +94,14 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
   const hadErrorEver = useRef(false); // Rastreia erros em TODAS as rodadas
   const exerciseFinished = useRef(false); // Trava a fila após a 3ª rodada (evita narrar uma "próxima rodada" fantasma)
   const [showPerfect, setShowPerfect] = useState(false);
-  const sessionIdRef = useRef<string | null>(null);
   const roundStartTimeRef = useRef<number>(0);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (childId) {
-      startGameSession(childId, 'aventura_das_letras')
-        .then(id => { if (isMounted) sessionIdRef.current = id; })
-        .catch(err => console.warn('Erro iniciar sessao FlorestaPalavras:', err));
-    }
-    return () => { isMounted = false; };
-  }, [childId]);
+  const { difficulty, logEvent, finishSession, abandonSession } = useGameSession('aventura_das_letras');
 
   // Inicializar fila com base na dificuldade
   useEffect(() => {
-    if (exerciseFinished.current) return;
+    if (exerciseFinished.current || difficulty === null) return;
     const activeLang = language || 'pt';
-    const difficulty = Math.floor(challengesCompleted / 7) % 3; // 0: Fácil, 1: Médio, 2: Difícil
-    
+
     // Filtrar ITEMS_POOL com base na dificuldade
     let pool = ITEMS_POOL.filter(item => {
       const w = item.wordKeys[activeLang] || item.wordKeys['pt'];
@@ -144,7 +133,7 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
     }
     setQueue(selectedTargets);
     setCurrentIndex(0);
-  }, [challengesCompleted, language, readWords]);
+  }, [challengesCompleted, language, readWords, difficulty]);
 
   // Iniciar nova rodada quando muda o índice na fila
   useEffect(() => {
@@ -183,20 +172,15 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
     const isCorrect = choice === correctWord;
     const responseTime = Date.now() - roundStartTimeRef.current;
 
-    if (childId && sessionIdRef.current) {
-      logGameEvent({
-        profile_id: childId,
-        session_id: sessionIdRef.current,
-        game_key: 'aventura_das_letras',
-        event_type: 'answer',
-        target: correctWord,
-        target_type: 'word',
-        response_value: choice,
-        correct: isCorrect,
-        response_time_ms: responseTime,
-        error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
-      }).catch(err => console.warn('Erro logGameEvent answer Floresta:', err));
-    }
+    logEvent({
+      event_type: 'answer',
+      target: correctWord,
+      target_type: 'word',
+      response_value: choice,
+      correct: isCorrect,
+      response_time_ms: responseTime,
+      error_type: isCorrect ? undefined : (responseTime < 500 ? 'impulsiva' : 'substituicao'),
+    });
 
     if (isCorrect) {
       playSound('success', soundEnabled);
@@ -216,15 +200,7 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          if (childId && sessionIdRef.current) {
-            logGameEvent({
-              profile_id: childId,
-              session_id: sessionIdRef.current,
-              game_key: 'aventura_das_letras',
-              event_type: 'activity_complete',
-            }).catch(console.warn);
-            endGameSession(sessionIdRef.current).catch(console.warn);
-          }
+          finishSession();
           await completeChallenge('word', correctWord);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
@@ -245,15 +221,7 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
   };
 
   const handleBack = () => {
-    if (childId && sessionIdRef.current && !exerciseFinished.current) {
-      logGameEvent({
-        profile_id: childId,
-        session_id: sessionIdRef.current,
-        game_key: 'aventura_das_letras',
-        event_type: 'abandon',
-      }).catch(console.warn);
-      endGameSession(sessionIdRef.current).catch(console.warn);
-    }
+    abandonSession();
     onBack();
   };
 

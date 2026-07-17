@@ -162,6 +162,16 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
     });
   };
 
+  const handleSelectDeletion = () => {
+    playSound('pop', soundEnabled);
+    Animated.spring(avatarX, { toValue: 330, friction: 6, tension: 40, useNativeDriver: true }).start();
+    Animated.spring(avatarY, { toValue: 960, friction: 6, tension: 40, useNativeDriver: true }).start(() => {
+      setTimeout(() => {
+        onSelectGame('game_deletion');
+      }, 300);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* CABEÇALHO */}
@@ -400,6 +410,17 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
             titleSide="right"
             onPress={handleSelectLibrary}
             style={{ left: 138, top: 100 }}
+          />
+
+          {/* NÓ DA SÍLABA ESCONDIDA (deleção fonêmica) — desafio bônus, sempre disponível */}
+          <LevelNode
+            state="available"
+            color="#F48FB1"
+            emoji="🔍"
+            title={t('game8Title')}
+            titleSide="left"
+            onPress={handleSelectDeletion}
+            style={{ left: 298, top: 925 }}
           />
 
           {/* PERSONAGEM ANIMADO FLUTUANDO NO MAPA */}

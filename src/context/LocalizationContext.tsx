@@ -88,6 +88,8 @@ export interface Translations {
   game7Title: string;
   game7Desc: string;
   game7Prompt: string;
+  game8Title: string;
+  game8Prompt: string;
   listenAgain: string;
   castleOpened: string;
   difficultyEasy: string;
@@ -239,6 +241,8 @@ const translations: Record<LanguageType, Translations> = {
     game6Title: "Floresta das Palavras",
     game6Desc: "Selecione o nome correto da figura apresentada!",
     game6Prompt: "Ouça e escolha a imagem certa!",
+    game8Title: "Sílaba Escondida",
+    game8Prompt: "Escute a dica e descubra a palavra sem a sílaba escondida! 🔍",
     game7Title: "Castelo das Frases",
     game7Desc: "Ordene as palavras para ler a frase e abrir o castelo!",
     game7Prompt: "Ouça a frase e monte-a com as palavras abaixo! 🔊",
@@ -391,6 +395,8 @@ const translations: Record<LanguageType, Translations> = {
     game6Title: "Word Forest",
     game6Desc: "Select the correct name for the image shown!",
     game6Prompt: "Listen and choose the right image!",
+    game8Title: "Hidden Syllable",
+    game8Prompt: "Listen to the clue and find the word without the hidden syllable! 🔍",
     game7Title: "Sentence Castle",
     game7Desc: "Order the words to read the sentence and open the castle!",
     game7Prompt: "Listen to the sentence and build it with the words below! 🔊",
@@ -543,6 +549,8 @@ const translations: Record<LanguageType, Translations> = {
     game6Title: "Foresta delle Parole",
     game6Desc: "Seleziona il nome corretto per la figura mostrata!",
     game6Prompt: "Ascolta e scegli l'immagine giusta!",
+    game8Title: "Sillaba Nascosta",
+    game8Prompt: "Ascolta l'indizio e trova la parola senza la sillaba nascosta! 🔍",
     game7Title: "Castello delle Frasi",
     game7Desc: "Ordina le parole per leggere la frase e aprire il castello!",
     game7Prompt: "Ascolta la frase e costruiscila con le parole qui sotto! 🔊",
@@ -695,6 +703,8 @@ const translations: Record<LanguageType, Translations> = {
     game6Title: "Bosque de Palabras",
     game6Desc: "¡Selecciona el nombre correcto del dibujo mostrado!",
     game6Prompt: "¡Escucha y elige la imagen correcta!",
+    game8Title: "Sílaba Escondida",
+    game8Prompt: "¡Escucha la pista y descubre la palabra sin la sílaba escondida! 🔍",
     game7Title: "Castillo de las Frases",
     game7Desc: "¡Ordena las palabras para leer la frase y abrir el castillo!",
     game7Prompt: "¡Escucha la frase y arma con las palabras de abajo! 🔊",
