@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Platform, TextInput, Modal } from 'react-native';
 import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
@@ -56,6 +56,11 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
 
   const [subPeriodEnd, setSubPeriodEnd] = useState<string | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
+
+  // Exclusão de conta (irreversível) — confirmação em duas etapas
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'confirm' | 'type'>('closed');
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // FNV-1a hash (pure JS — deterministic, no deps)
   const hashPin = useCallback((pin: string, salt: string): string => {
@@ -334,6 +339,44 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
           },
         ]
       );
+    }
+  };
+
+  const openDeleteAccountFlow = () => {
+    setDeleteConfirmInput('');
+    setDeleteStep('confirm');
+  };
+
+  const closeDeleteAccountFlow = () => {
+    setDeleteStep('closed');
+    setDeleteConfirmInput('');
+  };
+
+  const handleConfirmDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const { data, error } = await supabase.rpc('delete_my_account');
+      setDeletingAccount(false);
+
+      if (error || !data?.success) {
+        const msg = t('deleteAccountError');
+        if (Platform.OS === 'web') window.alert(msg); else Alert.alert('', msg);
+        return;
+      }
+
+      setDeleteStep('closed');
+      if (Platform.OS === 'web') {
+        window.alert(t('deleteAccountSuccess'));
+        await supabase.auth.signOut();
+      } else {
+        Alert.alert('', t('deleteAccountSuccess'), [
+          { text: 'OK', onPress: async () => { await supabase.auth.signOut(); } },
+        ]);
+      }
+    } catch (err) {
+      setDeletingAccount(false);
+      const msg = t('deleteAccountError');
+      if (Platform.OS === 'web') window.alert(msg); else Alert.alert('', msg);
     }
   };
 
@@ -724,9 +767,87 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
             )}
           </View>
 
+          {/* Exclusão de conta — discreta, sem destaque de ação comum */}
+          <TouchableOpacity
+            style={stylesPP.deleteAccountLink}
+            onPress={openDeleteAccountFlow}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={stylesPP.deleteAccountLinkText}>{t('deleteAccountLink')}</Text>
+          </TouchableOpacity>
+
         </View>
 
       </ScrollView>
+
+      {/* MODAL DE EXCLUSÃO DE CONTA — confirmação em duas etapas */}
+      <Modal
+        visible={deleteStep !== 'closed'}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDeleteAccountFlow}
+      >
+        <View style={stylesPP.modalOverlay}>
+          <View style={stylesPP.modalCard}>
+            {deleteStep === 'confirm' && (
+              <>
+                <Text style={stylesPP.modalTitle}>{t('deleteAccountStep1Title')}</Text>
+                <Text style={stylesPP.modalBody}>
+                  {t('deleteAccountStep1Body').replace(
+                    '{name}',
+                    children.length > 0 ? children.map((c) => c.name).join(', ') : t('deleteAccountYourChildren')
+                  )}
+                </Text>
+                <View style={stylesPP.modalButtonsRow}>
+                  <TouchableOpacity style={stylesPP.modalCancelBtn} onPress={closeDeleteAccountFlow}>
+                    <Text style={stylesPP.modalCancelText}>{t('deleteAccountCancel')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={stylesPP.modalContinueBtn} onPress={() => setDeleteStep('type')}>
+                    <Text style={stylesPP.modalContinueText}>{t('deleteAccountContinue')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            {deleteStep === 'type' && (
+              <>
+                <Text style={stylesPP.modalTitle}>{t('deleteAccountStep2Title')}</Text>
+                <Text style={stylesPP.modalBody}>{t('deleteAccountConfirmInstruction')}</Text>
+                <TextInput
+                  style={stylesPP.modalInput}
+                  value={deleteConfirmInput}
+                  onChangeText={setDeleteConfirmInput}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  placeholder={t('deleteAccountConfirmWord')}
+                  placeholderTextColor="#B0BEC5"
+                  editable={!deletingAccount}
+                />
+                {deletingAccount ? (
+                  <ActivityIndicator size="large" color="#D32F2F" style={{ marginVertical: 16 }} />
+                ) : (
+                  <View style={stylesPP.modalButtonsRow}>
+                    <TouchableOpacity style={stylesPP.modalCancelBtn} onPress={closeDeleteAccountFlow}>
+                      <Text style={stylesPP.modalCancelText}>{t('deleteAccountCancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        stylesPP.modalDeleteBtn,
+                        deleteConfirmInput.trim().toUpperCase() !== t('deleteAccountConfirmWord').toUpperCase() &&
+                          stylesPP.modalDeleteBtnDisabled,
+                      ]}
+                      onPress={handleConfirmDeleteAccount}
+                      disabled={deleteConfirmInput.trim().toUpperCase() !== t('deleteAccountConfirmWord').toUpperCase()}
+                    >
+                      <Text style={stylesPP.modalDeleteText}>{t('deleteAccountConfirmButton')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -994,6 +1115,102 @@ const styles = StyleSheet.create({
 });
 
 const stylesPP = StyleSheet.create({
+  deleteAccountLink: {
+    alignSelf: 'center',
+    marginTop: 20,
+    padding: 8,
+  },
+  deleteAccountLinkText: {
+    fontSize: 12,
+    color: '#9E9E9E',
+    textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 22,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#B71C1C',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalBody: {
+    fontSize: 14,
+    color: '#37474F',
+    lineHeight: 20,
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  modalInput: {
+    borderWidth: 2,
+    borderColor: '#D32F2F',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#37474F',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#ECEFF1',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  modalCancelText: {
+    color: '#546E7A',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalContinueBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#D32F2F',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  modalContinueText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalDeleteBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#B71C1C',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  modalDeleteBtnDisabled: {
+    backgroundColor: '#E0B4B4',
+  },
+  modalDeleteText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   premiumBadge: {
     marginLeft: 'auto',
     backgroundColor: '#FFF8E1',

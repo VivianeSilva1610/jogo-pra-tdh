@@ -144,6 +144,19 @@ export interface Translations {
   remove: string;
   premiumLimit: string;
   switchChild: string;
+  deleteAccountLink: string;
+  deleteAccountStep1Title: string;
+  deleteAccountStep1Body: string;
+  deleteAccountContinue: string;
+  deleteAccountCancel: string;
+  deleteAccountStep2Title: string;
+  deleteAccountConfirmWord: string;
+  deleteAccountConfirmInstruction: string;
+  deleteAccountConfirmButton: string;
+  deleteAccountDeleting: string;
+  deleteAccountSuccess: string;
+  deleteAccountError: string;
+  deleteAccountYourChildren: string;
   subscribePremium: string;
   premiumAvailable: string;
   premiumAvailableDesc: string;
@@ -300,6 +313,19 @@ const translations: Record<LanguageType, Translations> = {
     remove: "Remover",
     premiumLimit: "⭐ Plano Premium permite até 5 perfis de crianças",
     switchChild: "Trocar criança ativa",
+    deleteAccountLink: "Excluir minha conta",
+    deleteAccountStep1Title: "Excluir conta",
+    deleteAccountStep1Body: "Isso vai apagar permanentemente os dados de {name} e todo o progresso. Essa ação não pode ser desfeita.",
+    deleteAccountContinue: "Continuar",
+    deleteAccountCancel: "Cancelar",
+    deleteAccountStep2Title: "Confirme a exclusão",
+    deleteAccountConfirmWord: "EXCLUIR",
+    deleteAccountConfirmInstruction: "Digite EXCLUIR para confirmar",
+    deleteAccountConfirmButton: "Excluir permanentemente",
+    deleteAccountDeleting: "Excluindo...",
+    deleteAccountSuccess: "Sua conta foi excluída.",
+    deleteAccountError: "Não foi possível excluir sua conta. Tente novamente.",
+    deleteAccountYourChildren: "sua conta",
     subscribePremium: "Assinar Premium ⭐",
     premiumAvailable: "Disponível no Premium",
     premiumAvailableDesc: "Acompanhe letras, sílabas e palavras que a criança dominou com o Plano Premium.",
@@ -454,6 +480,19 @@ const translations: Record<LanguageType, Translations> = {
     remove: "Remove",
     premiumLimit: "⭐ Premium Plan allows up to 5 child profiles",
     switchChild: "Switch active child",
+    deleteAccountLink: "Delete my account",
+    deleteAccountStep1Title: "Delete account",
+    deleteAccountStep1Body: "This will permanently delete {name}'s data and all progress. This action cannot be undone.",
+    deleteAccountContinue: "Continue",
+    deleteAccountCancel: "Cancel",
+    deleteAccountStep2Title: "Confirm deletion",
+    deleteAccountConfirmWord: "DELETE",
+    deleteAccountConfirmInstruction: "Type DELETE to confirm",
+    deleteAccountConfirmButton: "Delete permanently",
+    deleteAccountDeleting: "Deleting...",
+    deleteAccountSuccess: "Your account has been deleted.",
+    deleteAccountError: "We couldn't delete your account. Please try again.",
+    deleteAccountYourChildren: "your account",
     subscribePremium: "Subscribe Premium ⭐",
     premiumAvailable: "Available in Premium",
     premiumAvailableDesc: "Track letters, syllables, and words mastered with the Premium Plan.",
@@ -608,6 +647,19 @@ const translations: Record<LanguageType, Translations> = {
     remove: "Rimuovi",
     premiumLimit: "⭐ Il Piano Premium consente fino a 5 profili",
     switchChild: "Cambia bambino attivo",
+    deleteAccountLink: "Elimina il mio account",
+    deleteAccountStep1Title: "Elimina account",
+    deleteAccountStep1Body: "Questo eliminerà permanentemente i dati di {name} e tutti i suoi progressi. Questa azione non può essere annullata.",
+    deleteAccountContinue: "Continua",
+    deleteAccountCancel: "Annulla",
+    deleteAccountStep2Title: "Conferma eliminazione",
+    deleteAccountConfirmWord: "ELIMINA",
+    deleteAccountConfirmInstruction: "Digita ELIMINA per confermare",
+    deleteAccountConfirmButton: "Elimina definitivamente",
+    deleteAccountDeleting: "Eliminazione in corso...",
+    deleteAccountSuccess: "Il tuo account è stato eliminato.",
+    deleteAccountError: "Non è stato possibile eliminare il tuo account. Riprova.",
+    deleteAccountYourChildren: "questo account",
     subscribePremium: "Abbonati a Premium ⭐",
     premiumAvailable: "Disponibile con Premium",
     premiumAvailableDesc: "Tieni traccia di lettere, sillabe e parole con il Piano Premium.",
@@ -762,6 +814,19 @@ const translations: Record<LanguageType, Translations> = {
     remove: "Eliminar",
     premiumLimit: "⭐ El Plan Premium permite hasta 5 perfiles",
     switchChild: "Cambiar niño activo",
+    deleteAccountLink: "Eliminar mi cuenta",
+    deleteAccountStep1Title: "Eliminar cuenta",
+    deleteAccountStep1Body: "Esto eliminará permanentemente los datos de {name} y todo su progreso. Esta acción no se puede deshacer.",
+    deleteAccountContinue: "Continuar",
+    deleteAccountCancel: "Cancelar",
+    deleteAccountStep2Title: "Confirmar eliminación",
+    deleteAccountConfirmWord: "ELIMINAR",
+    deleteAccountConfirmInstruction: "Escribe ELIMINAR para confirmar",
+    deleteAccountConfirmButton: "Eliminar permanentemente",
+    deleteAccountDeleting: "Eliminando...",
+    deleteAccountSuccess: "Tu cuenta ha sido eliminada.",
+    deleteAccountError: "No pudimos eliminar tu cuenta. Inténtalo de nuevo.",
+    deleteAccountYourChildren: "esta cuenta",
     subscribePremium: "Suscribirse a Premium ⭐",
     premiumAvailable: "Disponible en Premium",
     premiumAvailableDesc: "Haz seguimiento de letras, sílabas y palabras con el Plan Premium.",
