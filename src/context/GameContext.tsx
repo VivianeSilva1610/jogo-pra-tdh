@@ -165,6 +165,7 @@ interface GameContextProps {
   resetGameProgress: () => Promise<void>;
   setSoundEnabled: (enabled: boolean) => Promise<void>;
   setIsPremium: (premium: boolean) => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   claimChestReward: () => Promise<string>;
 }
 
@@ -541,6 +542,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
     await AsyncStorage.setItem(key('game_premium'), String(premium));
   };
 
+  // Rebusca a assinatura na fonte de verdade (tabela subscriptions).
+  // Usado após o retorno do checkout do Stripe, já que o carregamento
+  // automático só roda quando childId/parentId mudam.
+  const refreshSubscription = async () => {
+    if (!parentId) return;
+    const sub = await loadParentSubscription(parentId);
+    setIsPremiumState(sub.isPremium);
+  };
+
   const resetGameProgress = async () => {
     setStars(0);
     setCoins(0);
@@ -585,7 +595,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
       challengesCompleted, learnedLetters, masteredSyllables, readWords, soundEnabled, isPremium,
       dailyUsageSeconds, showChestModal, isLoadingProfile, setShowChestModal,
       selectCharacter, setAvatarName, addStars, addCoins, buySticker, buyClothing, equipClothing,
-      completeChallenge, resetGameProgress, setSoundEnabled, setIsPremium, claimChestReward
+      completeChallenge, resetGameProgress, setSoundEnabled, setIsPremium, refreshSubscription, claimChestReward
     }}>
       {children}
     </GameContext.Provider>

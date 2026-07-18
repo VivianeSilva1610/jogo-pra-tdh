@@ -169,6 +169,8 @@ export interface Translations {
   childNamePlaceholder: string;
   createProfile: string;
   manageSubscription: string;
+  manageSubscriptionContactTitle: string;
+  manageSubscriptionContactBody: string;
   activeUntil: string;
 }
 
@@ -338,6 +340,8 @@ const translations: Record<LanguageType, Translations> = {
     childNamePlaceholder: "Nome da criança",
     createProfile: "Criar perfil",
     manageSubscription: "Gerenciar Assinatura",
+    manageSubscriptionContactTitle: "Gerenciar assinatura",
+    manageSubscriptionContactBody: "Para alterar ou cancelar sua assinatura, entre em contato pelo e-mail viverevivi37@gmail.com.",
     activeUntil: "Ativo até",
   },
   en: {
@@ -505,6 +509,8 @@ const translations: Record<LanguageType, Translations> = {
     childNamePlaceholder: "Child's name",
     createProfile: "Create profile",
     manageSubscription: "Manage Subscription",
+    manageSubscriptionContactTitle: "Manage subscription",
+    manageSubscriptionContactBody: "To change or cancel your subscription, please contact us at viverevivi37@gmail.com.",
     activeUntil: "Active until",
   },
   it: {
@@ -672,6 +678,8 @@ const translations: Record<LanguageType, Translations> = {
     childNamePlaceholder: "Nome del bambino",
     createProfile: "Crea profilo",
     manageSubscription: "Gestisci Abbonamento",
+    manageSubscriptionContactTitle: "Gestisci abbonamento",
+    manageSubscriptionContactBody: "Per modificare o annullare il tuo abbonamento, contattaci all'indirizzo viverevivi37@gmail.com.",
     activeUntil: "Attivo fino al",
   },
   es: {
@@ -839,6 +847,8 @@ const translations: Record<LanguageType, Translations> = {
     childNamePlaceholder: "Nombre del niño",
     createProfile: "Crear perfil",
     manageSubscription: "Gestionar Suscripción",
+    manageSubscriptionContactTitle: "Gestionar suscripción",
+    manageSubscriptionContactBody: "Para cambiar o cancelar tu suscripción, contáctanos en viverevivi37@gmail.com.",
     activeUntil: "Activo hasta",
   }
 };

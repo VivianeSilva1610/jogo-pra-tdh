@@ -4,8 +4,8 @@ import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users, LogOut } from 'lucide-react-native';
-import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createStripeSession, supabase } from '../services/supabase';
-import { Linking } from 'react-native';
+import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createCheckoutSession, supabase } from '../services/supabase';
+import * as WebBrowser from 'expo-web-browser';
 
 interface ParentsPanelScreenProps {
   onNavigate: (screen: string) => void;
@@ -285,7 +285,8 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
 
   const handleSubscribe = async () => {
     setStripeLoading(true);
-    const url = await createStripeSession('checkout');
+    const country = language === 'pt' ? 'BR' : 'INT';
+    const url = await createCheckoutSession('https://jogo-pra-tdh.vercel.app', country);
     setStripeLoading(false);
     if (!url) {
       Alert.alert('Erro', 'Não foi possível abrir o checkout. Tente novamente.');
@@ -294,22 +295,18 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     if (Platform.OS === 'web') {
       window.location.href = url; // redireciona na mesma aba (evita bloqueio de popup)
     } else {
-      await Linking.openURL(url);
+      await WebBrowser.openBrowserAsync(url);
     }
   };
 
-  const handleManageSubscription = async () => {
-    setStripeLoading(true);
-    const url = await createStripeSession('portal');
-    setStripeLoading(false);
-    if (!url) {
-      Alert.alert('Erro', 'Não foi possível abrir o portal. Tente novamente.');
-      return;
-    }
+  const handleManageSubscription = () => {
+    // Portal de billing self-service ainda não está disponível; por ora,
+    // direciona para contato por e-mail. TODO: portal completo do Stripe.
+    const msg = t('manageSubscriptionContactBody');
     if (Platform.OS === 'web') {
-      window.location.href = url;
+      window.alert(msg);
     } else {
-      await Linking.openURL(url);
+      Alert.alert(t('manageSubscriptionContactTitle'), msg);
     }
   };
 

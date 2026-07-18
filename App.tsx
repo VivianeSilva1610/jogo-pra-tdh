@@ -50,21 +50,25 @@ function GameAppContent({
   onSelectChild: (id: string) => void;
   isInitializingChild: boolean;
 }) {
-  const { character, soundEnabled, isLoadingProfile, isPremium } = useGame();
+  const { character, soundEnabled, isLoadingProfile, isPremium, refreshSubscription } = useGame();
   const { t } = useLocalization();
 
   const [currentScreen, setCurrentScreen] = useState<string>('home');
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Detecta retorno do Stripe Checkout (?payment=success) na web
+  // Detecta retorno do Stripe Checkout (?checkout=success|cancelled) na web
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') {
+    const checkoutResult = params.get('checkout');
+    if (checkoutResult === 'success') {
       window.history.replaceState({}, '', window.location.pathname);
       setPaymentSuccess(true);
       setTimeout(() => setPaymentSuccess(false), 4000);
+      refreshSubscription();
+    } else if (checkoutResult === 'cancelled') {
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
 

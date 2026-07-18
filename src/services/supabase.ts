@@ -289,20 +289,40 @@ export const loadParentSubscription = async (
 };
 
 /**
- * Chama a Edge Function stripe-checkout e retorna a URL de pagamento.
- * type: 'checkout' → nova assinatura | 'portal' → gerenciar assinatura existente
+ * Chama a Edge Function create-checkout-session (projeto Interativo,
+ * compartilhada com o Ilha do Foco) e retorna a URL do checkout do Stripe.
+ * returnUrl deve ser só a base (sem query string) — a função já anexa
+ * ?checkout=success ou ?checkout=cancelled.
  */
-export const createStripeSession = async (
-  type: 'checkout' | 'portal' = 'checkout'
+export const createCheckoutSession = async (
+  returnUrl: string,
+  country: 'BR' | 'INT'
 ): Promise<string | null> => {
   try {
-    const { data, error } = await (supabase as any).functions.invoke('stripe-checkout', {
-      body: { type },
-    });
-    if (error) { console.warn('Stripe session error:', error); return null; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
+
+    const response = await fetch(
+      'https://pswmbqlafywaxphsrloe.supabase.co/functions/v1/create-checkout-session',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ country, returnUrl }),
+      }
+    );
+
+    if (!response.ok) {
+      console.warn('Erro ao criar checkout session:', response.status, await response.text());
+      return null;
+    }
+
+    const data = await response.json();
     return data?.url ?? null;
   } catch (err) {
-    console.warn('Erro ao criar sessão Stripe:', err);
+    console.warn('Erro ao iniciar checkout:', err);
     return null;
   }
 };
