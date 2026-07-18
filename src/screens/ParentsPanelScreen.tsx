@@ -4,7 +4,7 @@ import { useLocalization, LanguageType } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { CustomButton } from '../components/CustomButton';
 import { ArrowLeft, BookOpen, Clock, Settings, Shield, Users, LogOut } from 'lucide-react-native';
-import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createCheckoutSession, supabase } from '../services/supabase';
+import { fetchChildren, deleteChild, createChildWithProfile, getParentPinHash, setParentPinHash, syncChildProfile, loadParentSubscription, createCheckoutSession, createPortalSession, supabase } from '../services/supabase';
 import * as WebBrowser from 'expo-web-browser';
 
 interface ParentsPanelScreenProps {
@@ -299,14 +299,26 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
     }
   };
 
-  const handleManageSubscription = () => {
-    // Portal de billing self-service ainda não está disponível; por ora,
-    // direciona para contato por e-mail. TODO: portal completo do Stripe.
-    const msg = t('manageSubscriptionContactBody');
+  const handleManageSubscription = async () => {
+    setStripeLoading(true);
+    const { url, error } = await createPortalSession('https://jogo-pra-tdh.vercel.app');
+    setStripeLoading(false);
+
+    if (error === 'no_stripe_customer' || !url) {
+      // Premium por liberação administrativa (sem cobrança no Stripe) ou erro — direciona pra contato.
+      const msg = t('manageSubscriptionContactBody');
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert(t('manageSubscriptionContactTitle'), msg);
+      }
+      return;
+    }
+
     if (Platform.OS === 'web') {
-      window.alert(msg);
+      window.location.href = url;
     } else {
-      Alert.alert(t('manageSubscriptionContactTitle'), msg);
+      await WebBrowser.openBrowserAsync(url);
     }
   };
 

@@ -328,6 +328,42 @@ export const createCheckoutSession = async (
 };
 
 /**
+ * Chama a Edge Function create-portal-session (projeto Interativo) e
+ * retorna a URL do portal de cobrança do Stripe. Se o responsável for
+ * premium por liberação administrativa (sem provider_customer_id no
+ * Stripe), a função responde com error: 'no_stripe_customer'.
+ */
+export const createPortalSession = async (
+  returnUrl: string
+): Promise<{ url?: string; error?: string }> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { error: 'unauthorized' };
+
+    const response = await fetch(
+      'https://pswmbqlafywaxphsrloe.supabase.co/functions/v1/create-portal-session',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ returnUrl }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data?.error || 'internal_error' };
+    }
+    return { url: data?.url };
+  } catch (err) {
+    console.warn('Erro ao abrir portal de assinatura:', err);
+    return { error: 'internal_error' };
+  }
+};
+
+/**
  * Cria um perfil de filho no Supabase e inicializa o perfil de progresso.
  */
 export const createChildWithProfile = async (
