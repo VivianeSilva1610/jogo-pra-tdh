@@ -621,7 +621,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
       {!roundCompleted && (
         <TouchableOpacity
           style={styles.listenBtn}
-          onPress={() => speak(phraseData.sentence, language)}
+          onPress={() => { logEvent({ event_type: 'help_request' }); speak(phraseData.sentence, language); }}
           activeOpacity={0.8}
         >
           <Text style={styles.listenBtnText}>🔊 {t('listenAgain') || 'Ouvir a frase'}</Text>

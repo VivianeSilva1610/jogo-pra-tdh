@@ -212,7 +212,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
         <TouchableOpacity 
           style={styles.speakerButton} 
           activeOpacity={0.8}
-          onPress={() => speakSyllable(targetSyllable)}
+          onPress={() => { logEvent({ event_type: 'help_request' }); speakSyllable(targetSyllable); }}
         >
           <Volume2 size={54} color="#5E35B1" />
           <Text style={styles.speakerText}>{t('listenAgain') || 'Ouvir de novo'}</Text>

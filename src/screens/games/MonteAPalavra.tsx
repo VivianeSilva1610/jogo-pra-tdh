@@ -510,7 +510,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
 
       <TouchableOpacity 
         style={styles.listenButton} 
-        onPress={() => speak(currentSoundText, language)}
+        onPress={() => { logEvent({ event_type: 'help_request' }); speak(currentSoundText, language); }}
       >
         <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
       </TouchableOpacity>

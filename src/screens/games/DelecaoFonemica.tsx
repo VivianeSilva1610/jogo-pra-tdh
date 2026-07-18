@@ -222,7 +222,7 @@ export const DelecaoFonemica: React.FC<DeletionProps> = ({ onBack }) => {
       {currentItem && (
         <TouchableOpacity
           style={styles.listenButton}
-          onPress={() => speak(currentItem.instruction, language)}
+          onPress={() => { logEvent({ event_type: 'help_request' }); speak(currentItem.instruction, language); }}
         >
           <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
         </TouchableOpacity>

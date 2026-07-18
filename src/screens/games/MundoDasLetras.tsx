@@ -265,7 +265,7 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
 
       <TouchableOpacity
         style={styles.listenButton}
-        onPress={() => speak(targetSyllable, language)}
+        onPress={() => { logEvent({ event_type: 'help_request' }); speak(targetSyllable, language); }}
       >
         <Text style={styles.listenButtonText}>🔊 {t('listenAgain')}</Text>
       </TouchableOpacity>

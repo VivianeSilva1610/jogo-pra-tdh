@@ -247,6 +247,7 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
       <TouchableOpacity 
         style={styles.listenButton} 
         onPress={() => {
+          logEvent({ event_type: 'help_request' });
           const lang = language as string;
           const correctWord = currentItem.wordKeys[lang] || currentItem.wordKeys['pt'];
           speak(correctWord, language);
