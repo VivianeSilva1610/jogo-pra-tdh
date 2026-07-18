@@ -97,11 +97,15 @@ function GameAppContent({
 
   // Monitorar carregamento do personagem inicial
   useEffect(() => {
-    // Só exige seleção se já estiver logado e não tiver personagem salvo
-    if (session && character === null) {
+    // Só exige seleção se já estiver logado, o perfil já tiver carregado da
+    // nuvem (senão character===null só significa "ainda não chegou"; forçar
+    // a seleção nesse momento prendia a tela nela mesmo depois do personagem
+    // real carregar, já que nada revertia currentScreen de volta) e mesmo
+    // assim não houver personagem salvo.
+    if (session && !isLoadingProfile && character === null) {
       setCurrentScreen('character_select');
     }
-  }, [character, session]);
+  }, [character, session, isLoadingProfile]);
 
   // Trilha sonora de fundo
   useEffect(() => {
