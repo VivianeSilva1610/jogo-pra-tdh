@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Platform, ActivityIndicator, Alert, SafeAreaView, Easing, TextInput, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../services/supabase';
 import { useLocalization } from '../context/LocalizationContext';
@@ -12,6 +12,23 @@ import { playSound } from '../services/audio';
 import { speak } from '../services/speech';
 
 WebBrowser.maybeCompleteAuthSession();
+
+// A Política de Privacidade e os Termos de Uso cobrem as duas plataformas
+// (Ilha do Foco + Aventura das Letras) como um único documento, hospedado
+// junto com o app Ilha do Foco - o deploy deste app tem um rewrite catch-all
+// para index.html (vercel.json), então não dá pra servir essas páginas aqui.
+const LEGAL_URLS = {
+  terms: 'https://interativo-pi.vercel.app/termos-de-uso.html',
+  privacy: 'https://interativo-pi.vercel.app/politica-privacidade.html',
+};
+
+const openLegalUrl = (url: string) => {
+  if (Platform.OS === 'web') {
+    window.open(url, '_blank');
+  } else {
+    WebBrowser.openBrowserAsync(url);
+  }
+};
 
 export const LoginScreen: React.FC = () => {
   const { t, language } = useLocalization();
@@ -307,6 +324,20 @@ export const LoginScreen: React.FC = () => {
           </View>
 
           {!isResetMode && (
+            <Text style={styles.legalConsentText}>
+              Ao criar uma conta, você concorda com nossos{' '}
+              <Text style={styles.legalConsentLink} onPress={() => openLegalUrl(LEGAL_URLS.terms)}>
+                Termos de Uso
+              </Text>
+              {' '}e nossa{' '}
+              <Text style={styles.legalConsentLink} onPress={() => openLegalUrl(LEGAL_URLS.privacy)}>
+                Política de Privacidade
+              </Text>
+              .
+            </Text>
+          )}
+
+          {!isResetMode && (
             <TouchableOpacity onPress={() => setIsResetMode(true)} style={styles.forgotBtn}>
               <Text style={styles.forgotText}>Esqueci minha senha</Text>
             </TouchableOpacity>
@@ -582,6 +613,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#FFF',
     letterSpacing: 0.5,
+  },
+  legalConsentText: {
+    fontSize: FONT_SIZES.micro,
+    color: THEME_COLORS.brownDark,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 18,
+  },
+  legalConsentLink: {
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
   forgotBtn: {
     marginTop: 10,
