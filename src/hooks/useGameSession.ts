@@ -80,11 +80,11 @@ export function useGameSession(gameKey: string) {
     }).catch((err) => console.warn(`Erro logGameEvent (${gameKey}):`, err));
   };
 
-  const finishSession = () => {
+  const finishSession = (stars: number = 0) => {
     if (!childId || !sessionIdRef.current || endedRef.current) return;
     endedRef.current = true;
     logEvent({ event_type: 'activity_complete' });
-    endGameSession(sessionIdRef.current).catch((err) => console.warn(`Erro endGameSession (${gameKey}):`, err));
+    endGameSession(sessionIdRef.current, { stars }).catch((err) => console.warn(`Erro endGameSession (${gameKey}):`, err));
   };
 
   const abandonSession = () => {

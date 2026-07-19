@@ -161,7 +161,7 @@ interface GameContextProps {
   buySticker: (id: string, cost: number) => Promise<boolean>;
   buyClothing: (id: string, cost: number) => Promise<boolean>;
   equipClothing: (id: string | null) => Promise<void>;
-  completeChallenge: (type: 'letter' | 'syllable' | 'word', value: string) => Promise<void>;
+  completeChallenge: (type: 'letter' | 'syllable' | 'word', value: string) => Promise<number>;
   resetGameProgress: () => Promise<void>;
   setSoundEnabled: (enabled: boolean) => Promise<void>;
   setIsPremium: (premium: boolean) => Promise<void>;
@@ -496,6 +496,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, childId, p
       masteredSyllables: newSyllables,
       readWords: newWords,
     });
+
+    return earnedStars;
   };
 
   const claimChestReward = async (): Promise<string> => {

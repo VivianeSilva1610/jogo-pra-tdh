@@ -175,8 +175,8 @@ export const DelecaoFonemica: React.FC<DeletionProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          finishSession();
-          await completeChallenge('word', currentItem.answer);
+          const earnedStars = await completeChallenge('word', currentItem.answer);
+          finishSession(earnedStars);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {

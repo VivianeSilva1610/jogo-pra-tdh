@@ -146,8 +146,8 @@ export const SilabasCamufladas: React.FC<SilabasCamufladasProps> = ({ onBack }) 
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          finishSession();
-          await completeChallenge('syllable', targetLetter);
+          const earnedStars = await completeChallenge('syllable', targetLetter);
+          finishSession(earnedStars);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {

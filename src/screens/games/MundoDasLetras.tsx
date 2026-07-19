@@ -216,8 +216,8 @@ export const MundoDasSilabas: React.FC<MundoDasSilabasProps> = ({ onBack }) => {
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          finishSession();
-          await completeChallenge('syllable', targetSyllable);
+          const earnedStars = await completeChallenge('syllable', targetSyllable);
+          finishSession(earnedStars);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {

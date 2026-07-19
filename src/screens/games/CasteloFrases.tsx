@@ -535,8 +535,8 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             exerciseFinished.current = true;
-            finishSession();
-            await completeChallenge('word', phraseData.sentence);
+            const earnedStars = await completeChallenge('word', phraseData.sentence);
+            finishSession(earnedStars);
             if (!hadErrorEver.current) {
               setShowPerfect(true);
             } else {

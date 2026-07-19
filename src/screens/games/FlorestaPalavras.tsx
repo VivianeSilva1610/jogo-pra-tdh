@@ -200,8 +200,8 @@ export const FlorestaPalavras: React.FC<FlorestaPalavrasProps> = ({ onBack }) =>
           setCurrentIndex(nextIdx);
         } else {
           exerciseFinished.current = true;
-          finishSession();
-          await completeChallenge('word', correctWord);
+          const earnedStars = await completeChallenge('word', correctWord);
+          finishSession(earnedStars);
           if (!hadErrorEver.current) {
             setShowPerfect(true);
           } else {

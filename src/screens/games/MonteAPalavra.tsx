@@ -466,8 +466,8 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
             setCurrentIndex(nextIdx);
           } else {
             exerciseFinished.current = true;
-            finishSession();
-            await completeChallenge('word', currentWord);
+            const earnedStars = await completeChallenge('word', currentWord);
+            finishSession(earnedStars);
             if (!hadErrorEver.current) {
               setShowPerfect(true);
             } else {
