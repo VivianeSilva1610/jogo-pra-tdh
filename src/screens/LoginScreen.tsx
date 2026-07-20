@@ -156,7 +156,13 @@ export const LoginScreen: React.FC = () => {
         if (error) throw error;
         // The family and child_profiles creation will happen via createChildWithProfile called elsewhere
         // But for "Caso A", the family must be created. We do this automatically in createChildWithProfile now.
-        Alert.alert('Conta criada', 'Sua conta foi criada! Faça login agora.');
+        // With email confirmation required (project-wide Supabase setting), signUp() succeeds but returns
+        // no session until the confirmation link is clicked - "faça login agora" would be wrong in that case.
+        if (data.session) {
+          Alert.alert('Conta criada', 'Sua conta foi criada! Faça login agora.');
+        } else {
+          Alert.alert('Quase lá!', 'Enviamos um link de confirmação para o seu email. Clique nele para ativar sua conta antes de fazer login (confira também a caixa de spam).');
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
@@ -170,6 +176,8 @@ export const LoginScreen: React.FC = () => {
              } else {
                 Alert.alert('Erro', 'Senha ou email incorretos.');
              }
+          } else if (error.message.toLowerCase().includes('email not confirmed')) {
+            Alert.alert('Confirme seu email', 'Seu email ainda não foi confirmado. Confira sua caixa de entrada (e o spam) e clique no link que enviamos.');
           } else {
             throw error;
           }
