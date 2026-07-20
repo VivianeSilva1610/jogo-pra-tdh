@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Circle, Rect, Path, G, Polygon, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Ellipse, Rect, Path, G, Polygon, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 interface IconProps {
   size?: number;
@@ -315,8 +315,10 @@ const renderAccessory = (accessory: string | null | undefined) => {
   }
 };
 
-// Auxiliar: Elipse para o react-native-svg
-const Ellipse: React.FC<any> = (props) => <Circle {...props} />;
+// Brilho "sticker" — realce translúcido no canto superior da cabeça
+const Shine: React.FC<{ cx: number; cy: number; rx: number; ry: number }> = ({ cx, cy, rx, ry }) => (
+  <Ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#FFFFFF" opacity={0.3} />
+);
 
 // 1. Capybara (Capivara)
 export const CapybaraAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
@@ -324,31 +326,35 @@ export const CapybaraAvatar: React.FC<IconProps> = ({ size = 80, accessory }) =>
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Orelhas */}
-      <Ellipse cx="25" cy="40" rx="8" ry="10" fill="#795548" />
-      <Ellipse cx="75" cy="40" rx="8" ry="10" fill="#795548" />
-      <Ellipse cx="25" cy="40" rx="4" ry="6" fill="#3E2723" />
-      <Ellipse cx="75" cy="40" rx="4" ry="6" fill="#3E2723" />
-      
-      {/* Corpo / Cabeça */}
-      <Rect x="20" y="30" width="60" height="60" rx="30" fill="#8D6E63" />
-      
-      {/* Focinho longo */}
-      <Rect x="30" y="55" width="40" height="25" rx="12" fill="#795548" />
-      
-      {/* Olhos (fechados e relaxados) */}
-      <Path d="M35 48 Q 40 52 45 48" stroke="#3E2723" strokeWidth="2" fill="none" />
-      <Path d="M55 48 Q 60 52 65 48" stroke="#3E2723" strokeWidth="2" fill="none" />
-      
-      {/* Nariz grande */}
-      <Ellipse cx="50" cy="62" rx="6" ry="4" fill="#3E2723" />
-      
+      <Circle cx="23" cy="35" r="11" fill="#8D6E63" stroke="#5D4037" strokeWidth="2" />
+      <Circle cx="77" cy="35" r="11" fill="#8D6E63" stroke="#5D4037" strokeWidth="2" />
+      <Circle cx="23" cy="35" r="5.5" fill="#5D4037" />
+      <Circle cx="77" cy="35" r="5.5" fill="#5D4037" />
+
+      {/* Cabeça */}
+      <Circle cx="50" cy="55" r="36" fill="#A47B5B" stroke="#6D4C41" strokeWidth="2.5" />
+
+      {/* Focinho */}
+      <Ellipse cx="50" cy="69" rx="24" ry="17" fill="#C9A876" />
+      <Path d="M26 69 A 24 17 0 0 1 74 69" stroke="#6D4C41" strokeWidth="2" fill="none" />
+
+      {/* Olhos contentes (fechados), traço grosso e escuro sobre pelo claro */}
+      <Path d="M35 49 Q 41 44 47 49" stroke="#3E2723" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+      <Path d="M53 49 Q 59 44 65 49" stroke="#3E2723" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+
+      {/* Narinas */}
+      <Ellipse cx="44" cy="66" rx="3" ry="2.2" fill="#3E2723" />
+      <Ellipse cx="56" cy="66" rx="3" ry="2.2" fill="#3E2723" />
+
       {/* Boca */}
-      <Path d="M50 66 V 72 M 45 72 Q 50 76 55 72" stroke="#3E2723" strokeWidth="2" fill="none" />
-      
+      <Path d="M50 71 V 76 M 44 76 Q 50 81 56 76" stroke="#3E2723" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+
       {/* Bochechas */}
-      <Circle cx="32" cy="55" r="4" fill="#FF8A80" opacity="0.6" />
-      <Circle cx="68" cy="55" r="4" fill="#FF8A80" opacity="0.6" />
-      
+      <Circle cx="27" cy="61" r="6" fill="#FF8A65" opacity="0.5" />
+      <Circle cx="73" cy="61" r="6" fill="#FF8A65" opacity="0.5" />
+
+      <Shine cx={35} cy={33} rx={10} ry={6} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
@@ -361,28 +367,32 @@ export const TurtleAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Casco traseiro */}
-      <Circle cx="50" cy="60" r="38" fill="#2E7D32" />
-      <Path d="M20 60 Q 50 30 80 60" fill="#1B5E20" />
-      <Path d="M30 45 L 45 60 L 30 75 Z" fill="#388E3C" opacity="0.5" />
-      <Path d="M70 45 L 55 60 L 70 75 Z" fill="#388E3C" opacity="0.5" />
-      <Path d="M50 35 L 60 50 L 50 65 L 40 50 Z" fill="#4CAF50" opacity="0.5" />
-      
+      <Circle cx="50" cy="62" r="36" fill="#2E7D32" stroke="#1B5E20" strokeWidth="2.5" />
+      <Path d="M50 30 L 68 46 L 62 68 L 38 68 L 32 46 Z" fill="#43A047" stroke="#1B5E20" strokeWidth="2" strokeLinejoin="round" />
+      <Path d="M18 62 L 32 46 L 38 68 Z" fill="#388E3C" stroke="#1B5E20" strokeWidth="1.5" strokeLinejoin="round" />
+      <Path d="M82 62 L 68 46 L 62 68 Z" fill="#388E3C" stroke="#1B5E20" strokeWidth="1.5" strokeLinejoin="round" />
+
       {/* Cabeça */}
-      <Circle cx="50" cy="40" r="22" fill="#81C784" stroke="#4CAF50" strokeWidth="2" />
-      
+      <Circle cx="50" cy="38" r="21" fill="#A5D6A7" stroke="#2E7D32" strokeWidth="2.5" />
+
       {/* Olhos grandes */}
-      <Circle cx="42" cy="35" r="4" fill="#1B5E20" />
-      <Circle cx="58" cy="35" r="4" fill="#1B5E20" />
-      <Circle cx="41" cy="34" r="1.5" fill="#FFF" />
-      <Circle cx="57" cy="34" r="1.5" fill="#FFF" />
-      
+      <Circle cx="42" cy="34" r="5" fill="#FFF" stroke="#1B5E20" strokeWidth="1" />
+      <Circle cx="58" cy="34" r="5" fill="#FFF" stroke="#1B5E20" strokeWidth="1" />
+      <Circle cx="42" cy="35" r="2.6" fill="#1B5E20" />
+      <Circle cx="58" cy="35" r="2.6" fill="#1B5E20" />
+      <Circle cx="41" cy="34" r="1" fill="#FFF" />
+      <Circle cx="57" cy="34" r="1" fill="#FFF" />
+
       {/* Bochechas */}
-      <Circle cx="35" cy="42" r="3" fill="#66BB6A" />
-      <Circle cx="65" cy="42" r="3" fill="#66BB6A" />
-      
+      <Circle cx="34" cy="42" r="3.5" fill="#81D683" opacity="0.7" />
+      <Circle cx="66" cy="42" r="3.5" fill="#81D683" opacity="0.7" />
+
       {/* Sorriso simpático */}
-      <Path d="M44 46 Q 50 52 56 46" stroke="#1B5E20" strokeWidth="2" strokeLinecap="round" fill="none" />
-      
+      <Path d="M43 44 Q 50 50 57 44" stroke="#1B5E20" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+
+      <Shine cx={38} cy={30} rx={6} ry={4} />
+      <Shine cx={38} cy={52} rx={8} ry={5} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
@@ -394,30 +404,35 @@ export const SlothAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
+      {/* Pelo do topo */}
+      <Path d="M30 21 Q 50 4 70 21" stroke="#8D6E63" strokeWidth="5" fill="none" strokeLinecap="round" />
+
       {/* Cabeça */}
-      <Circle cx="50" cy="50" r="35" fill="#A1887F" />
-      
-      {/* Rosto / Máscara */}
-      <Ellipse cx="50" cy="50" rx="28" ry="22" fill="#D7CCC8" />
-      
-      {/* Marcas dos olhos */}
-      <Ellipse cx="36" cy="48" rx="10" ry="14" fill="#5D4037" transform="rotate(-15, 36, 48)" />
-      <Ellipse cx="64" cy="48" rx="10" ry="14" fill="#5D4037" transform="rotate(15, 64, 48)" />
-      
-      {/* Olhos relaxados */}
-      <Path d="M32 48 Q 36 50 40 48" stroke="#3E2723" strokeWidth="2" fill="none" />
-      <Path d="M60 48 Q 64 50 68 48" stroke="#3E2723" strokeWidth="2" fill="none" />
-      
+      <Circle cx="50" cy="53" r="36" fill="#BCA284" stroke="#6D4C41" strokeWidth="2.5" />
+
+      {/* Máscara clara do rosto */}
+      <Ellipse cx="50" cy="56" rx="27" ry="23" fill="#F1E4D3" />
+
+      {/* Manchas escuras ao redor dos olhos */}
+      <Ellipse cx="37" cy="51" rx="10" ry="13" fill="#6D4C41" transform="rotate(-12, 37, 51)" />
+      <Ellipse cx="63" cy="51" rx="10" ry="13" fill="#6D4C41" transform="rotate(12, 63, 51)" />
+
+      {/* Olhos sonolentos: traço claro sobre a mancha escura para contraste */}
+      <Path d="M32 51 Q 37 47 42 51" stroke="#FFF8E1" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+      <Path d="M58 51 Q 63 47 68 51" stroke="#FFF8E1" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+
       {/* Narizinho */}
-      <Ellipse cx="50" cy="58" rx="4" ry="3" fill="#3E2723" />
-      
+      <Ellipse cx="50" cy="64" rx="5" ry="4" fill="#3E2723" />
+
       {/* Sorriso tranquilo */}
-      <Path d="M46 64 Q 50 68 54 64" stroke="#3E2723" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      
-      {/* Pelos do topo */}
-      <Path d="M45 15 Q 50 10 55 15" stroke="#8D6E63" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <Path d="M48 18 Q 50 12 52 18" stroke="#8D6E63" strokeWidth="3" fill="none" strokeLinecap="round" />
-      
+      <Path d="M43 71 Q 50 77 57 71" stroke="#6D4C41" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+
+      {/* Bochechas */}
+      <Circle cx="30" cy="63" r="5" fill="#FF8A65" opacity="0.4" />
+      <Circle cx="70" cy="63" r="5" fill="#FF8A65" opacity="0.4" />
+
+      <Shine cx={36} cy={30} rx={9} ry={5} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
@@ -429,33 +444,36 @@ export const FrogAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
+      {/* Corpo / Cabeça Principal */}
+      <Ellipse cx="50" cy="62" rx="40" ry="30" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2.5" />
+
+      {/* Barriguinha verde claro */}
+      <Ellipse cx="50" cy="76" rx="28" ry="16" fill="#C8E6C9" />
+
       {/* Olhos super grandes no topo */}
-      <Circle cx="32" cy="30" r="16" fill="#4CAF50" />
-      <Circle cx="68" cy="30" r="16" fill="#4CAF50" />
+      <Circle cx="32" cy="30" r="16" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2" />
+      <Circle cx="68" cy="30" r="16" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2" />
       <Circle cx="32" cy="30" r="12" fill="#FFF" />
       <Circle cx="68" cy="30" r="12" fill="#FFF" />
-      
+
       {/* Pupilas */}
-      <Circle cx="32" cy="30" r="5" fill="#1B5E20" />
-      <Circle cx="68" cy="30" r="5" fill="#1B5E20" />
+      <Circle cx="32" cy="30" r="5.5" fill="#1B5E20" />
+      <Circle cx="68" cy="30" r="5.5" fill="#1B5E20" />
       <Circle cx="30" cy="28" r="2" fill="#FFF" />
       <Circle cx="66" cy="28" r="2" fill="#FFF" />
-      
-      {/* Corpo / Cabeça Principal */}
-      <Ellipse cx="50" cy="60" rx="40" ry="32" fill="#4CAF50" />
-      
-      {/* Barriguinha verde claro */}
-      <Ellipse cx="50" cy="75" rx="30" ry="18" fill="#C8E6C9" />
-      
-      {/* Sorriso Gigaante */}
+
+      {/* Sorriso Gigante */}
       <Path d="M25 55 Q 50 80 75 55" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" fill="none" />
       <Path d="M22 52 L 25 55" stroke="#1B5E20" strokeWidth="2" strokeLinecap="round" fill="none" />
       <Path d="M78 52 L 75 55" stroke="#1B5E20" strokeWidth="2" strokeLinecap="round" fill="none" />
-      
+
       {/* Bochechas Rosadas */}
       <Circle cx="20" cy="60" r="6" fill="#FF8A80" opacity="0.6" />
       <Circle cx="80" cy="60" r="6" fill="#FF8A80" opacity="0.6" />
-      
+
+      <Shine cx={30} cy={26} rx={4} ry={3} />
+      <Shine cx={66} cy={26} rx={4} ry={3} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
@@ -467,35 +485,42 @@ export const HedgehogAvatar: React.FC<IconProps> = ({ size = 80, accessory }) =>
   <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
-      {/* Espinhos (Corpo Base) */}
-      <Circle cx="50" cy="50" r="35" fill="#5D4037" />
-      <Path d="M15 50 Q 50 10 85 50 Q 50 90 15 50" fill="#4E342E" stroke="#3E2723" strokeWidth="2" />
-      {/* Espinhos soltos desenhados */}
-      <Path d="M20 40 L 10 30 M 30 25 L 20 15 M 50 15 L 50 5 M 70 25 L 80 15 M 80 40 L 90 30" stroke="#4E342E" strokeWidth="3" strokeLinecap="round" />
-      
-      {/* Rostinho (Coração ou elipse) */}
-      <Ellipse cx="50" cy="60" rx="24" ry="20" fill="#D7CCC8" />
-      
-      {/* Orelhinhas */}
-      <Circle cx="30" cy="45" r="5" fill="#D7CCC8" />
-      <Circle cx="70" cy="45" r="5" fill="#D7CCC8" />
-      
-      {/* Nariz pontudo */}
-      <Circle cx="50" cy="55" r="4" fill="#3E2723" />
-      
+      {/* Corpo base */}
+      <Circle cx="50" cy="54" r="35" fill="#6D4C41" stroke="#4E342E" strokeWidth="2.5" />
+      {/* Coroa de espinhos, alinhada ao topo do corpo */}
+      <Path
+        d="M16 46 L23 24 L30 44 L38 20 L46 42 L50 18 L54 42 L62 20 L70 44 L77 24 L84 46 Z"
+        fill="#6D4C41"
+        stroke="#4E342E"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Rostinho claro */}
+      <Ellipse cx="50" cy="62" rx="26" ry="21" fill="#F1E0C8" stroke="#6D4C41" strokeWidth="2" />
+
+      {/* Orelhinhas, espiando na base dos espinhos */}
+      <Circle cx="26" cy="51" r="6" fill="#D7B89C" stroke="#6D4C41" strokeWidth="1.5" />
+      <Circle cx="74" cy="51" r="6" fill="#D7B89C" stroke="#6D4C41" strokeWidth="1.5" />
+
       {/* Olhos fofos */}
-      <Circle cx="40" cy="52" r="3" fill="#3E2723" />
-      <Circle cx="60" cy="52" r="3" fill="#3E2723" />
-      <Circle cx="39" cy="51" r="1" fill="#FFF" />
-      <Circle cx="59" cy="51" r="1" fill="#FFF" />
-      
-      {/* Bochechas */}
-      <Circle cx="35" cy="58" r="3" fill="#FF8A80" opacity="0.6" />
-      <Circle cx="65" cy="58" r="3" fill="#FF8A80" opacity="0.6" />
-      
+      <Circle cx="41" cy="58" r="4.2" fill="#3E2723" />
+      <Circle cx="59" cy="58" r="4.2" fill="#3E2723" />
+      <Circle cx="39.5" cy="56.5" r="1.4" fill="#FFF" />
+      <Circle cx="57.5" cy="56.5" r="1.4" fill="#FFF" />
+
+      {/* Nariz pontudo */}
+      <Circle cx="50" cy="66" r="4.5" fill="#3E2723" />
+
       {/* Boquinha */}
-      <Path d="M46 62 Q 50 66 54 62" stroke="#3E2723" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      
+      <Path d="M45 72 Q 50 76 55 72" stroke="#3E2723" strokeWidth="2" strokeLinecap="round" fill="none" />
+
+      {/* Bochechas */}
+      <Circle cx="34" cy="65" r="4" fill="#FF8A65" opacity="0.5" />
+      <Circle cx="66" cy="65" r="4" fill="#FF8A65" opacity="0.5" />
+
+      <Shine cx={37} cy={55} rx={7} ry={4} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
@@ -508,31 +533,35 @@ export const KoalaAvatar: React.FC<IconProps> = ({ size = 80, accessory }) => (
     <G>
       {renderAccessoryGroup(accessory, isBackAccessory)}
       {/* Orelhas Grandes Felpudas */}
-      <Circle cx="20" cy="35" r="16" fill="#B0BEC5" />
-      <Circle cx="20" cy="35" r="10" fill="#ECEFF1" />
-      <Circle cx="80" cy="35" r="16" fill="#B0BEC5" />
-      <Circle cx="80" cy="35" r="10" fill="#ECEFF1" />
-      
+      <Circle cx="20" cy="35" r="16" fill="#B0BEC5" stroke="#78909C" strokeWidth="2" />
+      <Circle cx="20" cy="35" r="9" fill="#ECEFF1" />
+      <Circle cx="80" cy="35" r="16" fill="#B0BEC5" stroke="#78909C" strokeWidth="2" />
+      <Circle cx="80" cy="35" r="9" fill="#ECEFF1" />
+
       {/* Cabeça Larga */}
-      <Ellipse cx="50" cy="55" rx="36" ry="30" fill="#90A4AE" />
-      
-      {/* Nariz Grande Preto/Cinza Escuro Oval */}
-      <Ellipse cx="50" cy="58" rx="10" ry="14" fill="#37474F" />
-      <Ellipse cx="47" cy="52" rx="3" ry="5" fill="#546E7A" /> {/* Brilho do nariz */}
-      
+      <Ellipse cx="50" cy="55" rx="36" ry="30" fill="#90A4AE" stroke="#546E7A" strokeWidth="2.5" />
+
       {/* Olhos espaçados */}
-      <Circle cx="32" cy="48" r="4" fill="#212121" />
-      <Circle cx="68" cy="48" r="4" fill="#212121" />
-      <Circle cx="31" cy="47" r="1.5" fill="#FFF" />
-      <Circle cx="67" cy="47" r="1.5" fill="#FFF" />
-      
+      <Circle cx="32" cy="48" r="4.5" fill="#FFF" />
+      <Circle cx="68" cy="48" r="4.5" fill="#FFF" />
+      <Circle cx="32" cy="49" r="3.2" fill="#212121" />
+      <Circle cx="68" cy="49" r="3.2" fill="#212121" />
+      <Circle cx="31" cy="47.5" r="1.2" fill="#FFF" />
+      <Circle cx="67" cy="47.5" r="1.2" fill="#FFF" />
+
+      {/* Nariz Grande Oval */}
+      <Ellipse cx="50" cy="60" rx="11" ry="15" fill="#37474F" stroke="#212121" strokeWidth="1.5" />
+      <Ellipse cx="46" cy="53" rx="3.2" ry="5" fill="#607D8B" />
+
       {/* Bochechinhas */}
-      <Circle cx="26" cy="58" r="4" fill="#FF8A80" opacity="0.4" />
-      <Circle cx="74" cy="58" r="4" fill="#FF8A80" opacity="0.4" />
-      
+      <Circle cx="26" cy="60" r="4.5" fill="#FF8A80" opacity="0.4" />
+      <Circle cx="74" cy="60" r="4.5" fill="#FF8A80" opacity="0.4" />
+
       {/* Boquinha tímida */}
-      <Path d="M47 75 Q 50 78 53 75" stroke="#212121" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      
+      <Path d="M46 76 Q 50 79 54 76" stroke="#212121" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+
+      <Shine cx={38} cy={33} rx={9} ry={5} />
+
       {renderAccessoryGroup(accessory, isBodyAccessory)}
       {renderAccessoryGroup(accessory, (acc) => !isBackAccessory(acc) && !isBodyAccessory(acc))}
     </G>
