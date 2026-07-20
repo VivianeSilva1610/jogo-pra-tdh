@@ -97,15 +97,17 @@ function GameAppContent({
 
   // Monitorar carregamento do personagem inicial
   useEffect(() => {
-    // Só exige seleção se já estiver logado, o perfil já tiver carregado da
-    // nuvem (senão character===null só significa "ainda não chegou"; forçar
-    // a seleção nesse momento prendia a tela nela mesmo depois do personagem
-    // real carregar, já que nada revertia currentScreen de volta) e mesmo
-    // assim não houver personagem salvo.
-    if (session && !isLoadingProfile && character === null) {
+    // Só exige seleção quando: logado, o App já terminou de resolver qual
+    // childId usar (isInitializingChild), o childId já chegou ao GameProvider
+    // e o perfil daquele childId já carregou da nuvem. Antes disso,
+    // isLoadingProfile pode ficar false momentaneamente só porque childId
+    // ainda é null (ver GameContext: childId null → isLoadingProfile=false
+    // imediatamente), o que fazia character===null parecer definitivo e
+    // prendia o usuário em character_select mesmo tendo personagem salvo.
+    if (session && !isInitializingChild && childId && !isLoadingProfile && character === null) {
       setCurrentScreen('character_select');
     }
-  }, [character, session, isLoadingProfile]);
+  }, [character, session, isLoadingProfile, isInitializingChild, childId]);
 
   // Trilha sonora de fundo
   useEffect(() => {
