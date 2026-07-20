@@ -11,19 +11,19 @@ interface CharacterSelectScreenProps {
   onNavigate: (screen: string) => void;
 }
 
-const CHARACTERS: { id: CharacterType; nameKey: 'unisexBoy' | 'unisexGirl' | 'fox' | 'panda' | 'kitten' | 'robot' }[] = [
-  { id: 'boy', nameKey: 'unisexBoy' },
-  { id: 'girl', nameKey: 'unisexGirl' },
-  { id: 'fox', nameKey: 'fox' },
-  { id: 'panda', nameKey: 'panda' },
-  { id: 'kitten', nameKey: 'kitten' },
-  { id: 'robot', nameKey: 'robot' },
+const CHARACTERS: { id: CharacterType; nameKey: 'capybara' | 'turtle' | 'sloth' | 'frog' | 'hedgehog' | 'koala' }[] = [
+  { id: 'capybara', nameKey: 'capybara' },
+  { id: 'turtle', nameKey: 'turtle' },
+  { id: 'sloth', nameKey: 'sloth' },
+  { id: 'frog', nameKey: 'frog' },
+  { id: 'hedgehog', nameKey: 'hedgehog' },
+  { id: 'koala', nameKey: 'koala' },
 ];
 
 export const CharacterSelectScreen: React.FC<CharacterSelectScreenProps> = ({ onNavigate }) => {
   const { selectCharacter, character } = useGame();
   const { t, language } = useLocalization();
-  const [selected, setSelected] = useState<CharacterType>(character || 'panda');
+  const [selected, setSelected] = useState<CharacterType>(character || 'capybara');
 
   const handleSelect = (charId: CharacterType, nameKey: string) => {
     setSelected(charId);

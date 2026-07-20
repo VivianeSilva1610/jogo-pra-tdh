@@ -9,7 +9,7 @@ export interface ChildProfile {
   parent_id: string;
   name: string;
   age: number;
-  avatar: string; // ex: 'panda', 'fox', 'boy', 'girl', etc.
+  avatar: string; // ex: 'capybara', 'turtle', 'sloth', 'frog', etc.
   preferred_language?: string;
   created_at?: string;
 }

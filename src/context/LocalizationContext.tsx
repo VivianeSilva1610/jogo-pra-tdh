@@ -17,12 +17,12 @@ export interface Translations {
   enterAvatarName: string;
   save: string;
   cancel: string;
-  unisexGirl: string;
-  unisexBoy: string;
-  fox: string;
-  panda: string;
-  kitten: string;
-  robot: string;
+  capybara: string;
+  turtle: string;
+  sloth: string;
+  frog: string;
+  hedgehog: string;
+  koala: string;
   lumiGreeting: string;
   lumiTip: string;
   lettersLearned: string;
@@ -188,12 +188,12 @@ const translations: Record<LanguageType, Translations> = {
     enterAvatarName: "Como quer chamar seu personagem?",
     save: "Salvar",
     cancel: "Cancelar",
-    unisexGirl: "Menina Aventureira",
-    unisexBoy: "Menino Aventureiro",
-    fox: "Raposa",
-    panda: "Panda",
-    kitten: "Gatinho",
-    robot: "Robô Amigável",
+    capybara: "Capivara",
+    turtle: "Tartaruga",
+    sloth: "Bicho-preguiça",
+    frog: "Rã",
+    hedgehog: "Porco-espinho",
+    koala: "Coala",
     lumiGreeting: "Oi! Eu sou o Lumi! Vamos jogar juntos?",
     lumiTip: "Toque nas coisas para encontrar as letras!",
     lettersLearned: "Letras aprendidas",
@@ -357,12 +357,12 @@ const translations: Record<LanguageType, Translations> = {
     enterAvatarName: "What do you want to call your character?",
     save: "Save",
     cancel: "Cancel",
-    unisexGirl: "Adventurer Girl",
-    unisexBoy: "Adventurer Boy",
-    fox: "Fox",
-    panda: "Panda",
-    kitten: "Kitten",
-    robot: "Friendly Robot",
+    capybara: "Capybara",
+    turtle: "Turtle",
+    sloth: "Sloth",
+    frog: "Frog",
+    hedgehog: "Hedgehog",
+    koala: "Koala",
     lumiGreeting: "Hi! I'm Lumi! Let's play together!",
     lumiTip: "Tap things to find hidden letters!",
     lettersLearned: "Letters learned",
@@ -526,12 +526,12 @@ const translations: Record<LanguageType, Translations> = {
     enterAvatarName: "Come vuoi chiamare il tuo personaggio?",
     save: "Salva",
     cancel: "Annulla",
-    unisexGirl: "Ragazza Avventuriera",
-    unisexBoy: "Ragazzo Avventuriero",
-    fox: "Volpe",
-    panda: "Panda",
-    kitten: "Gattino",
-    robot: "Robot Amichevole",
+    capybara: "Capibara",
+    turtle: "Tartaruga",
+    sloth: "Bradipo",
+    frog: "Rana",
+    hedgehog: "Riccio",
+    koala: "Koala",
     lumiGreeting: "Ciao! Sono Lumi! Giochiamo insieme?",
     lumiTip: "Tocca gli oggetti per trovare le lettere nascoste!",
     lettersLearned: "Lettere imparate",
@@ -695,12 +695,12 @@ const translations: Record<LanguageType, Translations> = {
     enterAvatarName: "¿Cómo quieres llamar a tu personaje?",
     save: "Guardar",
     cancel: "Cancelar",
-    unisexGirl: "Chica Aventurera",
-    unisexBoy: "Chico Aventurero",
-    fox: "Zorro",
-    panda: "Panda",
-    kitten: "Gatito",
-    robot: "Robot Amigable",
+    capybara: "Capibara",
+    turtle: "Tortuga",
+    sloth: "Perezoso",
+    frog: "Rana",
+    hedgehog: "Erizo",
+    koala: "Koala",
     lumiGreeting: "¡Hola! ¡Soy Lumi! ¿Jugamos juntos?",
     lumiTip: "¡Toca los objetos para encontrar las letras ocultas!",
     lettersLearned: "Letras aprendidas",

@@ -12,12 +12,12 @@ import { Plus, Trash2, LogOut } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 
 const AVATAR_OPTIONS = [
-  { key: 'panda',  emoji: '🐼', label: 'Panda' },
-  { key: 'fox',    emoji: '🦊', label: 'Raposa' },
-  { key: 'kitten', emoji: '🐱', label: 'Gatinho' },
-  { key: 'robot',  emoji: '🤖', label: 'Robô' },
-  { key: 'boy',    emoji: '👦', label: 'Menino' },
-  { key: 'girl',   emoji: '👧', label: 'Menina' },
+  { key: 'capybara',  emoji: '🦫', label: 'Capivara' },
+  { key: 'turtle',    emoji: '🐢', label: 'Tartaruga' },
+  { key: 'sloth',     emoji: '🦥', label: 'Preguiça' },
+  { key: 'frog',      emoji: '🐸', label: 'Rã' },
+  { key: 'hedgehog',  emoji: '🦔', label: 'Porco-espinho' },
+  { key: 'koala',     emoji: '🐨', label: 'Coala' },
 ] as const;
 
 function emojiFor(avatar: string) {
@@ -35,7 +35,7 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newAvatar, setNewAvatar] = useState<string>('panda');
+  const [newAvatar, setNewAvatar] = useState<string>('capybara');
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState('');
   const [consentGiven, setConsentGiven] = useState(false);
@@ -118,7 +118,7 @@ export const ChildSelectorScreen: React.FC<Props> = ({ parentId, isPremium, onSe
   const cancelForm = () => {
     setShowForm(false);
     setNewName('');
-    setNewAvatar('panda');
+    setNewAvatar('capybara');
     setFormError('');
     setConsentGiven(false);
   };

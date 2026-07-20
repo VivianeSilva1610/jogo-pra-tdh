@@ -117,7 +117,7 @@ export const syncChildProfile = async (
       .update({
         seeds: profile.coins, // O certo seria incrementar, mas syncChildProfile envia o total
         stars_by_game: newStars,
-        avatar: profile.character ?? 'panda',
+        avatar: profile.character ?? 'capybara',
         unlocked_stickers: profile.unlockedStickers,
         updated_at: new Date().toISOString(),
       })

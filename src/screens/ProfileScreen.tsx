@@ -30,11 +30,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
   const [tempName, setTempName] = useState('');
 
   const handleStartEditName = () => {
-    const currentName = avatarName || t(
-      character === 'boy' ? 'unisexBoy' :
-      character === 'girl' ? 'unisexGirl' :
-      (character as any)
-    );
+    const currentName = avatarName || t(character as any);
     setTempName(currentName);
     setIsEditingName(true);
   };
@@ -86,11 +82,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
               activeOpacity={0.7}
             >
               <Text style={styles.avatarName}>
-                {avatarName || t(
-                  character === 'boy' ? 'unisexBoy' :
-                  character === 'girl' ? 'unisexGirl' :
-                  (character as any)
-                )}
+                {avatarName || t(character as any)}
               </Text>
               <Text style={styles.editIcon}>✏️</Text>
             </TouchableOpacity>

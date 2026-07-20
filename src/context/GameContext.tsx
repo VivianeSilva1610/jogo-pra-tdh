@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useRef, useCallb
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { syncChildProfile, loadChildProfile, loadParentSubscription, ChildProgressProfile } from '../services/supabase';
 
-export type CharacterType = 'boy' | 'girl' | 'fox' | 'panda' | 'kitten' | 'robot';
+export type CharacterType = 'capybara' | 'turtle' | 'sloth' | 'frog' | 'hedgehog' | 'koala';
 
 export interface StickerItem {
   id: string;

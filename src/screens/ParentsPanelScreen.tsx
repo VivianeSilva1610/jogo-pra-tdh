@@ -13,7 +13,7 @@ interface ParentsPanelScreenProps {
 }
 
 const AVATAR_EMOJIS: Record<string, string> = {
-  panda: '🐼', fox: '🦊', kitten: '🐱', robot: '🤖', boy: '👦', girl: '👧',
+  capybara: '🦫', turtle: '🐢', sloth: '🦥', frog: '🐸', hedgehog: '🦔', koala: '🐨',
 };
 
 export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNavigate, onSwitchChild }) => {
@@ -48,7 +48,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [addName, setAddName] = useState('');
-  const [addAvatar, setAddAvatar] = useState('panda');
+  const [addAvatar, setAddAvatar] = useState('capybara');
   const [addingChild, setAddingChild] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -276,7 +276,7 @@ export const ParentsPanelScreen: React.FC<ParentsPanelScreenProps> = ({ onNaviga
       setChildren(kids);
       setShowAddForm(false);
       setAddName('');
-      setAddAvatar('panda');
+      setAddAvatar('capybara');
     } else {
       setAddError('Não foi possível criar o perfil. Tente novamente.');
     }
