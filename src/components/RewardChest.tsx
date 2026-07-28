@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated, Easing, Image } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { useLocalization } from '../context/LocalizationContext';
 import { ChestIcon } from './VectorIcons';
@@ -95,7 +95,15 @@ export const RewardChest: React.FC = () => {
               onPress={handleOpenChest}
               disabled={isOpen || isOpening}
             >
-              <ChestIcon size={140} isOpen={isOpen} />
+              {isOpen ? (
+                <Image
+                  source={require('../../assets/games/aventura das letras/reward_bau-abrindo.png')}
+                  style={styles.chestImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <ChestIcon size={140} isOpen={false} />
+              )}
             </TouchableOpacity>
           </Animated.View>
 
@@ -152,7 +160,12 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 180,
+  },
+  chestImage: {
+    width: 160,
     height: 160,
+    borderRadius: 16,
   },
   instructions: {
     fontSize: 16,
