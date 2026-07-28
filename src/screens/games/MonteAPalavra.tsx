@@ -492,7 +492,7 @@ export const MonteAPalavra: React.FC<MonteAPalavraProps> = ({ onBack }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GameBackground source={require('../../../assets/games/aventura das letras/bg_monte-a-palavra.png')} />
+      <GameBackground source={require('../../../assets/games/aventura das letras/backgrounds/bg_monte-a-palavra.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />

@@ -203,7 +203,7 @@ export const DelecaoFonemica: React.FC<DeletionProps> = ({ onBack }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GameBackground source={require('../../../assets/games/aventura das letras/bg_delecao-fonemica.png')} />
+      <GameBackground source={require('../../../assets/games/aventura das letras/backgrounds/bg_delecao-fonemica.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
