@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 import Svg, { Rect, Path, Polygon, G, Circle } from 'react-native-svg';
 import { useGameSession } from '../../hooks/useGameSession';
+import { GameBackground } from '../../components/GameBackground';
 
 interface CasteloFrasesProps {
   onBack: () => void;
@@ -600,6 +601,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <GameBackground source={require('../../../assets/games/aventura das letras/bg_castelo-de-frases.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />

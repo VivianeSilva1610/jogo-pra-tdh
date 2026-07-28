@@ -10,6 +10,7 @@ import { speak } from '../../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
 import { PerfectRun } from '../../components/PerfectRun';
 import { useGameSession } from '../../hooks/useGameSession';
+import { GameBackground } from '../../components/GameBackground';
 
 interface CapturaDeSilabasProps {
   onBack: () => void;
@@ -251,6 +252,7 @@ export const CapturaDeSilabas: React.FC<CapturaDeSilabasProps> = ({ onBack }) =>
 
   return (
     <SafeAreaView style={styles.container}>
+      <GameBackground source={require('../../../assets/games/aventura das letras/bg_captura-de-silabas.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
