@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Animated, Alert, Dimensions } from 'react-native';
 import { useLocalization } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
-import { StarIcon, CoinIcon, getAvatarComponent } from '../components/VectorIcons';
+import { StarIcon, CoinIcon, getAvatarImage } from '../components/VectorIcons';
 import { ArrowLeft } from 'lucide-react-native';
 import Svg, { Path, Circle, Ellipse, Rect, G, Polygon, Text as SvgText, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { THEME_COLORS, FONT_SIZES } from '../styles/theme';
@@ -70,7 +70,7 @@ const INTERMEDIATE_STONES = [
 
 export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onSelectGame: (gameId: string) => void }> = ({ onNavigate, onSelectGame }) => {
   const { t, language } = useLocalization();
-  const { stars, coins, character, equippedClothing, childId, challengesCompleted, setShowChestModal, soundEnabled, isPremium } = useGame();
+  const { stars, coins, character, childId, challengesCompleted, setShowChestModal, soundEnabled, isPremium } = useGame();
 
   // Free: games 1-2 in any language, unlimited. Premium: games 3-7 + all extra content.
   const isFreemiumLocked = (gameIndex: number): boolean => {
@@ -440,7 +440,7 @@ export const GameMapScreen: React.FC<{ onNavigate: (screen: string) => void; onS
               pointerEvents="none"
             >
               <View style={styles.avatarInner}>
-                {getAvatarComponent(character, 70, equippedClothing)}
+                {getAvatarImage(character, 70)}
               </View>
             </Animated.View>
           )}

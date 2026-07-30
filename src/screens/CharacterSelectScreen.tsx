@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { useGame, CharacterType } from '../context/GameContext';
 import { useLocalization } from '../context/LocalizationContext';
-import { getAvatarComponent } from '../components/VectorIcons';
+import { getAvatarImage } from '../components/VectorIcons';
 import { CustomButton } from '../components/CustomButton';
 import { speak } from '../services/speech';
 import { ArrowLeft } from 'lucide-react-native';
@@ -65,7 +65,7 @@ export const CharacterSelectScreen: React.FC<CharacterSelectScreenProps> = ({ on
                 onPress={() => handleSelect(char.id, char.nameKey)}
               >
                 <View style={styles.avatarWrapper}>
-                  {getAvatarComponent(char.id, 90)}
+                  {getAvatarImage(char.id, 90)}
                 </View>
                 <Text style={[styles.name, isSelected && styles.nameSelected]}>
                   {t(char.nameKey as any)}

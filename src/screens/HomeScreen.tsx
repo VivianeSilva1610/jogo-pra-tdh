@@ -4,7 +4,7 @@ import { useLocalization } from '../context/LocalizationContext';
 import { useGame } from '../context/GameContext';
 import { MascotLumi } from '../components/MascotLumi';
 import { CustomButton } from '../components/CustomButton';
-import { getAvatarComponent } from '../components/VectorIcons';
+import { getAvatarImage } from '../components/VectorIcons';
 import { EnchantedBackground } from '../components/EnchantedBackground';
 import { THEME_COLORS } from '../styles/theme';
 
@@ -14,7 +14,7 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   const { t } = useLocalization();
-  const { character, equippedClothing, coins, stars } = useGame();
+  const { character, coins, stars } = useGame();
 
   return (
     <EnchantedBackground>
@@ -43,7 +43,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
         {character && (
           <View style={styles.characterContainer}>
             <View style={styles.characterCircle}>
-              {getAvatarComponent(character, 120, equippedClothing)}
+              {getAvatarImage(character, 120)}
             </View>
           </View>
         )}

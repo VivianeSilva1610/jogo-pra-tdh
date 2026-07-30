@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, Modal } from 'react-native';
 import { useLocalization } from '../context/LocalizationContext';
 import { useGame, STICKERS_LIST, CLOTHING_LIST } from '../context/GameContext';
-import { getAvatarComponent } from '../components/VectorIcons';
+import { getAvatarImage } from '../components/VectorIcons';
 import { CustomButton } from '../components/CustomButton';
 import { MascotLumi } from '../components/MascotLumi';
 import { ArrowLeft } from 'lucide-react-native';
@@ -19,7 +19,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
     character,
     avatarName,
     setAvatarName,
-    equippedClothing,
     challengesCompleted,
     unlockedStickers,
     unlockedClothing,
@@ -75,7 +74,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onNavigate }) => {
         {character && (
           <View style={styles.avatarCard}>
             <View style={styles.avatarGlow} />
-            {getAvatarComponent(character, 130, equippedClothing)}
+            {getAvatarImage(character, 130)}
             <TouchableOpacity 
               style={styles.avatarNameContainer} 
               onPress={handleStartEditName}

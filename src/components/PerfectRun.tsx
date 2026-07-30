@@ -9,7 +9,7 @@ import {
   Easing,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
-import { getAvatarComponent } from './VectorIcons';
+import { getAvatarImage } from './VectorIcons';
 import { speak } from '../services/speech';
 import { useLocalization } from '../context/LocalizationContext';
 
@@ -26,7 +26,7 @@ const PERFECT_MESSAGES: Record<string, string[]> = {
 };
 
 export const PerfectRun: React.FC<PerfectRunProps> = ({ visible, onClose }) => {
-  const { character, equippedClothing } = useGame();
+  const { character } = useGame();
   const { language } = useLocalization();
 
   // Animations
@@ -116,7 +116,7 @@ export const PerfectRun: React.FC<PerfectRunProps> = ({ visible, onClose }) => {
 
           {/* Avatar jumping */}
           <Animated.View style={[styles.avatarWrapper, { transform: [{ translateY: floatAnim }] }]}>
-            {getAvatarComponent(character, 130, equippedClothing)}
+            {getAvatarImage(character, 130)}
           </Animated.View>
 
           {/* Message */}

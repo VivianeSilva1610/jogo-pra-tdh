@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image, StyleSheet } from 'react-native';
 import Svg, { Circle, Ellipse, Rect, Path, G, Polygon, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 interface IconProps {
@@ -610,4 +611,30 @@ export const getAvatarComponent = (id: 'capybara' | 'turtle' | 'sloth' | 'frog' 
     default: return <CapybaraAvatar size={size} accessory={accessory} />;
   }
 };
+
+// Retratos ilustrados por personagem (sem suporte a acessórios/roupas
+// sobrepostas - usar getAvatarComponent onde a roupa equipada precisa
+// aparecer, como na Coleção/guarda-roupa)
+const AVATAR_IMAGES: Record<'capybara' | 'turtle' | 'sloth' | 'frog' | 'hedgehog' | 'koala', ReturnType<typeof require>> = {
+  capybara: require('../../assets/games/aventura das letras/avatar_capivara.png'),
+  turtle: require('../../assets/games/aventura das letras/avatar_tartaruga.png'),
+  sloth: require('../../assets/games/aventura das letras/avatar_preguica.png'),
+  frog: require('../../assets/games/aventura das letras/avatar_ra.png'),
+  hedgehog: require('../../assets/games/aventura das letras/avatar_porco-espinho.png'),
+  koala: require('../../assets/games/aventura das letras/avatar_coala.png'),
+};
+
+export const getAvatarImage = (id: 'capybara' | 'turtle' | 'sloth' | 'frog' | 'hedgehog' | 'koala' | null, size = 80) => (
+  <Image
+    source={AVATAR_IMAGES[id ?? 'capybara']}
+    style={[styles.avatarImage, { width: size, height: size, borderRadius: size / 2 }]}
+    resizeMode="cover"
+  />
+);
+
+const styles = StyleSheet.create({
+  avatarImage: {
+    backgroundColor: '#FFF',
+  },
+});
 
