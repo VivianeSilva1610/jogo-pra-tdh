@@ -177,7 +177,7 @@ export const SilabasCamufladas: React.FC<SilabasCamufladasProps> = ({ onBack }) 
 
   return (
     <SafeAreaView style={styles.container}>
-      <GameBackground source={require('../../../assets/games/aventura das letras/backgrounds/bg_silabas-camufladas.png')} />
+      <GameBackground source={require('../../../assets/games/aventura das letras/bg_silabas-camufladas.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />

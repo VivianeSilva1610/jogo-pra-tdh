@@ -191,7 +191,7 @@ export const SomESilabas: React.FC<SomESilabasProps> = ({ onBack }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GameBackground source={require('../../../assets/games/aventura das letras/backgrounds/bg_som-e-silabas.png')} />
+      <GameBackground source={require('../../../assets/games/aventura das letras/bg_som-e-silabas.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />

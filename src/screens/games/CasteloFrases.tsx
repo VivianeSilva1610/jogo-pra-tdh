@@ -601,7 +601,7 @@ export const CasteloFrases: React.FC<CasteloFrasesProps> = ({ onBack }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <GameBackground source={require('../../../assets/games/aventura das letras/backgrounds/bg_castelo-de-frases.png')} />
+      <GameBackground source={require('../../../assets/games/aventura das letras/bg_castelo-de-frases.png')} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color="#5D4037" />
