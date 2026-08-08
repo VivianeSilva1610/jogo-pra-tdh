@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(rm -f App.preview.tsx)",
+      "Bash(rm -f \"C:\\\\Users\\\\vivia\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-vivia-OneDrive-Documentos-Projetos-Aventura-das-letras\\\\be8a75cf-7401-49e1-ab90-ea8217e05f2b\\\\scratchpad\\\\bg-preview.png\" \"C:\\\\Users\\\\vivia\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-vivia-OneDrive-Documentos-Projetos-Aventura-das-letras\\\\be8a75cf-7401-49e1-ab90-ea8217e05f2b\\\\scratchpad\\\\screenshot_bg.js\")",
+      "PowerShell(Stop-Process -Id 31728 -Force -ErrorAction SilentlyContinue)",
+      "Bash(git reset *)",
+      "Bash(unzip -o '/c/Users/vivia/Downloads/Progetto senza titolo.zip' -d /c/Users/vivia/AppData/Local/Temp/claude/c--Users-vivia-OneDrive-Documentos-Projetos-Aventura-das-letras/be8a75cf-7401-49e1-ab90-ea8217e05f2b/scratchpad/recheck)",
+      "Bash(node \"C:\\\\Users\\\\vivia\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-vivia-OneDrive-Documentos-Projetos-Aventura-das-letras\\\\be8a75cf-7401-49e1-ab90-ea8217e05f2b\\\\scratchpad\\\\check2.js\")"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }
