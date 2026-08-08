@@ -47,7 +47,6 @@ export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResetMode, setIsResetMode] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState('O app foi atualizado! Se você já tinha conta, talvez precise redefinir sua senha.');
 
   useEffect(() => {
     // 1. Loop de flutuação de Lumi
@@ -131,7 +130,7 @@ export const LoginScreen: React.FC = () => {
 
   const handleEmailAuth = async (isSignUp: boolean) => {
     if (!email) {
-      Alert.alert('Atenção', 'Preencha o email');
+      Alert.alert(t('attention'), t('loginAlertFillEmail'));
       return;
     }
 
@@ -143,7 +142,7 @@ export const LoginScreen: React.FC = () => {
           redirectTo: Platform.OS === 'web' ? window.location.origin + '/' : 'aventuradasletras://',
         });
         if (error) throw error;
-        Alert.alert('Sucesso!', 'Verifique seu email para redefinir a senha.');
+        Alert.alert(t('loginAlertSuccessTitle'), t('loginAlertCheckEmailReset'));
         setIsResetMode(false);
         return;
       }
@@ -159,9 +158,9 @@ export const LoginScreen: React.FC = () => {
         // With email confirmation required (project-wide Supabase setting), signUp() succeeds but returns
         // no session until the confirmation link is clicked - "faça login agora" would be wrong in that case.
         if (data.session) {
-          Alert.alert('Conta criada', 'Sua conta foi criada! Faça login agora.');
+          Alert.alert(t('loginAlertAccountCreatedTitle'), t('loginAlertAccountCreatedBody'));
         } else {
-          Alert.alert('Quase lá!', 'Enviamos um link de confirmação para o seu email. Clique nele para ativar sua conta antes de fazer login (confira também a caixa de spam).');
+          Alert.alert(t('loginAlertAlmostThereTitle'), t('loginAlertConfirmationSentBody'));
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -172,12 +171,12 @@ export const LoginScreen: React.FC = () => {
           if (error.message.includes('Invalid login credentials')) {
              if (migratedEmails.includes(email.trim().toLowerCase())) {
                 setIsResetMode(true);
-                Alert.alert('Atualização de Segurança', 'Sua conta foi migrada para o novo sistema Interativo. Por favor, redefina sua senha enviando um link para o seu email.');
+                Alert.alert(t('loginAlertSecurityUpdateTitle'), t('loginAlertMigratedBody'));
              } else {
-                Alert.alert('Erro', 'Senha ou email incorretos.');
+                Alert.alert(t('loginErrorTitle'), t('loginAlertWrongCredentials'));
              }
           } else if (error.message.toLowerCase().includes('email not confirmed')) {
-            Alert.alert('Confirme seu email', 'Seu email ainda não foi confirmado. Confira sua caixa de entrada (e o spam) e clique no link que enviamos.');
+            Alert.alert(t('loginAlertConfirmEmailTitle'), t('loginAlertEmailNotConfirmedBody'));
           } else {
             throw error;
           }
@@ -186,9 +185,9 @@ export const LoginScreen: React.FC = () => {
     } catch (err: any) {
       console.error('Erro de autenticação:', err.message);
       if (Platform.OS === 'web') {
-        alert('Erro ao autenticar: ' + err.message);
+        alert(t('loginAlertAuthErrorPrefix') + err.message);
       } else {
-        Alert.alert('Erro', err.message);
+        Alert.alert(t('loginErrorTitle'), err.message);
       }
     } finally {
       setLoading(false);
@@ -234,9 +233,9 @@ export const LoginScreen: React.FC = () => {
     } catch (err: any) {
       console.error('Erro no login com Google:', err.message);
       if (Platform.OS === 'web') {
-        alert('Erro ao realizar login: ' + err.message);
+        alert(t('loginAlertGoogleErrorTitle') + ': ' + err.message);
       } else {
-        Alert.alert('Erro no Login', 'Não foi possível autenticar com a conta Google.');
+        Alert.alert(t('loginAlertGoogleErrorTitle'), t('loginAlertGoogleErrorBody'));
       }
     } finally {
       setLoading(false);
@@ -274,7 +273,7 @@ export const LoginScreen: React.FC = () => {
             <View style={styles.bubbleInner}>
               <Text style={styles.welcomeTitle}>{t('loginWelcomeTitle')}</Text>
               <Text style={styles.welcomeText}>{t('loginWelcomeText')}</Text>
-              <Text style={[styles.helpText, { color: THEME_COLORS.orangeDark, marginBottom: 5 }]}>{updateMessage}</Text>
+              <Text style={[styles.helpText, { color: THEME_COLORS.orangeDark, marginBottom: 5 }]}>{t('loginUpdateMessage')}</Text>
             </View>
           </View>
         </View>
@@ -283,7 +282,7 @@ export const LoginScreen: React.FC = () => {
         <View style={styles.formSection}>
           <TextInput
             style={styles.input}
-            placeholder="Seu Email"
+            placeholder={t('loginEmailPlaceholder')}
             placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
@@ -293,7 +292,7 @@ export const LoginScreen: React.FC = () => {
           {!isResetMode && (
             <TextInput
               style={styles.input}
-              placeholder="Sua Senha"
+              placeholder={t('loginPasswordPlaceholder')}
               placeholderTextColor="#999"
               value={password}
               onChangeText={setPassword}
@@ -312,7 +311,7 @@ export const LoginScreen: React.FC = () => {
                 {loading ? (
                   <ActivityIndicator size="small" color="#FFF" />
                 ) : (
-                  <Text style={styles.emailButtonText}>{isResetMode ? 'Enviar Email de Redefinição' : 'Entrar'}</Text>
+                  <Text style={styles.emailButtonText}>{isResetMode ? t('loginSendResetBtn') : t('loginSignInBtn')}</Text>
                 )}
               </Animated.View>
             </TouchableWithoutFeedback>
@@ -325,7 +324,7 @@ export const LoginScreen: React.FC = () => {
                 disabled={loading}
               >
                 <Animated.View style={[styles.emailButton, styles.signupButton, { transform: [{ scale: emailButtonScale }] }]}>
-                  <Text style={styles.emailButtonText}>Criar Conta</Text>
+                  <Text style={styles.emailButtonText}>{t('loginCreateAccountBtn')}</Text>
                 </Animated.View>
               </TouchableWithoutFeedback>
             )}
@@ -333,13 +332,13 @@ export const LoginScreen: React.FC = () => {
 
           {!isResetMode && (
             <Text style={styles.legalConsentText}>
-              Ao criar uma conta, você concorda com nossos{' '}
+              {t('loginLegalPrefix')}{' '}
               <Text style={styles.legalConsentLink} onPress={() => openLegalUrl(LEGAL_URLS.terms)}>
-                Termos de Uso
+                {t('loginTermsOfUse')}
               </Text>
-              {' '}e nossa{' '}
+              {' '}{t('loginLegalAnd')}{' '}
               <Text style={styles.legalConsentLink} onPress={() => openLegalUrl(LEGAL_URLS.privacy)}>
-                Política de Privacidade
+                {t('loginPrivacyPolicy')}
               </Text>
               .
             </Text>
@@ -347,17 +346,17 @@ export const LoginScreen: React.FC = () => {
 
           {!isResetMode && (
             <TouchableOpacity onPress={() => setIsResetMode(true)} style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>Esqueci minha senha</Text>
+              <Text style={styles.forgotText}>{t('loginForgotPassword')}</Text>
             </TouchableOpacity>
           )}
           {isResetMode && (
             <TouchableOpacity onPress={() => setIsResetMode(false)} style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>Voltar ao Login</Text>
+              <Text style={styles.forgotText}>{t('loginBackToLogin')}</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <Text style={styles.orText}>ou</Text>
+        <Text style={styles.orText}>{t('loginOr')}</Text>
 
         {/* BOTÃO DE LOGIN GOOGLE */}
         <View style={styles.actionSection}>

@@ -172,6 +172,35 @@ export interface Translations {
   manageSubscriptionContactTitle: string;
   manageSubscriptionContactBody: string;
   activeUntil: string;
+  loginEmailPlaceholder: string;
+  loginPasswordPlaceholder: string;
+  loginSignInBtn: string;
+  loginSendResetBtn: string;
+  loginCreateAccountBtn: string;
+  loginLegalPrefix: string;
+  loginTermsOfUse: string;
+  loginLegalAnd: string;
+  loginPrivacyPolicy: string;
+  loginForgotPassword: string;
+  loginBackToLogin: string;
+  loginOr: string;
+  loginUpdateMessage: string;
+  loginAlertFillEmail: string;
+  loginAlertSuccessTitle: string;
+  loginAlertCheckEmailReset: string;
+  loginAlertAccountCreatedTitle: string;
+  loginAlertAccountCreatedBody: string;
+  loginAlertAlmostThereTitle: string;
+  loginAlertConfirmationSentBody: string;
+  loginAlertSecurityUpdateTitle: string;
+  loginAlertMigratedBody: string;
+  loginErrorTitle: string;
+  loginAlertWrongCredentials: string;
+  loginAlertConfirmEmailTitle: string;
+  loginAlertEmailNotConfirmedBody: string;
+  loginAlertAuthErrorPrefix: string;
+  loginAlertGoogleErrorTitle: string;
+  loginAlertGoogleErrorBody: string;
 }
 
 const translations: Record<LanguageType, Translations> = {
@@ -343,6 +372,35 @@ const translations: Record<LanguageType, Translations> = {
     manageSubscriptionContactTitle: "Gerenciar assinatura",
     manageSubscriptionContactBody: "Para alterar ou cancelar sua assinatura, entre em contato pelo e-mail viverevivi37@gmail.com.",
     activeUntil: "Ativo até",
+    loginEmailPlaceholder: "Seu Email",
+    loginPasswordPlaceholder: "Sua Senha",
+    loginSignInBtn: "Entrar",
+    loginSendResetBtn: "Enviar Email de Redefinição",
+    loginCreateAccountBtn: "Criar Conta",
+    loginLegalPrefix: "Ao criar uma conta, você concorda com nossos",
+    loginTermsOfUse: "Termos de Uso",
+    loginLegalAnd: "e nossa",
+    loginPrivacyPolicy: "Política de Privacidade",
+    loginForgotPassword: "Esqueci minha senha",
+    loginBackToLogin: "Voltar ao Login",
+    loginOr: "ou",
+    loginUpdateMessage: "O app foi atualizado! Se você já tinha conta, talvez precise redefinir sua senha.",
+    loginAlertFillEmail: "Preencha o email",
+    loginAlertSuccessTitle: "Sucesso!",
+    loginAlertCheckEmailReset: "Verifique seu email para redefinir a senha.",
+    loginAlertAccountCreatedTitle: "Conta criada",
+    loginAlertAccountCreatedBody: "Sua conta foi criada! Faça login agora.",
+    loginAlertAlmostThereTitle: "Quase lá!",
+    loginAlertConfirmationSentBody: "Enviamos um link de confirmação para o seu email. Clique nele para ativar sua conta antes de fazer login (confira também a caixa de spam).",
+    loginAlertSecurityUpdateTitle: "Atualização de Segurança",
+    loginAlertMigratedBody: "Sua conta foi migrada para o novo sistema Interativo. Por favor, redefina sua senha enviando um link para o seu email.",
+    loginErrorTitle: "Erro",
+    loginAlertWrongCredentials: "Senha ou email incorretos.",
+    loginAlertConfirmEmailTitle: "Confirme seu email",
+    loginAlertEmailNotConfirmedBody: "Seu email ainda não foi confirmado. Confira sua caixa de entrada (e o spam) e clique no link que enviamos.",
+    loginAlertAuthErrorPrefix: "Erro ao autenticar: ",
+    loginAlertGoogleErrorTitle: "Erro no Login",
+    loginAlertGoogleErrorBody: "Não foi possível autenticar com a conta Google.",
   },
   en: {
     appName: "Letter Adventure",
@@ -512,6 +570,35 @@ const translations: Record<LanguageType, Translations> = {
     manageSubscriptionContactTitle: "Manage subscription",
     manageSubscriptionContactBody: "To change or cancel your subscription, please contact us at viverevivi37@gmail.com.",
     activeUntil: "Active until",
+    loginEmailPlaceholder: "Your Email",
+    loginPasswordPlaceholder: "Your Password",
+    loginSignInBtn: "Sign In",
+    loginSendResetBtn: "Send Reset Email",
+    loginCreateAccountBtn: "Create Account",
+    loginLegalPrefix: "By creating an account, you agree to our",
+    loginTermsOfUse: "Terms of Use",
+    loginLegalAnd: "and our",
+    loginPrivacyPolicy: "Privacy Policy",
+    loginForgotPassword: "Forgot my password",
+    loginBackToLogin: "Back to Login",
+    loginOr: "or",
+    loginUpdateMessage: "The app has been updated! If you already had an account, you may need to reset your password.",
+    loginAlertFillEmail: "Please enter your email",
+    loginAlertSuccessTitle: "Success!",
+    loginAlertCheckEmailReset: "Check your email to reset your password.",
+    loginAlertAccountCreatedTitle: "Account created",
+    loginAlertAccountCreatedBody: "Your account has been created! Sign in now.",
+    loginAlertAlmostThereTitle: "Almost there!",
+    loginAlertConfirmationSentBody: "We've sent a confirmation link to your email. Click it to activate your account before signing in (also check your spam folder).",
+    loginAlertSecurityUpdateTitle: "Security Update",
+    loginAlertMigratedBody: "Your account was migrated to the new Interativo system. Please reset your password by sending a link to your email.",
+    loginErrorTitle: "Error",
+    loginAlertWrongCredentials: "Incorrect email or password.",
+    loginAlertConfirmEmailTitle: "Confirm your email",
+    loginAlertEmailNotConfirmedBody: "Your email hasn't been confirmed yet. Check your inbox (and spam) and click the link we sent.",
+    loginAlertAuthErrorPrefix: "Authentication error: ",
+    loginAlertGoogleErrorTitle: "Login Error",
+    loginAlertGoogleErrorBody: "Could not authenticate with your Google account.",
   },
   it: {
     appName: "Avventura delle Lettere",
@@ -681,6 +768,35 @@ const translations: Record<LanguageType, Translations> = {
     manageSubscriptionContactTitle: "Gestisci abbonamento",
     manageSubscriptionContactBody: "Per modificare o annullare il tuo abbonamento, contattaci all'indirizzo viverevivi37@gmail.com.",
     activeUntil: "Attivo fino al",
+    loginEmailPlaceholder: "La tua Email",
+    loginPasswordPlaceholder: "La tua Password",
+    loginSignInBtn: "Accedi",
+    loginSendResetBtn: "Invia Email di Reimpostazione",
+    loginCreateAccountBtn: "Crea Account",
+    loginLegalPrefix: "Creando un account, accetti i nostri",
+    loginTermsOfUse: "Termini d'Uso",
+    loginLegalAnd: "e la nostra",
+    loginPrivacyPolicy: "Politica sulla Privacy",
+    loginForgotPassword: "Ho dimenticato la password",
+    loginBackToLogin: "Torna al Login",
+    loginOr: "oppure",
+    loginUpdateMessage: "L'app è stata aggiornata! Se avevi già un account, potresti dover reimpostare la password.",
+    loginAlertFillEmail: "Inserisci l'email",
+    loginAlertSuccessTitle: "Fatto!",
+    loginAlertCheckEmailReset: "Controlla la tua email per reimpostare la password.",
+    loginAlertAccountCreatedTitle: "Account creato",
+    loginAlertAccountCreatedBody: "Il tuo account è stato creato! Accedi ora.",
+    loginAlertAlmostThereTitle: "Ci siamo quasi!",
+    loginAlertConfirmationSentBody: "Abbiamo inviato un link di conferma alla tua email. Cliccalo per attivare il tuo account prima di accedere (controlla anche lo spam).",
+    loginAlertSecurityUpdateTitle: "Aggiornamento di Sicurezza",
+    loginAlertMigratedBody: "Il tuo account è stato migrato al nuovo sistema Interativo. Reimposta la tua password inviando un link alla tua email.",
+    loginErrorTitle: "Errore",
+    loginAlertWrongCredentials: "Email o password errati.",
+    loginAlertConfirmEmailTitle: "Conferma la tua email",
+    loginAlertEmailNotConfirmedBody: "La tua email non è ancora stata confermata. Controlla la posta in arrivo (e lo spam) e clicca sul link che abbiamo inviato.",
+    loginAlertAuthErrorPrefix: "Errore di autenticazione: ",
+    loginAlertGoogleErrorTitle: "Errore di Accesso",
+    loginAlertGoogleErrorBody: "Non è stato possibile autenticarsi con l'account Google.",
   },
   es: {
     appName: "Aventura de las Letras",
@@ -850,6 +966,35 @@ const translations: Record<LanguageType, Translations> = {
     manageSubscriptionContactTitle: "Gestionar suscripción",
     manageSubscriptionContactBody: "Para cambiar o cancelar tu suscripción, contáctanos en viverevivi37@gmail.com.",
     activeUntil: "Activo hasta",
+    loginEmailPlaceholder: "Tu Email",
+    loginPasswordPlaceholder: "Tu Contraseña",
+    loginSignInBtn: "Entrar",
+    loginSendResetBtn: "Enviar Email de Restablecimiento",
+    loginCreateAccountBtn: "Crear Cuenta",
+    loginLegalPrefix: "Al crear una cuenta, aceptas nuestros",
+    loginTermsOfUse: "Términos de Uso",
+    loginLegalAnd: "y nuestra",
+    loginPrivacyPolicy: "Política de Privacidad",
+    loginForgotPassword: "Olvidé mi contraseña",
+    loginBackToLogin: "Volver al Inicio de Sesión",
+    loginOr: "o",
+    loginUpdateMessage: "¡La app se actualizó! Si ya tenías una cuenta, quizás necesites restablecer tu contraseña.",
+    loginAlertFillEmail: "Completa el email",
+    loginAlertSuccessTitle: "¡Éxito!",
+    loginAlertCheckEmailReset: "Revisa tu email para restablecer la contraseña.",
+    loginAlertAccountCreatedTitle: "Cuenta creada",
+    loginAlertAccountCreatedBody: "¡Tu cuenta fue creada! Inicia sesión ahora.",
+    loginAlertAlmostThereTitle: "¡Casi listo!",
+    loginAlertConfirmationSentBody: "Enviamos un enlace de confirmación a tu email. Haz clic en él para activar tu cuenta antes de iniciar sesión (revisa también la carpeta de spam).",
+    loginAlertSecurityUpdateTitle: "Actualización de Seguridad",
+    loginAlertMigratedBody: "Tu cuenta fue migrada al nuevo sistema Interativo. Por favor, restablece tu contraseña enviando un enlace a tu email.",
+    loginErrorTitle: "Error",
+    loginAlertWrongCredentials: "Contraseña o email incorrectos.",
+    loginAlertConfirmEmailTitle: "Confirma tu email",
+    loginAlertEmailNotConfirmedBody: "Tu email aún no ha sido confirmado. Revisa tu bandeja de entrada (y el spam) y haz clic en el enlace que enviamos.",
+    loginAlertAuthErrorPrefix: "Error al autenticar: ",
+    loginAlertGoogleErrorTitle: "Error de Inicio de Sesión",
+    loginAlertGoogleErrorBody: "No se pudo autenticar con la cuenta de Google.",
   }
 };
 
